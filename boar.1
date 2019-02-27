@@ -1,0 +1,116 @@
+.Dd $Mdocdate$
+.Dt boar 1
+.Os
+.Sh NAME
+.Nm boar
+.Nd micro audio synthesis environment
+.Sh SYNOPSIS
+.Nm boar
+.Op -option n ...
+.Sh DESCRIPTION
+.Pp
+The Barely Operational Audio REPL (BOAR) is a small program that opens a handle to sndio and allows the user to play with carrier/modulator oscillator pairs by issuing commands from stdin. It lacks the features of many other synthesizers, but makes up for this with its light weight and small, readable source code.
+.Pp
+All options are paired with a single integer as their parameter unless otherwise indicated. boar already starts with sane defaults, so the user needn't dive through these too often. Some of these flags are not even implemented yet and have no effect.
+.Bl -tag -width Ds
+.It Fl bits
+The bit depth of the audio output. Currently locked to signed 16bit ints. boar will not start if another value is provided. This will change in future releases. 
+.El
+.Bl -tag -width Ds
+.It Fl bufsize
+The size of an audio buffer, in full frames, that boar will suggest to sndio. It's quite likely that sndio will modify this number slightly. Generally speaking, smaller buffers ensure more responsive audio but are more taxing on system resources.
+.El
+.Bl -tag -width Ds
+.It Fl chan
+The number of channels to play back audio in. This has only been tested on monophonic and stereophonic hardware, but boar should theoretically support an arbitrary number of channels.
+.El
+.Bl -tag -width Ds
+.It Fl echo-notes
+Requires no additional values. If this option is enabled, all note on/off commands sent to boar will be echoed back to stdout. This allows the user to pipe together multiple instances of boar with different settings, but send them the same note at once, simulating a single instrument with 4+ operators.
+.El
+.Bl -tag -width Ds
+.It Fl rate
+The sample rate of audio output.
+.El
+.Bl -tag -width Ds
+.It Fl polyphony
+The number of audio voices that can simultaneously play.
+.El
+.Pp
+Once running, boar accepts a few single character, single argument commands from the user:
+.Pp
+.Bl -tag -width Ds
+.It # [string]
+A comment. Any text behind this is ignored. Useful in annotating files full of boar commands that are expected to be loaded by the program.
+.El
+.Bl -tag -width Ds
+.It a/A [float]
+Sets the envelope attack for the carrier (a) or modulator (A). This is the amount of time the parameter being enveloped takes to reach its full effect. Values between 0.0 and 1.0 are honored.
+.El
+.Bl -tag -width Ds
+.It d/D [float]
+Sets the envelope decay for the carrier (d) or modulator (D). This is the amount of time the parameter being enveloped takes to reach its sustain level after the attack has taken place. Values between 0.0 and 1.0 are honored.
+.El
+.Bl -tag -width Ds
+.It e [string]
+All text after e will be echoed in its literal form to stdout. If multiple instances of boar are piped together, this allows the user to change the settings on one instance, but not another. In the pipe `boar | boar`, `e n 60` will play note 60 on the second program in the pipe, but not the first. Echos can be stacked; `e e n 60` would tell the third boar in the pipeline to play, and so on.
+.El
+.Bl -tag -width Ds
+.It l [float]
+Set boar's loudness, or master volume. Values between 0.0 and 1.0 are honored. 1.0 is 100% volume.
+.El
+.Bl -tag -width Ds
+.It m [float]
+Change the depth of the modulation on each voice. The value of the float argument is multiplied against the modulating frequency to determine the displacement of the carrier frequency. If the carrier wave is 100hz and the modulating wave is 50hz, then an argument of 0.1 will be multiplied against 50hz for a (+/-)5hz displacement of the carrier wave, causing the final signal to oscillate between 95hz and 105hz. Larger arguments to m generate more harmonic content and a "buzzier" tone. Extreme modulation will yield reflected harmonics, which can have unintended consequences on the signal.
+.El
+.Bl -tag -width Ds
+.It n [int]
+Play a note, where the argument is a MIDI note number. Notes cannot be stacked; it is impossible to play two 48s in differing phases, for instance. Running n against an already playing note will reset its envelope back to the attack stage. Once the number of active notes exceeds the value specified in the -polyphony flag, new notes will deactivate old ones to make room for themselves. This does not take place in a first-in-first-out manner; the oldest note is not necessarily the first one to have its space stolen. This unpredictability may be undesirable, and could be reformed in future versions of boar.
+.El
+.Bl -tag -width Ds
+.It o [int]
+Turns an active note off.
+.El
+.Bl -tag -width Ds
+.It P [char]
+Extra parameters in boar are hidden behind a stateful interface. Running P against one of these parameters will tell boar to point to it. Arguments to this parameter can be pushed with the value (v) command. These extra parameters are the wavetables for carrier (a, d, s, r) and modulator (A, D, S, R) envelopes. Entering `P A` will tell boar to modify the modulator attack phase's wavetable. Entering `v 5` will set the modulator attack to a logarithmic slope. See the wavetable command (w/W) for the list of waves.
+.El
+.Bl -tag -width Ds
+.It p [float]
+Set the pitch ratio between the carrier and modulator in every voice. If the carrier frequency of a voice is 440hz, then an argument of 2.0 would make the modulator oscillate at 880hz. Non-integer ratios tend to result in noisier timbres. As the modulating frequency becomes more miniscule, greater modulation depth is required to make its effects known. A low-frequency oscillation (LFO) can be implemented with a very low ratio like 0.001 and a very high modulation depth like 400.0.
+.El
+.Bl -tag -width Ds
+.It q [nil]
+Quits the program. Echos a "q" to stdout to kill all other instances of boar in the pipeline.
+.El
+.Bl -tag -width Ds
+.It r/R [float]
+Sets the envelope release for the carrier (r) or modulator (R). This is the amount of time the parameter being enveloped takes to reach zero after its corresponding note has been turned off. Values between 0.0 and 1.0 are honored.
+.El
+.Bl -tag -width Ds
+.It s/S [float]
+Sets the envelope sustain for the carrier (s) or modulator (S). This is the level at which the parameter being enveloped will be multiplied against after the attack and decay have taken place. Values between 0.0 and 1.0 are honored.
+.El
+.Bl -tag -width Ds
+.It v [int]
+Push an integer argument to the parameter pointed to by the parameter (P) command. See the entry for P for more info.
+.El
+.Bl -tag -width Ds
+.It w/W [int]
+Set the waveform for the carrier (w) or modulator (W), where the argument is one of the following:
+.Bd -literal -offset indent
+\& 0 - sine
+\& 1 - square
+\& 2 - triangle
+\& 3 - ramp (sawtooth)
+\& 4 - exponential
+\& 5 - logarithmic
+\& 6 - noise
+.Ed
+.El
+.Sh HISTORY
+boar was written in 2019, but it came out of the ashes of aborted (and far more ambitious) efforts in realtime synthesis dating back to 2014. This modest program largely has John Chowning to thank, as it leverages his groundbreaking work in FM synthesis, best elucidated his book "FM Theory and Applications." Curtis Roads also contributed a wealth of knowledge with his "Computer Music Tutorial." The communities at Vintage Synth Explorer and KVR Audio also patiently guided the author through many basic DSP concepts. 
+.Sh AUTHORS
+Written by Jim Dalrymple. https://dalrym.pl
+.Sh CAVEATS
+boar makes no use of readline. If you'd like to scroll through your input history, please call the program in `rlwrap boar`. While many synthesizer features were deliberately omitted from this program, some, like dithering and free-running LFOs may be forthcoming. 

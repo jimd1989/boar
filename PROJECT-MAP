@@ -1,0 +1,162 @@
+All are encouraged to modify this code as they see fit. This file is meant to
+introduce the codebase and make contributing easier.
+
+/* General info */
+
+All lines, including comments, are under 80 chars in length.
+
+All functions and types defined `static` within a .c file are intended for
+local use within the context of larger functions. Their headers are located at
+the top of the .c file.
+
+All functions and types referenced by other sections of the program are defined
+in a corresponding .h file. These header files are #included liberally, which
+is why they must contain `#pragma once` at the top to avoided redefining
+anything.
+
+All newly-defined structs and enums are typedef'd to StructName and EnumName.
+They are referred to as such throughout the program. Types defined by external
+libraries are not typedef'd, and retain their original formatting.
+
+All struct fields are CamelCase. All enum and #defines are ALL_CAPPED.
+Constants such as these should reveal which file they were defined in. The
+default sample rate, defined in "defaults.h" is DEFAULT_RATE, for instance.
+
+All function names are camelCase. The return type of a function (including any
+possible pointers) is expressed on its own line. The function name and
+parameters follow on the next. Parameter names are camelCase. Their terseness
+or verbosity depends upon how complex the function is. Ideally, an argument
+is an easy to understand abbreviation of its type; most Voice type parameters
+are passed as `v`, etc. The opening brace is included after the parameters,
+and not on its own line.
+
+The body of a function opens with a line break, a /* comment */ that describes
+the function, and another line break. All variables are declared at the top of
+the body. These variables must be initialized during declaration. If there is
+no immediate value to assign to a variable, then it will take a zero-type, such
+as 0, false, NULL, etc. Variables are camelCase. Another line break follows
+variable declaration.
+
+An example function:
+
+static float
+doublePhase(const Osc *o) {
+
+/* Doubles an oscillator's current phase. This makes no sense from a synthesis
+ * standpoint, but is a quick and easy example, so just go with it. */
+
+    const float p = o->Phase;
+
+    return p * 2.0f;
+}
+
+Due to the realtime nature of synthesis, many functions are not referentially
+transparent and do not return values that can be meticulously error-checked.
+It is considered acceptable to modify playback variables in place through void
+procedures. A small audio glitch should not bring the entire system to a
+grinding halt.
+
+This liberal approach to sound should be balanced by more stringent checks on
+initialization and user input. Initialization functions are still often void,
+but they will throw fatal errors with errx() if anything goes wrong. User
+input should be checked for correctness and discarded with a warnx() message
+if it is found lacking.
+
+boar should compile according to the flags in `Makefile`. All warnings should
+be considered errors, and rectified accordingly.
+
+All new features are unacceptable until they've been documented with comments
+and explained in the man file `boar.1`.
+
+/* Specific files */
+
+The files that make up the codebase are described in a specific ground-up
+manner that will hopefully make sense to somebody exploring boar's source
+for the first time. The descriptions here are brief, but more information is
+available in the files themselves. 
+
+/* Universal reference files */
+
+FILE: defaults.h
+Contains #defines used to set default values for various parameters throughout
+the program. Some of these defaults are discarded in favor of user-defined
+settings, while others remain constant.
+
+FILE maximums.h
+Contains constants that set strict upper and lower bounds on user input.
+Nothing here defers to user input.
+
+FILE errors.h
+Contains the Error enum, which is returned by various procedures to signal
+specifically what went wrong with them.
+
+/* Audio initialization */
+
+FILE audio-settings.c audio-settings.h
+Defines the AudioSettings type and its related functions, which parse the
+user input into playback settings. AudioSettings remains immutable after its
+initialization and is only accessible to other parts of the program in a
+read-only manner.
+
+FILE buffers.c buffers.h
+Audio output centers around summing synthesis data into an array of floats,
+then writing it to the soundcard in an array of bytes. These files describe
+Buffer (for internal floats) and ByteBuffer (for soundcard output), which
+accomplish these tasks.
+
+FILE audio-init.c audio-init.h
+Describes the Audio type, which uses AudioSettings to establish a link to the
+sndio device that listens for audio data. The functions defined here only deal
+with the initialization of Audio, and not its operation.
+
+/* Synthesis */
+
+FILE: numerical.c numerical.h
+Miscellaneous numerical functions related to more than one task. Used by
+various parts of the program.
+
+FILE: wavetable-*.h
+Wavetable files are constant arrays of floats that describe one cycle of a
+an arbitrary wave shape. Audio synthesis takes place by referencing values in
+these tables at specific frequencies. All wavetables are bipolar.
+
+FILE: wave.c wave.h
+Describes the WaveType enum, which is used to indicate which constant wavetable
+a sound component should reference while synthesizing audio data.
+
+FILE: envelope.c envelope.h
+Describes the Env type, which is used to apply dynamism to various parts of
+a signal through an ADSR envelope.
+
+FILE synthesis.c synthesis.h
+Defines the Osc type, which generates audio data from wavetables and writes
+them to a Buffer. Also defines the Operator, which couples an Osc with an Env
+for a complete synthesis unit. The bulk of arithmetic functions that govern
+synthesis take place here.
+
+/* Audio playback */
+
+FILE voice.c voice.h
+Defines the Voice type, which takes high-level music theory concepts like
+notes and feeds them to Operators to deal with them in synthesis terms. The
+functions here are a three-way crossroads between the Audio type, the Operator
+types, and user input. All management of polyphonic playback also takes place
+here.
+
+FILE audio-output.c audio-output.h
+After a cycle of data has been synthesized, it is written to the Audio type's
+Buffer. It is the job of the functions in this file to read the Buffer into
+a ByteBuffer and write it to the soundcard.
+
+/* User input */
+
+FILE valid-functions.h
+Defines the ArgStatus enum, which parses user input into types such as ints,
+floats, and strings. Contains the constant array VALID_FUNCTIONS, which
+contains an ArgStatus for every possible command. If the parsed user input for
+a command doesn't match the type specified by ArgStatus, it is discarded.
+
+FILE repl.c repl.h
+Defines the main loop that reads lines of user input from stdin, parses them
+into arguments, and dispatches them to the Audio type to perform actual sound
+generating functions.

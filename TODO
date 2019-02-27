@@ -1,0 +1,68 @@
+Features that boar is lacking, none of which are guaranteed to ever actually
+be implemented. If you are interested in contributing to boar's codebase, these
+may be good ideas to work on.
+
+Char type
+
+Audio dithering:
+A dedicated type should be written to perform dithering when a sample is
+converted from a float to an int16_t. Something similar has already been
+written in earlier iterations of boar; it just needs to be cleaned up and
+checked for subtle errors.
+
+Velocity sensitivity:
+Both carriers and modulators should respond to the velocity of key presses in
+some manner. In MIDI this is a value between 0 and 127. The note (n) command
+could be re-written so that `n 0 ... n 127` refer to key presses at maximum
+velocity, and n values greater than 127 refer to velocity sensitive inputs. The
+responsibility would fall upon external programs to translate these values
+accordingly, as it already does with MIDI note on/off procedures. This
+preserves the ability of a user to operate the REPL without a MIDI keyboard in
+a straightforward manner, but allows him/her to complicate matters with
+additional tools if they wish. The carrier/modular sensitivity to velocity
+could be tweaked with touch (t/T) commands between 0.0 (no sensitivity) and 
+1.0 (max sensitivity).
+
+Free-running modulators:
+Modulators currently oscillate at a fixed ratio to their carrier, which makes
+sense for most FM-esque sounds, but is less useful in emulating LFOs. There
+should also be a global modulator whose frequency and amplitude can be edited
+with float values to the (f/F) commands respectively.
+
+Fixed-rate carriers:
+An option to tell the carrier wave to oscillate at a fixed Hz value, regardless
+of what key is pressed. This would render an individual instance of boar
+musically useless, but could be useful in a larger chain of boars for patches
+that need formants, etc.
+
+Info:
+Running the info command (i), followed by a string, should return information
+about the queried parameter to stderr. Like `i W'` would return the shape of
+the modulator wave, etc.
+
+Help:
+A help (h) command followed by a command char could explain the purpose of
+each command. 
+
+Modify ByteBuffer
+Mixed-down int16_t samples can likely be written directly to it, without the
+need for manual bit-shifting.
+
+Sampling
+A dedicated wavetable based on a .WAV file specified in command-line args.
+Various pitch-shifting algorithms like resampling, SOLA, and phase vocoding.
+Controls over formants and the like. All frequency analysis should ideally take
+place at initialization since the wavetable is known ahead of time. This data,
+assuming it isn't too large, should be available in a dedicated type to ease
+the computational impact of frequency domain pitching. Samples used as
+envelopes should maybe use the first 4096 values of their tables.
+
+Value
+In addition to the (v) value command that accepts integers, there may need to
+be a (V) command for floats. This space has been reserved for future-proofing.
+
+Sample + Hold
+In addition to pure noise signals, there should be some kind of s+h feature.
+
+Comments
+Comments in various files should be updated or expanded upon.
