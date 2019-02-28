@@ -238,33 +238,44 @@ dispatchCmd(Repl *r) {
             setDecayLevel(&r->Audio->Voices.Carrier.Env,
                     truncateFloat(r->Cmd.Arg.F, 1.0f));
             break;
+        case 'E':
+            r->Pointer = r->Cmd.Arg.S[0];
+            break;
         case 'e':
             echoString(r->Cmd.Arg.S);
+            break;
+        case 'L':
+            setModulation(&r->Audio->Voices, r->Cmd.Arg.F);
             break;
         case 'l':
             setVolume(r->Audio, truncateFloat(r->Cmd.Arg.F, 1.0f));
             break;
-        case 'm':
-            setModulation(&r->Audio->Voices, r->Cmd.Arg.F);
-            break;
         case 'n':
             echoNoteCheck(r);
-            voiceOn(&r->Audio->Voices, r->Cmd.Arg.I);
+            voiceOn(&r->Audio->Voices, (uint16_t)r->Cmd.Arg.I);
             break;
         case 'o':
             echoNoteCheck(r);
-            voiceOff(&r->Audio->Voices, r->Cmd.Arg.I);
+            voiceOff(&r->Audio->Voices, (uint16_t)r->Cmd.Arg.I);
             break;
         case 'P':
-            r->Pointer = r->Cmd.Arg.S[0];
+            setPitchRatio(&r->Audio->Voices, false, r->Cmd.Arg.F);
             break;
         case 'p':
-            setPitchRatio(&r->Audio->Voices, r->Cmd.Arg.F);
+            setPitchRatio(&r->Audio->Voices, true, r->Cmd.Arg.F);
             break;
         case 'q':
             fprintf(DEFAULT_ECHO_FILE, "q\n");
             r->Audio->Active = false;
             return ERROR_EXIT;
+        case 'T':
+            selectWave(&r->Audio->Voices.Modulator.VelocityCurve, 
+                    r->Cmd.Arg.I);
+            break;
+        case 't':
+            selectWave(&r->Audio->Voices.Carrier.VelocityCurve, 
+                    r->Cmd.Arg.I);
+            break;
         case 'R':
             setReleaseLevel(&r->Audio->Voices.Modulator.Env,
                     truncateFloat(r->Cmd.Arg.F, 1.0f));
@@ -289,6 +300,12 @@ dispatchCmd(Repl *r) {
             break;
         case 'w':
             selectWave(&r->Audio->Voices.Carrier.Wave, r->Cmd.Arg.I);
+            break;
+        case 'X':
+            setFixedRate(&r->Audio->Voices, false, r->Cmd.Arg.F);
+            break;
+        case 'x':
+            setFixedRate(&r->Audio->Voices, true, r->Cmd.Arg.F);
             break;
     }
     return ERROR_OK;

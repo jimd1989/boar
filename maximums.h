@@ -32,3 +32,6 @@
 
 /* The smallest float value. Used to avoid zeroes. */
 #define MIN_FLOAT 0.000001f
+
+/* The maximum MIDI parameter value */
+#define MAX_MIDI_VALUE 127

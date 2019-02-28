@@ -2,6 +2,7 @@
 
 #include "buffers.h"
 #include "envelope.h"
+#include "velocity.h"
 #include "wave.h"
 
 /* types */
@@ -19,14 +20,19 @@ typedef struct Osc {
     float          Pitch;
     Buffer       * Buffer;
     Wave         * Wave;
+    Velocity       Velocity;
 } Osc;
 
 typedef struct Operator {
 
-/* Couples an Osc with an Env for organization's sake. */
+/* Couples an Osc with an Env for organization's sake. Contains pointers to
+ * values in a parent Operators struct, which govern the fixed rate and pitch
+ * ratio values of the Operator. */
 
-    Osc Osc;
-    Env Env;
+    float       * FixedRate;
+    float       * Ratio;
+    Osc           Osc;
+    Env           Env;
 } Operator;
 
 typedef struct Operators {
@@ -34,13 +40,18 @@ typedef struct Operators {
 /* A master Operator that contains the wave and envelope settings that
  * individual child Operators point to. No oscillator information is contained
  * here, as that is decided on a Voice by Voice basis. */
-
+    
+    float       FixedRate;    
+    float       Ratio;
     Wave        Wave;
+    Wave        VelocityCurve;
     Envs        Env;
 
 } Operators;
 
 /* headers */
+float hzToPitch(const float, const unsigned int);
 float pitch(const unsigned int, const unsigned int);
+void setPitch(Operator *, const unsigned int, const unsigned int);
 float interpolate(const float, const Wave *);
 void fillCarrierBuffer(Operator *, Operator *m);

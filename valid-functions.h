@@ -85,27 +85,27 @@ const ArgStatus VALID_FUNCTIONS[256] = {
     ARG_INVALID,
     ARG_INVALID,
     ARG_FLOAT,    /* D */
+    ARG_STRING,   /* E */
     ARG_INVALID,
     ARG_INVALID,
     ARG_INVALID,
     ARG_INVALID,
     ARG_INVALID,
     ARG_INVALID,
+    ARG_FLOAT,    /* L */
     ARG_INVALID,
     ARG_INVALID,
     ARG_INVALID,
-    ARG_INVALID,
-    ARG_INVALID,
-    ARG_STRING,   /* P */
+    ARG_FLOAT,    /* P */
     ARG_INVALID,
     ARG_FLOAT,    /* R */
     ARG_FLOAT,    /* S */
-    ARG_INVALID,
+    ARG_INT,      /* T */
     ARG_INVALID,
     ARG_INVALID,
     ARG_INT,      /* W */
-    ARG_INVALID,
-    ARG_INVALID,
+    ARG_FLOAT,    /* X */
+    ARG_INVALID, 
     ARG_INVALID,
     ARG_INVALID,
     ARG_INVALID,
@@ -125,18 +125,18 @@ const ArgStatus VALID_FUNCTIONS[256] = {
     ARG_INVALID,
     ARG_INVALID,
     ARG_FLOAT,   /* l */
-    ARG_FLOAT,   /* m */
+    ARG_INVALID,
     ARG_INT,     /* n */
     ARG_INT,     /* o */
     ARG_FLOAT,   /* p */
     ARG_NIL,     /* q */
     ARG_FLOAT,   /* r */
     ARG_FLOAT,   /* s */
-    ARG_INVALID,
+    ARG_INT,     /* t */
     ARG_INVALID,
     ARG_INT,     /* v */
     ARG_INT,     /* w */
-    ARG_INVALID,
+    ARG_FLOAT,   /* x */
     ARG_INVALID,
     ARG_INVALID,
     ARG_INVALID,

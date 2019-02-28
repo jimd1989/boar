@@ -4,6 +4,7 @@
 
 #include "errors.h"
 #include "wavetable-exponential.h"
+#include "wavetable-flat.h"
 #include "wavetable-logarithmic.h"
 #include "wavetable-ramp.h"
 #include "wavetable-sine.h"
@@ -37,8 +38,11 @@ selectWave(Wave *w, WaveType wt) {
             break;
         case WAVE_TYPE_NOISE:
             break;
+        case WAVE_TYPE_FLAT:
+            w->Table = WAVE_FLAT;
+            break;
         default:
-            warnx("Choose a wave between 0 and %d", WAVE_TYPE_NOISE);
+            warnx("Choose a wave between 0 and %d", WAVE_TYPE_FLAT);
             return;
     }
     w->Type = wt;

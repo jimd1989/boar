@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "audio-settings.h"
@@ -17,7 +18,6 @@ typedef struct Voice {
  * Voice.Modulator's buffer. */
 
     unsigned int  Key;
-    float       * Ratio;
     Operator      Carrier;
     Operator      Modulator;
 } Voice;
@@ -38,7 +38,6 @@ typedef struct Voices {
     unsigned int  Current;
     unsigned int  Rate;
     float         Amplitude;
-    float         Ratio;
     size_t        N;
     uint64_t      Phase;
     Operators     Carrier;
@@ -48,10 +47,11 @@ typedef struct Voices {
 } Voices;
 
 /* headers */
-void voiceOn(Voices *, const unsigned int);
-void voiceOff(Voices *, const unsigned int);
+void voiceOn(Voices *, const uint16_t);
+void voiceOff(Voices *, const uint16_t);
 void pollVoice(Voice *);
-void setPitchRatio(Voices *, const float);
+void setPitchRatio(Voices *, const bool, const float);
+void setFixedRate(Voices *, const bool, const float);
 void setModulation(Voices *, const float);
 void makeVoices(Voices *, Buffer *, const AudioSettings *);
 void killVoices(Voices *);

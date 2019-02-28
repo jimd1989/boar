@@ -18,7 +18,8 @@ typedef enum EnvStage {
 
 typedef struct EnvStep {
 
-/* Represents one stage of an Env (see below). */
+/* Represents one stage of an Env (see below). Every stage contains its own
+ * wavetable, which it iterpolates a value from at each applyEnv() call. */
 
     float       Level;
     Wave        Wave;

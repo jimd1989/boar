@@ -3,6 +3,10 @@ be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
 Char type
+Currently the extra (E) command takes the first character from a string
+argument, ignoring whatever is behind it. Should the program explicitly
+parse for a single char parameter, and return an error when anything longer
+is provided?
 
 Audio dithering:
 A dedicated type should be written to perform dithering when a sample is
@@ -11,29 +15,13 @@ written in earlier iterations of boar; it just needs to be cleaned up and
 checked for subtle errors.
 
 Velocity sensitivity:
-Both carriers and modulators should respond to the velocity of key presses in
-some manner. In MIDI this is a value between 0 and 127. The note (n) command
-could be re-written so that `n 0 ... n 127` refer to key presses at maximum
-velocity, and n values greater than 127 refer to velocity sensitive inputs. The
-responsibility would fall upon external programs to translate these values
-accordingly, as it already does with MIDI note on/off procedures. This
-preserves the ability of a user to operate the REPL without a MIDI keyboard in
-a straightforward manner, but allows him/her to complicate matters with
-additional tools if they wish. The carrier/modular sensitivity to velocity
-could be tweaked with touch (t/T) commands between 0.0 (no sensitivity) and 
-1.0 (max sensitivity).
+Implemented, but not tested on an actual keyboard yet. I don't have one!
 
 Free-running modulators:
-Modulators currently oscillate at a fixed ratio to their carrier, which makes
-sense for most FM-esque sounds, but is less useful in emulating LFOs. There
-should also be a global modulator whose frequency and amplitude can be edited
-with float values to the (f/F) commands respectively.
-
-Fixed-rate carriers:
-An option to tell the carrier wave to oscillate at a fixed Hz value, regardless
-of what key is pressed. This would render an individual instance of boar
-musically useless, but could be useful in a larger chain of boars for patches
-that need formants, etc.
+An additional modulator that runs against the signal at a fixed frequency and
+scaled depth may be desirable. This would allow the performer to add LFO
+effects like vibrato to a C:M pair that is modulating at a much higher
+frequency.
 
 Info:
 Running the info command (i), followed by a string, should return information
@@ -64,5 +52,14 @@ be a (V) command for floats. This space has been reserved for future-proofing.
 Sample + Hold
 In addition to pure noise signals, there should be some kind of s+h feature.
 
-Comments
-Comments in various files should be updated or expanded upon.
+Rotate Waves
+Maybe rotate some of the wavetables so that they are less awkward when used
+as envelope stages.
+
+Key Follow
+There are various instances where the intensity of a parameter can be modified
+based upon which note is being played.
+
+Micro-tuning
+Don't know enough music theory to even consider what the actual implementation
+might look like, but it's still a nice idea.

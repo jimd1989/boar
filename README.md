@@ -45,13 +45,13 @@ You shouldn't hear anything yet. You can change that with the `n` command, which
     n 108
     n 120
 
-A chord of sines should be playing now. These are the fundamental carrier waves. Each one of them has an associated modulator wave that can be adjusted through calls to the `p` and `m` functions. The argument to `p` sets the pitch ratio between a carrier and its modulator. If the carrier is oscillating at 440hz, then `p 2.0` will make its modulator 880hz:
+A chord of sines should be playing now. These are the fundamental carrier waves. Each one of them has an associated modulator wave that can be adjusted through calls to the `P` and `L` functions. The argument to `P` sets the pitch ratio between a carrier and its modulator. If the carrier is oscillating at 440hz, then `P 2.0` will make its modulator 880hz:
 
-    p 2.0
+    P 2.0
 
-You shouldn't hear any change in the sound yet, because the modulation depth is set to 0.0. The intensity of modulation is addressed through the `m` command. Setting it to 1.0 means that the carrier frequency (f<sub>c</sub>) will be offset by the modulating frequency (f<sub>m</sub>) to the full extent of f<sub>m</sub>, since f<sub>m</sub> × 1.0 = f<sub>m</sub>. In other words, the f<sub>c</sub> valued at 440hz is having its frequency modulated ±880hz in a cycle of 880hz:
+You shouldn't hear any change in the sound yet, because the modulation depth is set to 0.0. The intensity of modulation is addressed through the `L` command. Setting it to 1.0 means that the carrier frequency (f<sub>c</sub>) will be offset by the modulating frequency (f<sub>m</sub>) to the full extent of f<sub>m</sub>, since f<sub>m</sub> × 1.0 = f<sub>m</sub>. In other words, the f<sub>c</sub> valued at 440hz is having its frequency modulated ±880hz in a cycle of 880hz:
 
-    m 1.0
+    L 1.0
 
 The modulation should result in a squareish tone: almost like a church organ.
 
@@ -69,17 +69,17 @@ The lowercase command changes the carrier wave, while the uppercase one changes 
 
 Modulators can have lower pitches than their carriers too:
 
-    p 0.5
+    P 0.5
 
 This should also sound like an organ, though with a distinct timbre.
 
-    p 0.001
-    m 400.0
+    P 0.001
+    L 400.0
 
 After entering the above parameters, f<sub>m</sub> is so slow and the modulation is so pronounced that phase of the offset is perceptible to human hearing. This is low frequency oscillation, or an LFO. Playing around with these settings can yield truly alien tones:
 
-    m 3.567
-    p 1.51
+    L 3.567
+    P 1.51
 
 Generally speaking, "non clean" ratios are more harmonically complex. If your ears are hurting at this point, you can turn notes off with `o`:
 
@@ -126,16 +126,16 @@ Listen to how the following settings affect boar:
     S 0.1
     R 0.35
     r 0.35
-    p 2.0
-    m 17.5
+    P 2.0
+    L 17.5
 
 Giving different envelope settings to the modulator results in an effect similar to a filter sweep on an analog synthesizer.
 
-Each A, D, and R stage increments/decrements in a linear manner by default, but their patterns actually just reference the same wavetables available in the `w` and `W` commands. It doesn't make too much musical sense, but you can have a sine curve as an attack, or random noise as a release. These tables can be changed by referencing a specific stage with the parameter, or `P` command. The following will tell boar to modify the modulator attack wave:
+Each A, D, and R stage increments/decrements in a linear manner by default, but their patterns actually just reference the same wavetables available in the `w` and `W` commands. It doesn't make too much musical sense, but you can have a sine curve as an attack, or random noise as a release. These tables can be changed by referencing a specific stage with the extra parameter, or `E` command. The following will tell boar to modify the modulator attack wave:
 
-    P A
+    E A
 
-An integer value can be pushed to the parameter pointed to by `P` with the value command `v`. The following sets the modulator attack to a sine:
+An integer value can be pushed to the parameter pointed to by `E` with the value command `v`. The following sets the modulator attack to a sine:
 
     v 0
 
@@ -149,12 +149,12 @@ will chain together two boars, giving a 4 operator instrument with parallel carr
 
 Of course these extra oscillators are of no use unless they can be given distinct settings. The echo command does this:
 
-    e p 0.001
-    e m 400.0
+    e P 0.001
+    e L 400.0
 
 Commands prefaced with "e" will not be evaluated in the local instance of boar, but echoed to stdout, where the next boar in the pipe can run them. Echoes can stack too:
 
-    e e v 0.0
+    e e l 0.0
 
 This will mute the third boar in the pipe.
 
@@ -174,9 +174,11 @@ Now you have a primitive delay effect:
 
 This pipe-friendly simplicity lends itself to all kinds of extensibility. You can write a script that translates MIDI keyboard input to boar on/off notes, then fire them off to a FIFO that boar is listening to. You can run `sed` somewhere in the pipeline to mess with echoed notes. Go hog wild with your imagination; the shell is your DAW.
 
+Make sure to read `man boar` too. There are even more features, such as touch sensitivity and fixed-rate operators, that are documented there.
+
 ## Caveats
 
-Basic is beautiful, but I'd like to incorporate dithering, free-running LFOs, velocity-sensitive responses, etc. into boar eventually. Keep your nose to the ground for updates.
+Basic is beautiful, but I'd like to incorporate dithering, free-running LFOs,  etc. into boar eventually. Keep your nose to the ground for updates.
 
 ## Acknowledgements
 
