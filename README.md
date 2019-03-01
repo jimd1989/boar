@@ -65,7 +65,7 @@ The lowercase command changes the carrier wave, while the uppercase one changes 
     w 0
     W 0
 
-Modulators can have lower pitches than their carriers too:
+Modulators can have lower pitches too:
 
     P 0.5
 
