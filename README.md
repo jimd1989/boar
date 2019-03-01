@@ -6,8 +6,6 @@ boar was written on OpenBSD with the sndio library as its sole target. If sndio 
 
 Installation is the typical process:
 
-+ `tar xzvf boar.tar.gz`
-+ `cd boar`
 + `make`
 + `make install` (may have to be root)
 + `make uninstall` (to remove)
@@ -45,7 +43,7 @@ You shouldn't hear anything yet. You can change that with the `n` command, which
     n 108
     n 120
 
-A chord of sines should be playing now. These are the fundamental carrier waves. Each one of them has an associated modulator wave that can be adjusted through calls to the `P` and `L` functions. The argument to `P` sets the pitch ratio between a carrier and its modulator. If the carrier is oscillating at 440hz, then `P 2.0` will make its modulator 880hz:
+A chord of sines should be playing now. These are the fundamental carrier waves. Each one of them has an associated modulator wave that can be adjusted through calls to the `P` and `L` functions. The argument to `P` sets the pitch ratio between the modulator and the note played. If the note's frequency is 440hz, then `P 2.0` will make the modulator 880hz:
 
     P 2.0
 
