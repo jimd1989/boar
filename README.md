@@ -176,10 +176,6 @@ This pipe-friendly simplicity lends itself to all kinds of extensibility. You ca
 
 Make sure to read `man boar` too. There are even more features, such as touch sensitivity and fixed-rate operators, that are documented there.
 
-## Caveats
-
-Basic is beautiful, but I'd like to incorporate dithering, free-running LFOs,  etc. into boar eventually. Keep your nose to the ground for updates.
-
 ## Acknowledgements
 
 + [John Chowning](https://en.wikipedia.org/wiki/John_Chowning) is the man. His book _FM Theory and Applications_ was my bible as I learned the basics of synthesis.
