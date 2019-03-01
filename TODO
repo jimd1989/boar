@@ -9,13 +9,13 @@ parse for a single char parameter, and return an error when anything longer
 is provided?
 
 Audio dithering:
-A dedicated type should be written to perform dithering when a sample is
-converted from a float to an int16_t. Something similar has already been
-written in earlier iterations of boar; it just needs to be cleaned up and
-checked for subtle errors.
+Simple audio dithering has been implemented, but I don't have the ears
+(or equipment?) needed to notice its effects.
 
 Velocity sensitivity:
-Implemented, but not tested on an actual keyboard yet. I don't have one!
+Implemented, but not tested on an actual keyboard yet. I don't have one! A
+simple script that plays the same note with velocities between 0 and 127 seems
+to work as intended though.
 
 Free-running modulators:
 An additional modulator that runs against the signal at a fixed frequency and
@@ -63,3 +63,10 @@ based upon which note is being played.
 Micro-tuning
 Don't know enough music theory to even consider what the actual implementation
 might look like, but it's still a nice idea.
+
+Additional inputs
+The ability to assign parameters to modwheels, aftertouch, etc. The interface
+for these devices would have to be generic, with an external program
+converting their values into a proper boar command. Maybe two values could be 
+read through mod (m/M) commands, and the routing of these values assigned
+through the extra parameter (E) interface.

@@ -2,6 +2,7 @@
 
 #include <err.h>
 #include <limits.h>
+#include <math.h>
 #include <sndio.h>
 #include <stdint.h>
 #include <string.h>
@@ -73,13 +74,16 @@ writeSample(ByteBuffer *bb, const int16_t s, const unsigned int i) {
 }
 
 static int16_t
-mixdownSample(const float f, const float amplitude) {
+mixdownSample(const float s, const float amplitude) {
 
-/* Takes a float from Audio.MixingBuffer and returns an int16_t. This function
- * will eventually incorporate other essential audio processing procedures
- * such as dithering. */
+/* Takes a float from Audio.MixingBuffer and returns an int16_t with simple
+ * dither noise added to it. This algorithm was adapted from Jonas Norberg's
+ * post on KVR Audio. */
 
-   return (int16_t)(clip(f) * SHRT_MAX * amplitude);
+    float r = (arc4random() / ((float)RAND_MAX * 0.5f)) - 1.0f;
+    
+    r /= (float)(USHRT_MAX + 1);
+    return (int16_t)(roundf(clip(s + r) * (float)SHRT_MAX) * amplitude);
 }
 
 static void

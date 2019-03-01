@@ -18,8 +18,6 @@
 #include "maximums.h"
 #include "voice.h"
 
-#include <stdio.h>
-
 /* headers */
 static void populateSettings(const AudioSettings *, struct sio_par *); 
 static void openOutput(struct sio_hdl **);
