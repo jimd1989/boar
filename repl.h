@@ -5,33 +5,7 @@
 
 #include "audio-init.h"
 #include "defaults.h"
-
-/* types */
-typedef union Arg {
-
-/* Can be either a 32bit int, float, or string, depending on context. Arg.S
- * is not an independently-allocated string, but rather a pointer to 
- * Repl.Buffer[2], where the argument string of fgets()-snatched user input
- * begins. This is an acceptable solution because the lifetime of an Arg does 
- * not last beyond a single cycle of the REPL. If some long-term reference to 
- * Arg.S is ever required by a different part of the program, then it must be 
- * copied to a newly-allocated stretch of memory. Arg.S also retains its
- * terminating newline, which is useful when echoing strings further down
- * the pipe. */
-
-    uint32_t      I;
-    float         F;
-    char        * S;
-} Arg;
-
-typedef struct Cmd {
-
-/* Represents a single user-issued command, where (uint8_t)Func != ARG_INVALID
- * in the VALID_FUNCTIONS array. */ 
-
-    char        Func;
-    Arg         Arg;
-} Cmd;
+#include "parse.h"
 
 typedef struct Repl {
 

@@ -154,11 +154,15 @@ a ByteBuffer and write it to the soundcard.
 
 /* User input */
 
-FILE valid-functions.h
-Defines the ArgStatus enum, which parses user input into types such as ints,
-floats, and strings. Contains the constant array VALID_FUNCTIONS, which
-contains an ArgStatus for every possible command. If the parsed user input for
-a command doesn't match the type specified by ArgStatus, it is discarded.
+FILE types.h
+Contains bit flags for parsing argument types from user input. Also contains
+TYPE_SIGNATURES, which is an array of the expected argument type for every
+possible command in boar.
+
+FILE parse.c parse.h
+Defines the Cmd type, which is where user input is parsed into program data
+and sent off to execute audio commands. The functions in this file center
+around inferring the type of user input and ensuring it is correct.
 
 FILE repl.c repl.h
 Defines the main loop that reads lines of user input from stdin, parses them
