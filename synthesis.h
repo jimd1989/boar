@@ -13,8 +13,7 @@ typedef struct Osc {
  * WAVE_SINE where the sample resides. Osc.Amplitude governs the depth of
  * modulation or the volume of the note, depending upon whether Osc is a
  * modulator or carrier. At step i of every buffer-filling cycle,
- * Osc.Phase * Osc.Amplitude is written to Osc.Buffer.Values[i]. */
-    
+ * Osc.Phase * Osc.Amplitude is written to Osc.Buffer.Values[i]. */ 
     float          Amplitude;
     float          Phase;
     float          Pitch;
@@ -53,5 +52,4 @@ typedef struct Operators {
 float hzToPitch(const float, const unsigned int);
 float pitch(const unsigned int, const unsigned int);
 void setPitch(Operator *, const unsigned int, const unsigned int);
-float interpolate(const float, const Wave *);
 void fillCarrierBuffer(Operator *, Operator *m);

@@ -2,12 +2,10 @@ Features that boar is lacking, none of which are guaranteed to ever actually
 be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
-Negative numbers
-The REPL now parses negative numbers for floats and ints and assigns them their
-own type, but no function in TYPE_SIGNATURES currently accepts them. Negative
-values for envelopes could invert stages, and negative notes could play their
-waves backwards. These applications should be explored further, but negative
-phase must be safely wrapped first.
+Reverse wave polarity
+Operators and envelopes can read waves backwards, with audible effects. Unsure
+if this behavior should be extended to less practical applications, like
+velocity response curves.
 
 Char type
 Currently the extra (E) command takes the first character from a string

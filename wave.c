@@ -1,8 +1,13 @@
+/*Functions for selecting wave types and reading wavetables. */
+
 #include <err.h>
+#include <stdlib.h>
 
 #include "wave.h"
 
+#include "defaults.h"
 #include "errors.h"
+#include "maximums.h"
 #include "wavetable-exponential.h"
 #include "wavetable-flat.h"
 #include "wavetable-logarithmic.h"
@@ -13,11 +18,14 @@
 
 /* functions */
 void
-selectWave(Wave *w, WaveType wt) {
+selectWave(Wave *w, const int wt) {
 
-/* Assigns a WaveType and pointer to wavetable to a Wave. */
+/* Assigns a WaveType and pointer to wavetable to a Wave. Sets Wave.Polarity
+ * according to the sign of "wt". */
 
-    switch((unsigned int)wt) {
+    unsigned int uwt = abs(wt);
+
+    switch(uwt) {
         case WAVE_TYPE_SINE:
             w->Table = WAVE_SINE;
             break;
@@ -45,5 +53,40 @@ selectWave(Wave *w, WaveType wt) {
             warnx("Choose a wave between 0 and %d", WAVE_TYPE_FLAT);
             return;
     }
-    w->Type = wt;
+    w->Type = uwt;
+    if (wt < 0) {
+        w->Polarity = -1.0f;
+    } else {
+        w->Polarity = 1.0f;
+    }
+}
+
+float
+interpolate(const float phase, const Wave *w) {
+
+/* Performs a linear interpolation on the Wave's table in terms of phase. This
+ * is the primary means of pitching tones in the program. */
+
+    float r, s1, s2;
+    int i = 0;
+    
+    if (w->Type == WAVE_TYPE_NOISE) {
+        /* Generate white noise instead of wavetable lookup. */
+        return (float)arc4random() / (float)UINT_MAX;
+    }
+    i = (int)phase;
+    r = fabsf(phase) - abs(i);
+    s1 = w->Table[(unsigned int)i % DEFAULT_WAVELEN];
+    s2 = w->Table[((unsigned int)i+1) % DEFAULT_WAVELEN];
+    return ((1.0f - r) * s1) + (r * s2);
+}
+
+float
+singleCycleLookup(const float phase, const Wave *w) {
+
+/* Many wavetable referencing types, such as envelopes, apply a single cycle
+ * of a wave to a value. This function performs an interpolation over a
+ * wavetable using a phase between 0.0 and 1.0. */
+
+    return interpolate(phase * (float)MAX_WAVE_INDEX * w->Polarity, w);
 }

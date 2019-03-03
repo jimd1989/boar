@@ -117,19 +117,16 @@ applyEnv(Env *e) {
 /* Returns a sample from the envelope's stage's wavetable based upon the
  * envelope's phase. */
 
-    float phase = 0.0f;
-
     incrementEnv(e);
-    phase = e->Phase * (float)MAX_WAVE_INDEX;
     switch((unsigned int)e->Stage){
         case ENV_ATTACK:
-            return unipolar(interpolate(phase, &e->Attack->Wave));
+            return unipolar(singleCycleLookup(e->Phase, &e->Attack->Wave));
         case ENV_DECAY:
-            return unipolar(interpolate(phase, &e->Decay->Wave));
+            return unipolar(singleCycleLookup(e->Phase, &e->Decay->Wave));
         case ENV_SUSTAIN:
             return *e->Sustain;
         case ENV_RELEASE:
-            return unipolar(interpolate(phase, &e->Release->Wave));
+            return unipolar(singleCycleLookup(e->Phase, &e->Release->Wave));
         default:
             return 0.0f;
     }
@@ -177,7 +174,7 @@ setReleaseLevel(Envs *es, const float f) {
 }
 
 void
-setAttackWave(Envs *es, const WaveType wt) {
+setAttackWave(Envs *es, const int wt) {
 
 /* Sets the wavetable of the attack stage. */
 
@@ -185,7 +182,7 @@ setAttackWave(Envs *es, const WaveType wt) {
 }
 
 void
-setDecayWave(Envs *es, const WaveType wt) {
+setDecayWave(Envs *es, const int wt) {
 
 /* Sets the wavetable of the attack stage. */
 
@@ -193,7 +190,7 @@ setDecayWave(Envs *es, const WaveType wt) {
 }
 
 void
-setReleaseWave(Envs *es, const WaveType wt) {
+setReleaseWave(Envs *es, const int wt) {
 
 /* Sets the wavetable of the attack stage. */
 

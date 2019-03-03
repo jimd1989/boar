@@ -43,29 +43,8 @@ setPitch(Operator *o, const unsigned int note, const unsigned int rate) {
     if (*o->FixedRate) {
         o->Osc.Pitch = hzToPitch(*o->FixedRate, rate);
         return;
-
     }
     o->Osc.Pitch = *o->Ratio * pitch(note, rate);
-}
-
-float
-interpolate(const float phase, const Wave *w) {
-
-/* Performs a linear interpolation on the Wave's table in terms of phase. This
- * is the primary means of pitching tones in the program. */
-
-    float r, s1, s2;
-    int i = 0;
-    
-    if (w->Type == WAVE_TYPE_NOISE) {
-        /* Generate white noise instead of wavetable lookup. */
-        return (float)arc4random() / (float)UINT_MAX;
-    }
-    i = (int)phase;
-    r = fabsf(phase) - abs(i);
-    s1 = w->Table[(unsigned int)i % DEFAULT_WAVELEN];
-    s2 = w->Table[((unsigned int)i+1) % DEFAULT_WAVELEN];
-    return ((1.0f - r) * s1) + (r * s2);
 }
 
 static void
@@ -81,7 +60,7 @@ fillModulatorBuffer(Operator *m) {
     Osc *o = &m->Osc;
 
     for (; i < o->Buffer->Size; i++) {
-        o->Phase += o->Pitch;
+        o->Phase += o->Pitch * o->Wave->Polarity;
         o->Phase = fmodf(o->Phase, (float)DEFAULT_WAVELEN);
         o->Buffer->Values[i] = interpolate(o->Phase, o->Wave) * o->Amplitude *
             applyEnv(&m->Env) * o->Velocity.Sensitivity;
@@ -98,7 +77,7 @@ modulate(Osc *c, Osc *m, unsigned int i) {
  * discrete point in time i. This distorted carrier phase is then interpolated
  * against the carrier Osc's wavetable. */
 
-    c->Phase += c->Pitch;
+    c->Phase += c->Pitch * c->Wave->Polarity;
     c->Phase += m->Pitch * m->Buffer->Values[i];
     c->Phase = fmodf(c->Phase, (float)DEFAULT_WAVELEN);
     return interpolate(c->Phase, c->Wave);

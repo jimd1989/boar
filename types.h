@@ -143,7 +143,7 @@ static const unsigned int TYPE_SIGNATURES[256] = {
     TYPE_UINT,       /* T */
     TYPE_UNDEFINED,
     TYPE_UNDEFINED,
-    TYPE_UINT,       /* W */
+    TYPE_INT,        /* W */
     TYPE_UFLOAT,     /* X */
     TYPE_UNDEFINED, 
     TYPE_UNDEFINED,
@@ -174,8 +174,8 @@ static const unsigned int TYPE_SIGNATURES[256] = {
     TYPE_UFLOAT,     /* s */
     TYPE_UINT,       /* t */
     TYPE_UNDEFINED,
-    TYPE_UINT,       /* v */
-    TYPE_UINT,       /* w */
+    TYPE_INT,        /* v */
+    TYPE_INT,        /* w */
     TYPE_UFLOAT,     /* x */
     TYPE_UNDEFINED,
     TYPE_UNDEFINED,

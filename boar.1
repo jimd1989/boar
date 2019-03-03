@@ -11,7 +11,7 @@
 .Pp
 The Barely Operational Audio REPL (BOAR) is a small program that opens a handle to sndio and allows the user to play with carrier/modulator oscillator pairs by issuing commands from stdin. It lacks the features of many other synthesizers, but makes up for this with its light weight and small, readable source code.
 .Pp
-All options are paired with a single integer as their parameter unless otherwise indicated. boar already starts with sane defaults, so the user needn't dive through these too often. Some of these flags are not even implemented yet and have no effect.
+All startup options are paired with a single integer as their parameter unless otherwise indicated. boar already starts with sane defaults, so the user needn't dive through these too often. Some of these flags are not even implemented yet and have no effect.
 .Bl -tag -width Ds
 .It Fl bits
 The bit depth of the audio output. Currently locked to signed 16bit ints. boar will not start if another value is provided. This will change in future releases. 
@@ -36,19 +36,32 @@ The sample rate of audio output.
 .It Fl polyphony
 The number of audio voices that can simultaneously play.
 .El
+.Sh INTERACTIVE SESSION
 .Pp
-Once running, boar accepts a few single character, single argument commands from the user:
+Once running, boar accepts a few single character, single argument commands from the user. The parameters to these commands can be one of the following types:
+.Bd -literal -offset indent
+\& nil          No parameter at all
+\& uint         A unipolar (positive) integer
+\& int          A bipolar (positive or negative) integer
+\& ufloat       A unipolar (positive) integer
+\& float        A bipolar (positive or negative) float
+\& char         A single alphabetic character
+\& string       Any text
+.Ed
 .Pp
+Functions that expect certain numerical types can accept other numbers in some cases. A function that requires a float will understand `1` as `1.0`, for instance. Unipolar functions cannot accept bipolar values, however.
+.Pp
+boar's commands are as follows:
 .Bl -tag -width Ds
 .It # [string]
 A comment. Any text behind this is ignored. Useful in annotating files full of boar commands that are expected to be loaded by the program.
 .El
 .Bl -tag -width Ds
-.It a/A [float]
+.It a/A [ufloat]
 Sets the envelope attack for the carrier (a) or modulator (A). This is the amount of time the parameter being enveloped takes to reach its full effect. Values between 0.0 and 1.0 are honored.
 .El
 .Bl -tag -width Ds
-.It d/D [float]
+.It d/D [ufloat]
 Sets the envelope decay for the carrier (d) or modulator (D). This is the amount of time the parameter being enveloped takes to reach its sustain level after the attack has taken place. Values between 0.0 and 1.0 are honored.
 .El
 .Bl -tag -width Ds
@@ -60,19 +73,19 @@ Extra (E) parameters in boar are hidden behind a stateful interface. Running E a
 All text after e will be echoed in its literal form to stdout. If multiple instances of boar are piped together, this allows the user to change the settings on one instance, but not another. In the pipe `boar | boar`, `e n 60` will play note 60 on the second program in the pipe, but not the first. Echos can be stacked; `e e n 60` would tell the third boar in the pipeline to play, and so on.
 .El
 .Bl -tag -width Ds
-.It l/L [float]
+.It l/L [ufloat]
 Set the level of the carrier (l) and modulator (L). Carrier level is the main volume of the boar instance, and must be between 0.0 and 1.0. Modulation levels determine the modulation index of the operator pair, and can be as high as one wishes. A higher modulation level results in more harmonic content. Extreme modulation will yield reflected frequencies however.
 .El
 .Bl -tag -width Ds
-.It n [uint16]
+.It n [uint]
 Play a note, where the argument is a MIDI note number between 0 and 127. Notes cannot be stacked during pitched playback (but can be if the x/X commands are run). Running n against an already playing note will reset its envelope back to the attack stage. Once the number of active notes exceeds the value specified in the -polyphony flag, new notes will deactivate old ones to make room for themselves. This does not take place in a first-in-first-out manner; the oldest note is not necessarily the first one to have its space stolen. This unpredictability may be undesirable, and could be reformed in future versions of boar. If velocity sensitivity is enabled with t/T commands, then the upper byte of n's argument will be read as a velocity parameter between 0 and 127, while the lower byte will be the usual MIDI note number.
 .El
 .Bl -tag -width Ds
-.It o [int]
+.It o [uint]
 Turns an active note off. A note can be deactivated by passing its MIDI note number, or the 2 byte combination of a velocity value and a note. `o 60` and `o 32316` will both turn off the same note.
 .El
 .Bl -tag -width Ds
-.It p/P [float]
+.It p/P [ufloat]
 Set the pitch ratio between the note and the carrier (p) or modulator (P) oscillator. If a note is 440hz and the ratio is set to 2.0, then the oscillator with have a frequency of 880hz. This allows the performer to detune carriers and alter the timbre of modulators.
 .El
 .Bl -tag -width Ds
@@ -80,37 +93,39 @@ Set the pitch ratio between the note and the carrier (p) or modulator (P) oscill
 Quits the program. Echos a "q" to stdout to kill all other instances of boar in the pipeline.
 .El
 .Bl -tag -width Ds
-.It r/R [float]
+.It r/R [ufloat]
 Sets the envelope release for the carrier (r) or modulator (R). This is the amount of time the parameter being enveloped takes to reach zero after its corresponding note has been turned off. Values between 0.0 and 1.0 are honored.
 .El
 .Bl -tag -width Ds
-.It s/S [float]
+.It s/S [ufloat]
 Sets the envelope sustain for the carrier (s) or modulator (S). This is the level at which the parameter being enveloped will be multiplied against after the attack and decay have taken place. Values between 0.0 and 1.0 are honored.
 .El
 .Bl -tag -width Ds
-.It t/T [int]
+.It t/T [uint]
 Sets the touch sensitivity curve of the carrier (t) or modulator (T). Its argument is one of the wavetables specified in the w/W command entry. Depending upon the curve selected, boar's operators will respond differently to varying pressure on the keyboard. This parameter is set to 7 by default: a flat wavetable that does not respond to pressure at all. Users are advised not to change this value unless they are piping (filtered) musical keyboard input into boar; specifying velocity values in the REPL itself is a tedious process. See the note (n) command for more information.
 .El
 .Bl -tag -width Ds
 .It v [int]
-Push an integer argument to the parameter pointed to by the parameter (P) command. See the entry for P for more info.
+Push an integer argument to the parameter pointed to by the extra parameter (E) command. See the entry for E for more info.
 .El
 .Bl -tag -width Ds
 .It w/W [int]
 Set the waveform for the carrier (w) or modulator (W), where the argument is one of the following:
 .Bd -literal -offset indent
-\& 0 - sine
-\& 1 - square
-\& 2 - triangle
-\& 3 - ramp (sawtooth)
-\& 4 - exponential
-\& 5 - logarithmic
-\& 6 - noise
-\& 7 - flat (silence)
+\& 0    flat (silence)
+\& 1    sine
+\& 2    square
+\& 3    triangle
+\& 4    ramp (sawtooth)
+\& 5    exponential
+\& 6    logarithmic
+\& 7    noise
+\&
 .Ed
+Providing a negative parameter will tell the affected operator to read its wavetable in reverse. The effect is usually not audible with periodic waves, but it can be heard in very slow modulations. 
 .El
 .Bl -tag -width Ds
-.It x/X [float]
+.It x/X [ufloat]
 Sets the carrier (x) or modulator (X) to a fixed frequency in hz. The specific values of notes will no longer have an effect on the operator's pitch. This is useful for patches that require aharmonic content. Fixed frequency mode is exited when x/X is set to 0.0.
 .El
 .Sh HISTORY

@@ -53,7 +53,7 @@ typedef struct Env {
  *  Env.Decay, Env.Sustain, and Env.Release point to externally-defined float
  *  values in a master Envs struct. This allows the program to change envelope
  *  settings for all voices in O(1) time. Env.Phase is also the value that is
- *  multiplied against external parameter x at any given time. */ 
+ *  multiplied against external parameter x at any given time. */
 
     EnvStage      Stage;
     float         Phase;
@@ -82,8 +82,8 @@ void setAttackLevel(Envs *, const float);
 void setDecayLevel(Envs *, const float);
 void setSustainLevel(Envs *, const float);
 void setReleaseLevel(Envs *, const float);
-void setAttackWave(Envs *, const WaveType);
-void setDecayWave(Envs *, const WaveType);
-void setReleaseWave(Envs *, const WaveType);
+void setAttackWave(Envs *, const int);
+void setDecayWave(Envs *, const int);
+void setReleaseWave(Envs *, const int);
 void makeEnv(Envs *, Env *);
 void makeEnvs(Envs *, const unsigned int);
