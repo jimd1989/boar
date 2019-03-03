@@ -55,15 +55,15 @@ The modulation should result in a squareish tone: almost like a church organ.
 
 You can also get an actual square wave at any time by changing the wavetable number with `w` or `W`:
 
-    w 1
-    W 1
+    w 2
+    W 2
 
 A full list of waves is available in `man boar`.
 
 The lowercase command changes the carrier wave, while the uppercase one changes the modulator. You can set them back to sines with:
 
-    w 0
-    W 0
+    w 1
+    W 1
 
 Modulators can have lower pitches too:
 
@@ -135,7 +135,7 @@ Each A, D, and R stage increments/decrements in a linear manner by default, but 
 
 An integer value can be pushed to the parameter pointed to by `E` with the value command `v`. The following sets the modulator attack to a sine:
 
-    v 0
+    v 1
 
 This interface is a slightly unwieldy, but allows the performer to sculpt wave shapes unthinkable on traditional synthesizers.
 
@@ -172,7 +172,7 @@ Now you have a primitive delay effect:
 
 This pipe-friendly simplicity lends itself to all kinds of extensibility. You can write a script that translates MIDI keyboard input to boar on/off notes, then fire them off to a FIFO that boar is listening to. You can run `sed` somewhere in the pipeline to mess with echoed notes. Go hog wild with your imagination; the shell is your DAW.
 
-Make sure to read `man boar` too. There are even more features, such as touch sensitivity and fixed-rate operators, that are documented there.
+Make sure to read `man boar` too. There are even more features, such as touch sensitivity, fixed-rate operators, and reverse waves that are documented there.
 
 ## Acknowledgements
 
