@@ -2,7 +2,6 @@
 
 #include "buffers.h"
 #include "envelope.h"
-#include "velocity.h"
 #include "wave.h"
 
 /* types */
@@ -12,14 +11,17 @@ typedef struct Osc {
  * Osc.Phase is incremented by Osc.Pitch, which serves as the index of
  * WAVE_SINE where the sample resides. Osc.Amplitude governs the depth of
  * modulation or the volume of the note, depending upon whether Osc is a
- * modulator or carrier. At step i of every buffer-filling cycle,
- * Osc.Phase * Osc.Amplitude is written to Osc.Buffer.Values[i]. */ 
+ * modulator or carrier. Osc.KeyMod is the aggregate values of the velocity
+ * and key follow settings of the struck key that engaged the Osc. At step i of
+ * every buffer-filling cycle, Osc.Phase * Osc.Amplitude * Osc.KeyMod is
+ * written to Osc.Buffer.Values[i]. */
+
+    float          KeyMod;
     float          Amplitude;
     float          Phase;
     float          Pitch;
     Buffer       * Buffer;
     Wave         * Wave;
-    Velocity       Velocity;
 } Osc;
 
 typedef struct Operator {
@@ -43,13 +45,10 @@ typedef struct Operators {
     float       FixedRate;    
     float       Ratio;
     Wave        Wave;
-    Wave        VelocityCurve;
     Envs        Env;
 
 } Operators;
 
 /* headers */
-float hzToPitch(const float, const unsigned int);
-float pitch(const unsigned int, const unsigned int);
 void setPitch(Operator *, const unsigned int, const unsigned int);
 void fillCarrierBuffer(Operator *, Operator *m);

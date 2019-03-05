@@ -27,5 +27,5 @@ typedef struct Wave {
 
 /* headers */
 void selectWave(Wave *, const int);
-float interpolate(const float, const Wave *);
-float singleCycleLookup(const float, const Wave *w);
+float interpolate(const Wave *, const float);
+float interpolateCycle(const Wave *, const float);

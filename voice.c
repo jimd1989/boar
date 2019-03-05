@@ -14,12 +14,13 @@
 #include "defaults.h"
 #include "envelope.h"
 #include "errors.h"
+#include "key.h"
 #include "synthesis.h"
-#include "velocity.h"
 #include "wave.h"
 
 /* headers */
 static Voice * findFreeVoice(Voices *);
+static void resetVoice(const Voices *, Voice *, const uint16_t);
 static void setVoicesSettings(Voices *, const AudioSettings *);
 static void allocateVoices(Voices *);
 static void makeOperator(Operators *, Operator *, Buffer *);
@@ -50,6 +51,19 @@ findFreeVoice(Voices *vs) {
     return &vs->All[vs->Current];
 }
 
+static void
+resetVoice(const Voices *vs, Voice *v, const uint16_t note) {
+
+/* Retriggers keyboard settings and envelopes in a Voice. Notes that are
+ * turned off then on again without engaging another voice also trigger this
+ * branch, which could be a cause of subtle errors in future features. Be
+ * advised. */    
+    
+    applyKey(&vs->Keyboard, &v->Carrier, &v->Modulator, note);
+    resetEnv(&v->Carrier.Env);
+    resetEnv(&v->Modulator.Env);
+}
+
 void
 voiceOn(Voices *vs, const uint16_t n) {
 
@@ -60,50 +74,34 @@ voiceOn(Voices *vs, const uint16_t n) {
  * the middle of its buffer-filling operation, changing its values has a
  * negligible side-effect and is considered acceptable by this program. */
 
-    const float vel = getVelocity(n);
     const unsigned int note = getNote(n);
     Voice *v = NULL;
 
     if (note >= DEFAULT_KEYS_NUM) {
-        warnx("Note must be between 0 and %d", DEFAULT_KEYS_NUM - 1);
+        warnx("Note must be between 0 and %u", DEFAULT_KEYS_NUM - 1);
         return;
     }
-    if (vs->Keys[note] != NULL) {
-        /* The note is likely already playing, so reset the envelope and
-         * return. Notes that are turned off then on again without engaging
-         * another voice also trigger this branch, which could be a cause of
-         * subtle errors for future features. */
-        v = vs->Keys[note];
-        setSensitivity(&v->Carrier.Osc.Velocity, vel);
-        setSensitivity(&v->Modulator.Osc.Velocity, vel);
-        resetEnv(&v->Carrier.Env);
-        resetEnv(&v->Modulator.Env);
+    if (vs->Active[note] != NULL) {
+        resetVoice(vs, vs->Active[note], n);
         return;
     }
     v = findFreeVoice(vs);
-    if (v->Key != DEFAULT_NO_KEY) {
+    if (v->Note != DEFAULT_NO_KEY) {
         /* The previous note that held this voice remains as an artifact.
-         * Its entry in Voices.Keys must be removed first. This is a deliberate
-         * design choice that is explained further in voiceOff(). */
-        vs->Keys[v->Key] = NULL;
+         * Its entry in Voices.Active must be removed first. This is a 
+         * deliberate design choice that is explained further in voiceOff(). */
+        vs->Active[v->Note] = NULL;
     }
-    v->Key = note;
-    setPitch(&v->Carrier, note, vs->Rate);
-    setPitch(&v->Modulator, note, vs->Rate);
-    setSensitivity(&v->Carrier.Osc.Velocity, vel);
-    setSensitivity(&v->Modulator.Osc.Velocity, vel);
-    v->Carrier.Osc.Phase = vs->Phase * v->Carrier.Osc.Pitch;
-    v->Modulator.Osc.Phase = vs->Phase * v->Modulator.Osc.Pitch;
-    vs->Keys[note] = v;
-    resetEnv(&v->Modulator.Env);
-    resetEnv(&v->Carrier.Env);
+    v->Note = note;
+    vs->Active[note] = v;
+    resetVoice(vs, v, n);
 }
 
 void
 voiceOff(Voices *vs, const uint16_t n) {
 
 /* Signals a Voice to stop by setting its Env.Stage values to ENV_RELEASE.
- * The pointer to the Voice remains in Voices.Keys until it is overwritten
+ * The pointer to the Voice remains in Voices.Active until it is overwritten
  * by the next instance of voiceOn() that chances upon the Voice. This
  * process is slightly harder to follow, but it ensures that released envelopes
  * have a better shot at decaying naturally before their Voices are stolen. */
@@ -111,10 +109,10 @@ voiceOff(Voices *vs, const uint16_t n) {
     const unsigned int note = getNote(n);
     Voice *v = NULL;
 
-    if (vs->Keys[note] == NULL) {
+    if (vs->Active[note] == NULL) {
         return;
     }
-    v = vs->Keys[note];
+    v = vs->Active[note];
     v->Modulator.Env.Stage = ENV_RELEASE;
     v->Carrier.Env.Stage = ENV_RELEASE;
 }
@@ -138,6 +136,7 @@ setPitchRatio(Voices *vs, const bool isCarrier, const float r) {
  * change any notes that are currently playing. */
 
     unsigned int i = 0;
+    Voice *v = NULL;
 
     if (isCarrier) {
         vs->Carrier.Ratio = r;
@@ -145,11 +144,8 @@ setPitchRatio(Voices *vs, const bool isCarrier, const float r) {
         vs->Modulator.Ratio = r;
     }
     for (; i < vs->N; i++) {
-        if (isCarrier) {
-            setPitch(&vs->All[i].Carrier, vs->All[i].Key, vs->Rate);
-        } else {
-            setPitch(&vs->All[i].Modulator, vs->All[i].Key, vs->Rate);
-        }
+        v = &vs->All[i];
+        applyKey(&vs->Keyboard, &v->Carrier, &v->Modulator, v->Note);
     }
 }
 
@@ -160,6 +156,7 @@ setFixedRate(Voices *vs, const bool isCarrier, const float r) {
  * setPitchRatio(), operating in O(n) time upon all children. */
 
     unsigned int i = 0;
+    Voice *v = NULL;
 
     if (isCarrier) {
         vs->Carrier.FixedRate = r;
@@ -167,11 +164,8 @@ setFixedRate(Voices *vs, const bool isCarrier, const float r) {
         vs->Modulator.FixedRate = r;
     }
     for (; i < vs->N; i++) {
-        if (isCarrier) {
-            setPitch(&vs->All[i].Carrier, vs->All[i].Key, vs->Rate);
-        } else {
-            setPitch(&vs->All[i].Modulator, vs->All[i].Key, vs->Rate);
-        }
+        v = &vs->All[i];
+        applyKey(&vs->Keyboard, &v->Carrier, &v->Modulator, v->Note);
     }
 }
 
@@ -223,7 +217,6 @@ makeOperator(Operators *os, Operator *op, Buffer *b) {
     op->Ratio = &os->Ratio;
     op->Osc.Buffer = b;
     op->Osc.Wave = &os->Wave;
-    op->Osc.Velocity.Wave = &os->VelocityCurve;
     makeEnv(&os->Env, &op->Env);
 }
 
@@ -232,7 +225,7 @@ makeVoice(Voices *vs, Voice *v, Buffer *cB, Buffer *mB) {
 
 /* Initializes a Voice type within Voices.All. */
 
-    v->Key = DEFAULT_NO_KEY;
+    v->Note = DEFAULT_NO_KEY;
     v->Carrier.Osc.Amplitude = vs->Amplitude;
     makeOperator(&vs->Carrier, &v->Carrier, cB);
     makeOperator(&vs->Modulator, &v->Modulator, mB);
@@ -245,7 +238,6 @@ makeOperators(Operators *os, const unsigned int rate) {
 
     makeEnvs(&os->Env, rate);
     selectWave(&os->Wave, WAVE_TYPE_SINE);
-    selectWave(&os->VelocityCurve, WAVE_TYPE_FLAT);
 }
 
 void
@@ -265,6 +257,7 @@ makeVoices(Voices *vs, Buffer *cBuffer, const AudioSettings *aos) {
         v = &vs->All[i];
         makeVoice(vs, v, cBuffer, mBuffer);
     }
+    makeKeyboard(&vs->Keyboard, vs->Rate, &vs->Phase);
 }
 
 void

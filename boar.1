@@ -66,11 +66,15 @@ Sets the envelope decay for the carrier (d) or modulator (D). This is the amount
 .El
 .Bl -tag -width Ds
 .It E [char]
-Extra (E) parameters in boar are hidden behind a stateful interface. Running E against one of these parameters will tell boar to point to it. Arguments to this parameter can be pushed with the value (v) command. These extra parameters are the wavetables for carrier (a, d, r) and modulator (A, D, R) envelopes. Entering `E A` will tell boar to modify the modulator attack phase's wavetable. Entering `v 5` will set the modulator attack to a logarithmic slope. See the wavetable command (w/W) for the list of waves.
+Extra (E) parameters in boar are hidden behind a stateful interface. Running E against one of these parameters will tell boar to point to it. Arguments to this parameter can be pushed with the value (v) command. See the next section for more info.
 .El
 .Bl -tag -width Ds
 .It e [string]
 All text after e will be echoed in its literal form to stdout. If multiple instances of boar are piped together, this allows the user to change the settings on one instance, but not another. In the pipe `boar | boar`, `e n 60` will play note 60 on the second program in the pipe, but not the first. Echos can be stacked; `e e n 60` would tell the third boar in the pipeline to play, and so on.
+.El
+.Bl -tag -width Ds
+.It k/K [int]
+Set the key follow curve of the carrier (k) or the modulator (K). The curve is a wavetable from the w/W command. The amplitude of operators will be multiplied by the note number's place along this curve. The performer will usually want to dampen the amplitudes found at higher note numbers, so negative values are recommended to produce reversed curves.
 .El
 .Bl -tag -width Ds
 .It l/L [ufloat]
@@ -101,8 +105,16 @@ Sets the envelope release for the carrier (r) or modulator (R). This is the amou
 Sets the envelope sustain for the carrier (s) or modulator (S). This is the level at which the parameter being enveloped will be multiplied against after the attack and decay have taken place. Values between 0.0 and 1.0 are honored.
 .El
 .Bl -tag -width Ds
-.It t/T [uint]
-Sets the touch sensitivity curve of the carrier (t) or modulator (T). Its argument is one of the wavetables specified in the w/W command entry. Depending upon the curve selected, boar's operators will respond differently to varying pressure on the keyboard. This parameter is set to 7 by default: a flat wavetable that does not respond to pressure at all. Users are advised not to change this value unless they are piping (filtered) musical keyboard input into boar; specifying velocity values in the REPL itself is a tedious process. See the note (n) command for more information.
+.It t/T [int]
+Sets the touch sensitivity curve of the carrier (t) or modulator (T). Its argument is one of the wavetables specified in the w/W command entry. Depending upon the curve selected, boar's operators will respond differently to varying pressure on the keyboard. This parameter is set to 0 by default: a flat wavetable that does not respond to pressure at all. Users are advised not to change this value unless they are piping (filtered) musical keyboard input into boar; specifying velocity values in the REPL itself is a tedious process. See the note (n) command for more information.
+.El
+.Bl -tag -width Ds
+.It U [uint]
+Selects a note number to tune. When the tuning command (u) is run, it will target this note.
+.El
+.Bl -tag -width Ds
+.It u [ufloat]
+Tunes the selected note's (U) pitch by a float factor. Entering `u 0.75` will tell the selected note to play at three quarters its normal frequency, for instance. Alternative scales can be implemented by tuning each note in terms of an offset from the standard twelve-tone series.
 .El
 .Bl -tag -width Ds
 .It v [int]
@@ -127,6 +139,26 @@ Providing a negative parameter will tell the affected operator to read its wavet
 .Bl -tag -width Ds
 .It x/X [ufloat]
 Sets the carrier (x) or modulator (X) to a fixed frequency in hz. The specific values of notes will no longer have an effect on the operator's pitch. This is useful for patches that require aharmonic content. Fixed frequency mode is exited when x/X is set to 0.0.
+.El
+.Sh EXTRA PARAMETERS
+.Pp
+The following characters are valid arguments to the extra parameters (E) command. Each one is modified by an integer pushed by the value (v) command:
+.Pp
+.Bl -tag -width Ds
+.It a/A
+The wavetable of the attack stage of a carrier (a) or modulator (A) envelope. Accepts negative values for backwards wavetables.
+.El
+.Bl -tag -width Ds
+.It d/D
+The wavetable of the decay stage of a carrier (d) or modulator (D) envelope. Accepts negative values for backwards wavetables.
+.El
+.Bl -tag -width Ds
+.It r/R
+The wavetable of the release stage of a carrier (r) or modulator (R) envelope. Accepts negative values for backwards wavetables.
+.El
+.Bl -tag -width Ds
+.It u
+Which parameter the tuning commands (u/U) should affect. 0 alters carrier tuning and 1 alters the modulator.
 .El
 .Sh HISTORY
 boar was written in 2019, but it came out of the ashes of aborted (and far more ambitious) efforts in realtime synthesis dating back to 2014. This modest program largely has John Chowning to thank, as it leverages his groundbreaking work in FM synthesis, best elucidated his book "FM Theory and Applications." Curtis Roads also contributed a wealth of knowledge with his "Computer Music Tutorial." The communities at Vintage Synth Explorer and KVR Audio also patiently guided the author through many basic DSP concepts. 

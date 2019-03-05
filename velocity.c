@@ -6,8 +6,11 @@
 #include "numerical.h"
 #include "wave.h"
 
+/* headers */
+static float getVelocity(const uint16_t note);
+
 /* functions */
-float
+static float
 getVelocity(const uint16_t note) {
 
 /* Note is a set of two bytes. The lower byte is a value between 0 ... 127
@@ -20,23 +23,10 @@ getVelocity(const uint16_t note) {
 
     return (float)(note >> 9) / (float)MAX_MIDI_VALUE;
 }
-
-void
-setSensitivity(Velocity *v, const float vel) {
-
-/* Set Velocity.Sensitivity based upon a truncated lookup to the velocity
- * curve wavetable. */
-
-    const unsigned int i = (unsigned int)(truncateFloat(vel, 1.0f) *
-            (float)MAX_WAVE_INDEX);
+float
+applyVelocityCurve(const Wave *vw, const uint16_t note) {
     
-    v->Sensitivity = unipolar(v->Wave->Table[i]);
-}
-
-unsigned int
-getNote(const uint16_t note) {
-
-/* Returns the lower byte of note, indicating which MIDI note to play. */
-
-    return note & MAX_MIDI_VALUE;
+    const float vel = getVelocity(note);
+    
+    return interpolateCycle(vw, truncateFloat(vel, 1.0f));
 }

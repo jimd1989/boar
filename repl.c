@@ -4,7 +4,6 @@
  * DEFAULT_ECHO_FILE, which can be used to pipe information between multiple
  * instances of boar. */
 
-#include <ctype.h>
 #include <err.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -17,6 +16,7 @@
 #include "audio-output.h"
 #include "defaults.h"
 #include "errors.h"
+#include "key.h"
 #include "parse.h"
 #include "numerical.h"
 #include "voice.h"
@@ -79,6 +79,10 @@ dispatchIntPointer(Repl *r) {
        case 'r':
            setReleaseWave(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.I);
            break;
+       case 'u':
+           selectTuningLayer(&r->Audio->Voices.Keyboard,
+                   (TuningLayer)r->Cmd.Arg.I);
+           break;
        default:
            warnx("No valid parameter specified");
    } 
@@ -114,11 +118,19 @@ dispatchCmd(Repl *r) {
         case 'e':
             echoString(r->Cmd.Arg.S);
             break;
+        case 'K':
+            selectWave(&r->Audio->Voices.Keyboard.Modulator.KeyFollowCurve,
+                    r->Cmd.Arg.I);
+            break;
+        case 'k':
+            selectWave(&r->Audio->Voices.Keyboard.Carrier.KeyFollowCurve,
+                    r->Cmd.Arg.I);
+            break;
         case 'L':
             setModulation(&r->Audio->Voices, r->Cmd.Arg.F);
             break;
         case 'l':
-            setVolume(r->Audio, truncateFloat(r->Cmd.Arg.F, 1.0f));
+            setVolume(r->Audio, r->Cmd.Arg.F);
             break;
         case 'n':
             echoNoteCheck(r);
@@ -138,14 +150,6 @@ dispatchCmd(Repl *r) {
             fprintf(DEFAULT_ECHO_FILE, "q\n");
             r->Audio->Active = false;
             return ERROR_EXIT;
-        case 'T':
-            selectWave(&r->Audio->Voices.Modulator.VelocityCurve, 
-                    r->Cmd.Arg.I);
-            break;
-        case 't':
-            selectWave(&r->Audio->Voices.Carrier.VelocityCurve, 
-                    r->Cmd.Arg.I);
-            break;
         case 'R':
             setReleaseLevel(&r->Audio->Voices.Modulator.Env,
                     truncateFloat(r->Cmd.Arg.F, 1.0f));
@@ -161,6 +165,20 @@ dispatchCmd(Repl *r) {
         case 's':
             setSustainLevel(&r->Audio->Voices.Carrier.Env,
                     truncateFloat(r->Cmd.Arg.F, 1.0f));
+            break;
+        case 'T':
+            selectWave(&r->Audio->Voices.Keyboard.Modulator.VelocityCurve, 
+                    r->Cmd.Arg.I);
+            break;
+        case 't':
+            selectWave(&r->Audio->Voices.Keyboard.Carrier.VelocityCurve, 
+                    r->Cmd.Arg.I);
+            break;
+        case 'U':
+            selectTuningKey(&r->Audio->Voices.Keyboard, r->Cmd.Arg.I);
+            break;
+        case 'u':
+            tuneKey(&r->Audio->Voices.Keyboard, r->Cmd.Arg.F);
             break;
         case 'v':
             dispatchIntPointer(r);

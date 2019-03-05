@@ -138,6 +138,11 @@ them to a Buffer. Also defines the Operator, which couples an Osc with an Env
 for a complete synthesis unit. The bulk of arithmetic functions that govern
 synthesis take place here.
 
+FILE key.c key.h
+Defines the Keyboard type, which translates MIDI key numbers into internal Osc
+data. Velocity, key following, and micro-tuning take are implemented using the
+Keyboard and its related functions.
+
 /* Audio playback */
 
 FILE voice.c voice.h

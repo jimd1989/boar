@@ -5,8 +5,10 @@
 
 #include <stdbool.h>
 
-#include "maximums.h"
 #include "numerical.h"
+
+#include "maximums.h"
+#include "wavetable-exponential.h"
 
 /* functions */
 float
@@ -43,6 +45,20 @@ clip(const float s) {
     } else {
         return s;
     }
+}
+
+float
+expCurve(const float f) {
+
+/* Takes a float value between 0.0 and 1.0 and returns another value between
+ * -1.0 and 1.0 from a wavetable representing an exponential function. This
+ * value must be made unipolar again before it is of any use to envelopes.
+ * The curve is applied to diminish the presence of extreme values rarely used
+ * as arguments to envelopes. Interpolation is foresaken for basic truncation, 
+ * since the wavetable itself already provides a far superior resolution to
+ * traditional synthesis parameters, which are usually between 0 and 127. */
+
+    return WAVE_EXPONENTIAL[(unsigned int)(f * (DEFAULT_WAVELEN - 1))];
 }
 
 float

@@ -28,7 +28,7 @@ setVolume(Audio *a, const float f) {
 
  /* Sets master amplitude, without getting too loud. */
 
-    a->Amplitude = f;
+    a->Amplitude = unipolar(expCurve(truncateFloat(f, 1.0f)));
 }
 
 static void

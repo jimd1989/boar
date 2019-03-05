@@ -4,4 +4,5 @@
 float truncateFloat(const float, const float);
 float liftFloat(const float, const float);
 float clip(const float);
-float unipolar(const float s);
+float expCurve(const float);
+float unipolar(const float);

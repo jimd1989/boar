@@ -8,10 +8,8 @@
 #include "numerical.h"
 #include "synthesis.h"
 #include "wave.h"
-#include "wavetable-exponential.h"
 
 /* headers */
-static float expCurve(const float);
 static float envSpeed(const unsigned int, const float);
 static void setEnvLevel(const unsigned int, EnvStep *, const float);
 static void incrementAttack(Env *);
@@ -19,20 +17,6 @@ static void incrementDecay(Env *);
 static void incrementRelease(Env *);
 
 /* functions */
-static float
-expCurve(const float f) {
-
-/* Takes a float value between 0.0 and 1.0 and returns another value between
- * -1.0 and 1.0 from a wavetable representing an exponential function. This
- * value must be made unipolar again before it is of any use to envelopes.
- * The curve is applied to diminish the presence of extreme values rarely used
- * as arguments to envelopes. Interpolation is foresaken for basic truncation, 
- * since the wavetable itself already provides a far superior resolution to
- * traditional synthesis parameters, which are usually between 0 and 127. */
-
-    return WAVE_EXPONENTIAL[(unsigned int)(f * (DEFAULT_WAVELEN - 1))];
-}
-
 static float
 envSpeed(const unsigned int rate, const float f) {
 
@@ -120,13 +104,13 @@ applyEnv(Env *e) {
     incrementEnv(e);
     switch((unsigned int)e->Stage){
         case ENV_ATTACK:
-            return unipolar(singleCycleLookup(e->Phase, &e->Attack->Wave));
+            return interpolateCycle(&e->Attack->Wave, e->Phase);
         case ENV_DECAY:
-            return unipolar(singleCycleLookup(e->Phase, &e->Decay->Wave));
+            return interpolateCycle(&e->Decay->Wave, e->Phase);
         case ENV_SUSTAIN:
             return *e->Sustain;
         case ENV_RELEASE:
-            return unipolar(singleCycleLookup(e->Phase, &e->Release->Wave));
+            return interpolateCycle(&e->Release->Wave, e->Phase);
         default:
             return 0.0f;
     }

@@ -12,10 +12,12 @@
 
 /* headers */
 static void fillModulatorBuffer(Operator *);
+static float hzToPitch(const float, const unsigned int);
+static float pitch(const unsigned int, const unsigned int);
 static float modulate(Osc *, Osc *, const unsigned int);
 
 /* functions */
-float
+static float
 hzToPitch(const float hz, const unsigned int rate) {
 
 /* Converts a frequency in Hz to a wavetable increment value. */
@@ -23,7 +25,7 @@ hzToPitch(const float hz, const unsigned int rate) {
     return hz * ((float)DEFAULT_WAVELEN / (float)rate);
 }
 
-float
+static float
 pitch(const unsigned int note, const unsigned int rate) {
 
 /* Calculates the phase increment value for a pitch at the MIDI key number
@@ -62,8 +64,8 @@ fillModulatorBuffer(Operator *m) {
     for (; i < o->Buffer->Size; i++) {
         o->Phase += o->Pitch * o->Wave->Polarity;
         o->Phase = fmodf(o->Phase, (float)DEFAULT_WAVELEN);
-        o->Buffer->Values[i] = interpolate(o->Phase, o->Wave) * o->Amplitude *
-            applyEnv(&m->Env) * o->Velocity.Sensitivity;
+        o->Buffer->Values[i] = interpolate(o->Wave, o->Phase) * o->Amplitude *
+            applyEnv(&m->Env) * o->KeyMod;
     }
 }
 
@@ -80,7 +82,7 @@ modulate(Osc *c, Osc *m, unsigned int i) {
     c->Phase += c->Pitch * c->Wave->Polarity;
     c->Phase += m->Pitch * m->Buffer->Values[i];
     c->Phase = fmodf(c->Phase, (float)DEFAULT_WAVELEN);
-    return interpolate(c->Phase, c->Wave);
+    return interpolate(c->Wave, c->Phase);
 }
 
 void
@@ -95,6 +97,6 @@ fillCarrierBuffer(Operator *c, Operator *m) {
     fillModulatorBuffer(m);
     for (; i < c->Osc.Buffer->Size ; i++) {
         c->Osc.Buffer->Values[i] += modulate(&c->Osc, &m->Osc, i) *
-            c->Osc.Amplitude * applyEnv(&c->Env) * c->Osc.Velocity.Sensitivity;
+            c->Osc.Amplitude * applyEnv(&c->Env) * c->Osc.KeyMod;
     }
 }

@@ -5,6 +5,7 @@
 
 #include "audio-settings.h"
 #include "defaults.h"
+#include "key.h"
 #include "synthesis.h"
 #include "wave.h"
 
@@ -17,7 +18,7 @@ typedef struct Voice {
  * the values in Voice.Carrier's buffer are modulated against the values in
  * Voice.Modulator's buffer. */
 
-    unsigned int  Key;
+    unsigned int  Note;
     Operator      Carrier;
     Operator      Modulator;
 } Voice;
@@ -43,7 +44,8 @@ typedef struct Voices {
     Operators     Carrier;
     Operators     Modulator;
     Voice       * All;
-    Voice       * Keys[DEFAULT_KEYS_NUM];
+    Voice       * Active[DEFAULT_KEYS_NUM];
+    Keyboard      Keyboard;
 } Voices;
 
 /* headers */

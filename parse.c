@@ -135,7 +135,8 @@ parseArg(Cmd *c, const unsigned int t, char *line) {
     const unsigned int expected = TYPE_SIGNATURES[(unsigned int)c->Func];
 
     if (isFlagActive(t, TYPE_FLAG_FLOATING) &&
-            (! isFlagActive(expected, TYPE_FLAG_FLOATING))) {
+            (! isFlagActive(expected, TYPE_FLAG_FLOATING)) &&
+            (expected != TYPE_ANY)) {
         /* If an integer is expected but a float is provided, the float is
          * truncated and converted to an int. */
         if (sscanf(line, "%f", &c->Arg.F) == 0) {

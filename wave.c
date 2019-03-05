@@ -8,6 +8,7 @@
 #include "defaults.h"
 #include "errors.h"
 #include "maximums.h"
+#include "numerical.h"
 #include "wavetable-exponential.h"
 #include "wavetable-flat.h"
 #include "wavetable-logarithmic.h"
@@ -26,6 +27,9 @@ selectWave(Wave *w, const int wt) {
     unsigned int uwt = abs(wt);
 
     switch(uwt) {
+        case WAVE_TYPE_FLAT:
+            w->Table = WAVE_FLAT;
+            break;
         case WAVE_TYPE_SINE:
             w->Table = WAVE_SINE;
             break;
@@ -46,11 +50,8 @@ selectWave(Wave *w, const int wt) {
             break;
         case WAVE_TYPE_NOISE:
             break;
-        case WAVE_TYPE_FLAT:
-            w->Table = WAVE_FLAT;
-            break;
         default:
-            warnx("Choose a wave between 0 and %d", WAVE_TYPE_FLAT);
+            warnx("Choose a wave between 0 and %d", WAVE_TYPE_NOISE);
             return;
     }
     w->Type = uwt;
@@ -62,7 +63,7 @@ selectWave(Wave *w, const int wt) {
 }
 
 float
-interpolate(const float phase, const Wave *w) {
+interpolate(const Wave *w, const float phase) {
 
 /* Performs a linear interpolation on the Wave's table in terms of phase. This
  * is the primary means of pitching tones in the program. */
@@ -82,11 +83,12 @@ interpolate(const float phase, const Wave *w) {
 }
 
 float
-singleCycleLookup(const float phase, const Wave *w) {
+interpolateCycle(const Wave *w, const float phase) {
 
 /* Many wavetable referencing types, such as envelopes, apply a single cycle
  * of a wave to a value. This function performs an interpolation over a
  * wavetable using a phase between 0.0 and 1.0. */
 
-    return interpolate(phase * (float)MAX_WAVE_INDEX * w->Polarity, w);
+    return unipolar(
+            interpolate(w, phase * (float)MAX_WAVE_INDEX * w->Polarity));
 }
