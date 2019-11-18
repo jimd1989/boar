@@ -2,7 +2,16 @@ Features that boar is lacking, none of which are guaranteed to ever actually
 be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
-Char type
+Band-limited wavetables:
+The extra wavetable shapes, such as squares, ramps, etc. will alias and sound
+terrible. It is suggested that multiple wavetables be available for each shape,
+set at different frequencies. The interpolation function will read from the
+closest-pitched table, ensuring that its read speed never has to exceed 1.0.
+The exact meaning of "band-limited wavetable" will require further study for 
+the author to actually understand. This should be considered the most essential
+fix at the moment.
+
+Char type:
 Currently the extra (E) command takes the first character from a string
 argument, ignoring whatever is behind it. Should the program explicitly
 parse for a single char parameter, and return an error when anything longer
@@ -22,11 +31,11 @@ Help:
 A help (h) command followed by a command char could explain the purpose of
 each command. 
 
-Modify ByteBuffer
+Modify ByteBuffer:
 Mixed-down int16_t samples can likely be written directly to it, without the
 need for manual bit-shifting.
 
-Sampling
+Sampling:
 A dedicated wavetable based on a .WAV file specified in command-line args.
 Various pitch-shifting algorithms like resampling, SOLA, and phase vocoding.
 Controls over formants and the like. All frequency analysis should ideally take
@@ -35,18 +44,18 @@ assuming it isn't too large, should be available in a dedicated type to ease
 the computational impact of frequency domain pitching. Samples used as
 envelopes should maybe use the first 4096 values of their tables.
 
-Value
+Value:
 In addition to the (v) value command that accepts integers, there may need to
 be a (V) command for floats. This space has been reserved for future-proofing.
 
-Sample + Hold
+Sample + Hold:
 In addition to pure noise signals, there should be some kind of s+h feature.
 
-Rotate Waves
+Rotate Waves:
 Maybe rotate some of the wavetables so that they are less awkward when used
 as envelope stages.
 
-Additional inputs
+Additional inputs:
 The ability to assign parameters to modwheels, aftertouch, etc. The interface
 for these devices would have to be generic, with an external program
 converting their values into a proper boar command. Maybe two values could be 
