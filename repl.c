@@ -223,17 +223,22 @@ repl(Repl *r) {
  * them to the Audio struct for processing. */
 
     Error err = 0;
+    char *token = NULL;
 
     warnx("Welcome. You can exit at any time by pressing q + enter.");
     while (fgets(r->Buffer, DEFAULT_LINESIZE, stdin) != NULL) {
-        err = parseLine(&r->Cmd, r->Buffer);
-        if (err != ERROR_OK) {
-            printParseErr(err, r->Buffer);
-        } else {
-            err = dispatchCmd(r);
-            if (err == ERROR_EXIT) {
-                return;
+        token = strtok(r->Buffer, ";");
+        while (token != NULL) {
+            err = parseLine(&r->Cmd, token);
+            if (err != ERROR_OK) {
+                printParseErr(err, r->Buffer);
+            } else {
+                err = dispatchCmd(r);
+                if (err == ERROR_EXIT) {
+                    return;
+                }
             }
+            token = strtok(NULL, ";");
         }
     }
 }
