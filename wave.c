@@ -9,13 +9,13 @@
 #include "errors.h"
 #include "maximums.h"
 #include "numerical.h"
-#include "wavetable-exponential.h"
-#include "wavetable-flat.h"
-#include "wavetable-logarithmic.h"
-#include "wavetable-ramp.h"
-#include "wavetable-sine.h"
-#include "wavetable-square.h"
-#include "wavetable-triangle.h"
+#include "wavetables/exponential.h"
+#include "wavetables/flat.h"
+#include "wavetables/logarithmic.h"
+#include "wavetables/saw.h"
+#include "wavetables/sine.h"
+#include "wavetables/square.h"
+#include "wavetables/triangle.h"
 
 /* functions */
 void
@@ -28,25 +28,25 @@ selectWave(Wave *w, const int wt) {
 
     switch(uwt) {
         case WAVE_TYPE_FLAT:
-            w->Table = WAVE_FLAT;
+            w->Table = WAVE_FLATS[0];
             break;
         case WAVE_TYPE_SINE:
-            w->Table = WAVE_SINE;
+            w->Table = WAVE_SINES[0];
             break;
         case WAVE_TYPE_SQUARE:
-            w->Table = WAVE_SQUARE;
+            w->Table = WAVE_SQUARES[0];
             break;
         case WAVE_TYPE_TRIANGLE:
-            w->Table = WAVE_TRIANGLE;
+            w->Table = WAVE_TRIANGLES[0];
             break;
         case WAVE_TYPE_RAMP:
-            w->Table = WAVE_RAMP;
+            w->Table = WAVE_SAWS[0];
             break;
         case WAVE_TYPE_EXPONENTIAL:
-            w->Table = WAVE_EXPONENTIAL;
+            w->Table = WAVE_EXPONENTIALS[0];
             break;
         case WAVE_TYPE_LOGARITHMIC:
-            w->Table = WAVE_LOGARITHMIC;
+            w->Table = WAVE_LOGARITHMICS[0];
             break;
         case WAVE_TYPE_NOISE:
             break;

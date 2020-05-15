@@ -23,10 +23,13 @@
 #define DEFAULT_POLYPHONY 8
 
 /* Length of wavetable (should be a multiple of UINT_MAX) */
-#define DEFAULT_WAVELEN 4096
+#define DEFAULT_WAVELEN 2048
 
 /* Number of possible MIDI notes */
 #define DEFAULT_KEYS_NUM 128
+
+/* Number of octaves, used to segregate band-limited wavetables */
+#define DEFAULT_OCTAVES 12
 
 /* A number greater than the number of possible MIDI notes, for signaling
  * that no note is being played */

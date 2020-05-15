@@ -28,7 +28,7 @@
 #define MAX_ENV_TIME 10.0f
 
 /* The final index of a wavetable. */
-#define MAX_WAVE_INDEX 4095
+#define MAX_WAVE_INDEX 2047
 
 /* The smallest float value. Used to avoid zeroes. */
 #define MIN_FLOAT 0.000001f
