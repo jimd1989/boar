@@ -58,7 +58,7 @@ expCurve(const float f) {
  * since the wavetable itself already provides a far superior resolution to
  * traditional synthesis parameters, which are usually between 0 and 127. */
 
-    return WAVE_EXPONENTIAL_000[(unsigned int)(f * (DEFAULT_WAVELEN - 1))];
+    return WAVE_EXPONENTIALS[0][(unsigned int)(f * (DEFAULT_WAVELEN - 1))];
 }
 
 float
