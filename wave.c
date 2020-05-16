@@ -29,24 +29,31 @@ selectWave(Wave *w, const int wt) {
     switch(uwt) {
         case WAVE_TYPE_FLAT:
             w->Table = WAVE_FLATS[0];
+            w->NewTable = WAVE_FLATS;
             break;
         case WAVE_TYPE_SINE:
             w->Table = WAVE_SINES[0];
+            w->NewTable = WAVE_SINES;
             break;
         case WAVE_TYPE_SQUARE:
             w->Table = WAVE_SQUARES[0];
+            w->NewTable = WAVE_SQUARES;
             break;
         case WAVE_TYPE_TRIANGLE:
             w->Table = WAVE_TRIANGLES[0];
+            w->NewTable = WAVE_TRIANGLES;
             break;
-        case WAVE_TYPE_RAMP:
+        case WAVE_TYPE_SAW:
             w->Table = WAVE_SAWS[0];
+            w->NewTable = WAVE_SAWS;
             break;
         case WAVE_TYPE_EXPONENTIAL:
             w->Table = WAVE_EXPONENTIALS[0];
+            w->NewTable = WAVE_EXPONENTIALS;
             break;
         case WAVE_TYPE_LOGARITHMIC:
             w->Table = WAVE_LOGARITHMICS[0];
+            w->NewTable = WAVE_LOGARITHMICS;
             break;
         case WAVE_TYPE_NOISE:
             break;
@@ -60,6 +67,22 @@ selectWave(Wave *w, const int wt) {
     } else {
         w->Polarity = 1.0f;
     }
+}
+
+float
+newInterpolate(const Wave *w, const float *table, const float phase) {
+    float r, s1, s2;
+    int i = 0;
+
+    if (w->Type == WAVE_TYPE_NOISE) {
+        /* Generate white noise instead of wavetable lookup. */
+        return (float)arc4random() / (float)UINT_MAX;
+    }
+    i = (int)phase;
+    r = fabsf(phase) - abs(i);
+    s1 = table[(unsigned int)i % DEFAULT_WAVELEN];
+    s2 = table[((unsigned int)i+1) % DEFAULT_WAVELEN];
+    return ((1.0f - r) * s1) + (r * s2);
 }
 
 float

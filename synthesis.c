@@ -60,12 +60,16 @@ fillModulatorBuffer(Operator *m) {
     
     unsigned int i = 0;
     Osc *o = &m->Osc;
+    int tableNo = 1 + (int)ilogb(DEFAULT_OCTAVE_SCALING * o->Pitch);
 
+    tableNo = abs(tableNo);
+    tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
     for (; i < o->Buffer->Size; i++) {
         o->Phase += o->Pitch * o->Wave->Polarity;
         o->Phase = fmodf(o->Phase, (float)DEFAULT_WAVELEN);
-        o->Buffer->Values[i] = interpolate(o->Wave, o->Phase) * o->Amplitude *
-            applyEnv(&m->Env) * o->KeyMod;
+        o->Buffer->Values[i] =
+            newInterpolate(o->Wave, o->Wave->NewTable[tableNo], o->Phase) * 
+            o->Amplitude * applyEnv(&m->Env) * o->KeyMod;
     }
 }
 
@@ -79,10 +83,14 @@ modulate(Osc *c, Osc *m, unsigned int i) {
  * discrete point in time i. This distorted carrier phase is then interpolated
  * against the carrier Osc's wavetable. */
 
-    c->Phase += c->Pitch * c->Wave->Polarity;
-    c->Phase += m->Pitch * m->Buffer->Values[i];
-    c->Phase = fmodf(c->Phase, (float)DEFAULT_WAVELEN);
-    return interpolate(c->Wave, c->Phase);
+    const float pitch = (c->Pitch * c->Wave->Polarity) + 
+                        (m->Pitch * m->Buffer->Values[i]);
+    int tableNo = 1 + (int)ilogb(DEFAULT_OCTAVE_SCALING * pitch);
+
+    tableNo = abs(tableNo);
+    tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
+    c->Phase = fmodf(c->Phase + pitch, (float)DEFAULT_WAVELEN);
+    return newInterpolate(c->Wave, c->Wave->NewTable[tableNo], c->Phase);
 }
 
 void

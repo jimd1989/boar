@@ -31,6 +31,10 @@
 /* Number of octaves, used to segregate band-limited wavetables */
 #define DEFAULT_OCTAVES 12
 
+/* Scaling factor to create a unique mapping of octave pitch to wavetable
+ * index */
+#define DEFAULT_OCTAVE_SCALING 4.5f
+
 /* A number greater than the number of possible MIDI notes, for signaling
  * that no note is being played */
 #define DEFAULT_NO_KEY (DEFAULT_KEYS_NUM + 1)
