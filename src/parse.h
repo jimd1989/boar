@@ -17,11 +17,13 @@ typedef union Arg {
 typedef struct Cmd {
 
 /* The representation of a single boar command. Cmd.Func is a character that
- * corresponds with one of boar's functions, and Cmd.Arg is the solitary
- * argument to this function. */
+ * corresponds with one of boar's functions, Cmd.Type is the signature of the
+ * expected argument, and Cmd.Arg is the solitary argument to this function. */
 
-    char        Func;
-    Arg         Arg;
+    char                Func;
+    unsigned int        NewFunc;
+    unsigned int        Type;
+    Arg                 Arg;
 } Cmd;
 
 /* headers */

@@ -12,6 +12,7 @@
 
 #include "parse.h"
 
+#include "defaults.h"
 #include "errors.h"
 #include "types.h"
 
@@ -212,41 +213,99 @@ printArg(unsigned int t) {
 /* new (rough copy) */
 
 static int
-parseFunc(char *s) {
+parseFunc(Cmd *c, char *line) {
 
-    /* return -1 if not a valid func, n for number of spaces used by func
-     * otherwise, including trailing whitespace. Func should be explicit
-     * enum maybe? */
-
-    /* Need to pass cmd/arg type here as well to be populated with enum. */
-
-    /* Save type in cmd struct for quick checking arg later. */
+/* Populates a Cmd struct with the Func and Type of the command depicted in
+ * line. Returns the length of command (and trailing whitespace) to aid further 
+ * parsing. Returns -1 if the command is invalid. */
 
     int span = 1;
     unsigned int type = TYPE_UNDEFINED;
-    unsigned int typeIndex = s[0] - 65;
+    unsigned int typeIndex = line[0] - DEFAULT_ASCII_A;
 
-    if (!isalpha((int)s[0])) {
+    if (!isalpha((int)line[0])) {
         return -1;
     }
-    switch (s[1]) {
+    switch (line[1]) {
         case '.':
             type = TYPE_SIGNATURES_PERIOD[typeIndex];
+            c->NewFunc = typeIndex | TYPE_PERIOD;
             span++;
             break;
         case ':':
             type = TYPE_SIGNATURES_COLON[typeIndex];
+            c->NewFunc = typeIndex | TYPE_COLON;
             span++;
             break;
         default:
-            type = TYPE_SIGNATURES[typeIndex];
+            type = TYPE_SIGNATURES_PURE[typeIndex];
+            c->Type = typeIndex;
     }
     if (type == TYPE_UNDEFINED) {
         return -1;
     }
-    for (s += 2; isblank((int)*s); s++, span++) {
+    c->Type = type;
+    for (line += 2; isblank((int)*line); line++, span++) {
         /* chew up any trailing whitespace after command */
         ;
     }
     return span;
+}
+
+static Error
+newParseArg(Cmd *c, const unsigned int t, char *line) {
+
+/* After isValidArg() has ruled out any contradictory type flags, parseArg()
+ * reads the user input into an actual numerical value that can be used by
+ * boar commands. Floats and ints can be cast to one another to meet function
+ * argument expectations. */
+
+    if (isFlagActive(t, TYPE_FLAG_FLOATING) &&
+            (! isFlagActive(c->Type, TYPE_FLAG_FLOATING)) &&
+            (c->Type != TYPE_ANY)) {
+        /* If an integer is c->Type but a float is provided, the float is
+         * truncated and converted to an int. */
+        if (sscanf(line, "%f", &c->Arg.F) == 0) {
+            return ERROR_INPUT;
+        }
+        c->Arg.I = floorf(c->Arg.F);
+    } else if (isFlagActive(c->Type, TYPE_FLAG_FLOATING)) {
+        if (sscanf(line, "%f", &c->Arg.F) == 0) {
+            return ERROR_INPUT;
+        }
+    } else if (isFlagActive(c->Type, TYPE_FLAG_NUMBER)) {
+        if (sscanf(line, "%d", &c->Arg.I) == 0) {
+            return ERROR_INPUT;
+        }
+    } else {
+    /* "line" is the REPL's buffer. Because no value of Cmd.Arg needs to live
+     * in lone-term memory, it is acceptable to point Cmd.Arg.S directly to
+     * the buffer, which is guaranteed not be overwritten during the lifetime
+     * of function evaluation. */
+        c->Arg.S = line;
+    }
+    return ERROR_OK;
+}
+
+Error
+newParseLine(Cmd *c, char *line) {
+
+/* Reads a full line of user input into a Cmd struct, returning any errors
+ * it encounters. */ 
+
+    int span = 0;
+    unsigned int t = TYPE_UNDEFINED;
+
+    span = parseFunc(c, line);
+    if (span == -1) {
+        return ERROR_FUNCTION;
+    }
+    line += span;
+    t = readArg(line);
+    if (!isValidArg(c->Type, t)) {
+        warnx("Invalid argument %s. Expected %s, got %s", line,
+                printArg(c->Type), printArg(t));
+        return ERROR_ARG;
+    }
+    return newParseArg(c, t, line);
 }

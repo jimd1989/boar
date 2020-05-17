@@ -16,6 +16,7 @@
 #include "audio-output.h"
 #include "defaults.h"
 #include "errors.h"
+#include "funcs.h"
 #include "key.h"
 #include "parse.h"
 #include "numerical.h"
@@ -227,8 +228,8 @@ repl(Repl *r) {
     warnx("Welcome. You can exit at any time by pressing q + enter.");
     while (fgets(r->Buffer, DEFAULT_LINESIZE, stdin) != NULL) {
         span = strcspn(r->Buffer, "\n");
-        if (span == 0) {
-            /* ignore blank input */
+        if (span == 0 || r->Buffer[0] == '#') {
+            /* ignore blank or commented input */
             ;
         } else {
             /* read multiple commands buffered by semicolons */
@@ -249,3 +250,7 @@ repl(Repl *r) {
         }
     }
 }
+
+/* new */
+
+/* need a newDispatchCmd that matches against enums in funcs.h */

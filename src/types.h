@@ -51,6 +51,12 @@
 /* Signifies that any and all input is valid for a function. */
 #define TYPE_ANY (unsigned int)(1 << 30)
 
+/* A command with a "." adornment */
+#define TYPE_PERIOD (unsigned int)(1 << 7)
+
+/* A command with a ":" adornment */
+#define TYPE_COLON (unsigned int)(1 << 8)
+
 /* An array of expected argument types for commands with an unadorned
  * character such as (a), (d), etc */
 static const unsigned int TYPE_SIGNATURES_PURE[58] = {
