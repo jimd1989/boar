@@ -63,7 +63,8 @@ input should be checked for correctness and discarded with a warnx() message
 if it is found lacking.
 
 boar should compile according to the flags in `Makefile`. All warnings should
-be considered errors, and rectified accordingly.
+be considered errors, and rectified accordingly. The sole exception to this
+at the moment is OpenBSD's complaint about `rand()`. 
 
 All new features are unacceptable until they've been documented with comments
 and explained in the man file `boar.1`.

@@ -52,20 +52,22 @@ setPitch(Operator *o, const unsigned int note, const unsigned int rate) {
 static void
 fillModulatorBuffer(Operator *m) {
 
-/* The Buffer pointed to by Operator.Osc.Buffer is safe to overwrite on every
- * invocation of this function, as modulation is calculated in a single thread.
- * This procedure assigns an interpolated float sample to every index of the
- * Osc buffer, derived from Osc.Pitch. This buffer is later used to modulate
- * the carrier signal. */
+/* Assigns an interpolated float sample to every index of the Osc buffer, 
+ * derived from Osc.Pitch. This buffer is later used to modulate the carrier 
+ * signal. */
     
     unsigned int i = 0;
     Osc *o = &m->Osc;
+    unsigned int tableNo = 1 + 
+        (unsigned int)ilogb(DEFAULT_OCTAVE_SCALING * o->Pitch);
 
+    tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
     for (; i < o->Buffer->Size; i++) {
         o->Phase += o->Pitch * o->Wave->Polarity;
         o->Phase = fmodf(o->Phase, (float)DEFAULT_WAVELEN);
-        o->Buffer->Values[i] = interpolate(o->Wave, o->Phase) * o->Amplitude *
-            applyEnv(&m->Env) * o->KeyMod;
+        o->Buffer->Values[i] =
+            interpolate(o->Wave, o->Wave->Table[tableNo], o->Phase) * 
+            o->Amplitude * applyEnv(&m->Env) * o->KeyMod;
     }
 }
 
@@ -79,10 +81,14 @@ modulate(Osc *c, Osc *m, unsigned int i) {
  * discrete point in time i. This distorted carrier phase is then interpolated
  * against the carrier Osc's wavetable. */
 
-    c->Phase += c->Pitch * c->Wave->Polarity;
-    c->Phase += m->Pitch * m->Buffer->Values[i];
-    c->Phase = fmodf(c->Phase, (float)DEFAULT_WAVELEN);
-    return interpolate(c->Wave, c->Phase);
+    const float pitch = (c->Pitch * c->Wave->Polarity) + 
+                        (m->Pitch * m->Buffer->Values[i]);
+    unsigned int tableNo = 1 + 
+        (unsigned int)ilogb(DEFAULT_OCTAVE_SCALING * pitch);
+
+    tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
+    c->Phase = fmodf(c->Phase + pitch, (float)DEFAULT_WAVELEN);
+    return interpolate(c->Wave, c->Wave->Table[tableNo], c->Phase);
 }
 
 void

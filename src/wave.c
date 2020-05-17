@@ -9,13 +9,13 @@
 #include "errors.h"
 #include "maximums.h"
 #include "numerical.h"
-#include "wavetable-exponential.h"
-#include "wavetable-flat.h"
-#include "wavetable-logarithmic.h"
-#include "wavetable-ramp.h"
-#include "wavetable-sine.h"
-#include "wavetable-square.h"
-#include "wavetable-triangle.h"
+#include "wavetables/exponential.h"
+#include "wavetables/flat.h"
+#include "wavetables/logarithmic.h"
+#include "wavetables/saw.h"
+#include "wavetables/sine.h"
+#include "wavetables/square.h"
+#include "wavetables/triangle.h"
 
 /* functions */
 void
@@ -28,25 +28,25 @@ selectWave(Wave *w, const int wt) {
 
     switch(uwt) {
         case WAVE_TYPE_FLAT:
-            w->Table = WAVE_FLAT;
+            w->Table = WAVE_FLATS;
             break;
         case WAVE_TYPE_SINE:
-            w->Table = WAVE_SINE;
+            w->Table = WAVE_SINES;
             break;
         case WAVE_TYPE_SQUARE:
-            w->Table = WAVE_SQUARE;
+            w->Table = WAVE_SQUARES;
             break;
         case WAVE_TYPE_TRIANGLE:
-            w->Table = WAVE_TRIANGLE;
+            w->Table = WAVE_TRIANGLES;
             break;
-        case WAVE_TYPE_RAMP:
-            w->Table = WAVE_RAMP;
+        case WAVE_TYPE_SAW:
+            w->Table = WAVE_SAWS;
             break;
         case WAVE_TYPE_EXPONENTIAL:
-            w->Table = WAVE_EXPONENTIAL;
+            w->Table = WAVE_EXPONENTIALS;
             break;
         case WAVE_TYPE_LOGARITHMIC:
-            w->Table = WAVE_LOGARITHMIC;
+            w->Table = WAVE_LOGARITHMICS;
             break;
         case WAVE_TYPE_NOISE:
             break;
@@ -63,22 +63,25 @@ selectWave(Wave *w, const int wt) {
 }
 
 float
-interpolate(const Wave *w, const float phase) {
+interpolate(const Wave *w, const float *table, const float phase) {
 
-/* Performs a linear interpolation on the Wave's table in terms of phase. This
- * is the primary means of pitching tones in the program. */
+/* Since the phase of an oscillator is floating point, the index of the
+ * wavetable it reads may sit "between" two actual samples. Linear
+ * interpolation simulates this by reading from index n and index n+1 of the
+ * table, and weighting these values based upon the distance of the phase
+ * between them. */
 
     float r, s1, s2;
     int i = 0;
-    
+
     if (w->Type == WAVE_TYPE_NOISE) {
         /* Generate white noise instead of wavetable lookup. */
-        return (float)arc4random() / (float)UINT_MAX;
+        return (float)rand() / (float)UINT_MAX;
     }
     i = (int)phase;
     r = fabsf(phase) - abs(i);
-    s1 = w->Table[(unsigned int)i % DEFAULT_WAVELEN];
-    s2 = w->Table[((unsigned int)i+1) % DEFAULT_WAVELEN];
+    s1 = table[(unsigned int)i % DEFAULT_WAVELEN];
+    s2 = table[((unsigned int)i+1) % DEFAULT_WAVELEN];
     return ((1.0f - r) * s1) + (r * s2);
 }
 
@@ -90,5 +93,6 @@ interpolateCycle(const Wave *w, const float phase) {
  * wavetable using a phase between 0.0 and 1.0. */
 
     return unipolar(
-            interpolate(w, phase * (float)MAX_WAVE_INDEX * w->Polarity));
+            interpolate(w, w->Table[0], 
+                phase * (float)MAX_WAVE_INDEX * w->Polarity));
 }
