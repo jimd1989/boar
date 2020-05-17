@@ -2,25 +2,11 @@ Features that boar is lacking, none of which are guaranteed to ever actually
 be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
-Band-limited wavetables:
-The extra wavetable shapes, such as squares, ramps, etc. will alias and sound
-terrible. It is suggested that multiple wavetables be available for each shape,
-set at different frequencies. The interpolation function will read from the
-closest-pitched table, ensuring that its read speed never has to exceed 1.0.
-The exact meaning of "band-limited wavetable" will require further study for 
-the author to actually understand. This should be considered the most essential
-fix at the moment.
-
 Char type:
 Currently the extra (E) command takes the first character from a string
 argument, ignoring whatever is behind it. Should the program explicitly
 parse for a single char parameter, and return an error when anything longer
 is provided?
-
-Velocity sensitivity:
-Implemented, but not tested on an actual keyboard yet. I don't have one! A
-simple script that plays the same note with velocities between 0 and 127 seems
-to work as intended though.
 
 Info:
 Running the info command (i), followed by a string, should return information
@@ -42,7 +28,7 @@ Controls over formants and the like. All frequency analysis should ideally take
 place at initialization since the wavetable is known ahead of time. This data,
 assuming it isn't too large, should be available in a dedicated type to ease
 the computational impact of frequency domain pitching. Samples used as
-envelopes should maybe use the first 4096 values of their tables.
+envelopes should maybe use the first 2048 values of their tables.
 
 Value:
 In addition to the (v) value command that accepts integers, there may need to
@@ -61,3 +47,14 @@ for these devices would have to be generic, with an external program
 converting their values into a proper boar command. Maybe two values could be 
 read through mod (m/M) commands, and the routing of these values assigned
 through the extra parameter (E) interface.
+
+Improved band-limited wavetables:
+A basic table-per-octave solution has been implemented. Oscillators will always
+read from the table in the octave above to prevent aliasing. A more complex
+solution, such as interpolating between two tables, is doable, but I am
+satisfied with the way things sound for now.
+
+Extended syntax:
+Borrowing from the likes of J/K/etc, commands can maybe be two character combos
+such as "a a. a:". This would extend the alphabet and remove the need for the
+awful (E) interface.

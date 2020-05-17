@@ -80,7 +80,7 @@ mixdownSample(const float s, const float amplitude) {
  * dither noise added to it. This algorithm was adapted from Jonas Norberg's
  * post on KVR Audio. */
 
-    float r = (arc4random() / ((float)RAND_MAX * 0.5f)) - 1.0f;
+    float r = (rand() / ((float)RAND_MAX * 0.5f)) - 1.0f;
     
     r /= (float)(USHRT_MAX + 1);
     return (int16_t)(roundf(clip(s + r) * (float)SHRT_MAX) * amplitude);

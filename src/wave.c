@@ -76,7 +76,7 @@ interpolate(const Wave *w, const float *table, const float phase) {
 
     if (w->Type == WAVE_TYPE_NOISE) {
         /* Generate white noise instead of wavetable lookup. */
-        return (float)arc4random() / (float)UINT_MAX;
+        return (float)rand() / (float)UINT_MAX;
     }
     i = (int)phase;
     r = fabsf(phase) - abs(i);
