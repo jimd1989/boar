@@ -208,3 +208,45 @@ printArg(unsigned int t) {
             return "generic text";
     }
 }
+
+/* new (rough copy) */
+
+static int
+parseFunc(char *s) {
+
+    /* return -1 if not a valid func, n for number of spaces used by func
+     * otherwise, including trailing whitespace. Func should be explicit
+     * enum maybe? */
+
+    /* Need to pass cmd/arg type here as well to be populated with enum. */
+
+    /* Save type in cmd struct for quick checking arg later. */
+
+    int span = 1;
+    unsigned int type = TYPE_UNDEFINED;
+    unsigned int typeIndex = s[0] - 65;
+
+    if (!isalpha((int)s[0])) {
+        return -1;
+    }
+    switch (s[1]) {
+        case '.':
+            type = TYPE_SIGNATURES_PERIOD[typeIndex];
+            span++;
+            break;
+        case ':':
+            type = TYPE_SIGNATURES_COLON[typeIndex];
+            span++;
+            break;
+        default:
+            type = TYPE_SIGNATURES[typeIndex];
+    }
+    if (type == TYPE_UNDEFINED) {
+        return -1;
+    }
+    for (s += 2; isblank((int)*s); s++, span++) {
+        /* chew up any trailing whitespace after command */
+        ;
+    }
+    return span;
+}
