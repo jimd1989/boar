@@ -47,11 +47,9 @@ static void
 echoString(const char *s) {
 
 /* Echoes a string to DEFAULT_ECHO_FILE. This is uses to send arbitrary
- * commands to other instances of boar in the pipeline. The get (g) command
- * is prepended to this string, telling the receiving end of the pipe to
- * parse the string's contents as a boar command. */
+ * commands to other instances of boar in the pipeline. */
 
-    fprintf(DEFAULT_ECHO_FILE, "%s", s);
+    fprintf(DEFAULT_ECHO_FILE, "%s\n", s);
     fflush(DEFAULT_ECHO_FILE);
 }
 
@@ -224,21 +222,30 @@ repl(Repl *r) {
 
     Error err = 0;
     char *token = NULL;
+    unsigned int span = 0;
 
     warnx("Welcome. You can exit at any time by pressing q + enter.");
     while (fgets(r->Buffer, DEFAULT_LINESIZE, stdin) != NULL) {
-        token = strtok(r->Buffer, ";");
-        while (token != NULL) {
-            err = parseLine(&r->Cmd, token);
-            if (err != ERROR_OK) {
-                printParseErr(err, r->Buffer);
-            } else {
-                err = dispatchCmd(r);
-                if (err == ERROR_EXIT) {
-                    return;
+        span = strcspn(r->Buffer, "\n");
+        if (span == 0) {
+            /* ignore blank input */
+            ;
+        } else {
+            /* read multiple commands buffered by semicolons */
+            r->Buffer[span] = '\0';
+            token = strtok(r->Buffer, ";");
+            while (token != NULL) {
+                err = parseLine(&r->Cmd, token);
+                if (err != ERROR_OK) {
+                    printParseErr(err, r->Buffer);
+                } else {
+                    err = dispatchCmd(r);
+                    if (err == ERROR_EXIT) {
+                        return;
+                    }
                 }
+                token = strtok(NULL, ";");
             }
-            token = strtok(NULL, ";");
         }
     }
 }
