@@ -52,23 +52,21 @@ setPitch(Operator *o, const unsigned int note, const unsigned int rate) {
 static void
 fillModulatorBuffer(Operator *m) {
 
-/* The Buffer pointed to by Operator.Osc.Buffer is safe to overwrite on every
- * invocation of this function, as modulation is calculated in a single thread.
- * This procedure assigns an interpolated float sample to every index of the
- * Osc buffer, derived from Osc.Pitch. This buffer is later used to modulate
- * the carrier signal. */
+/* Assigns an interpolated float sample to every index of the Osc buffer, 
+ * derived from Osc.Pitch. This buffer is later used to modulate the carrier 
+ * signal. */
     
     unsigned int i = 0;
     Osc *o = &m->Osc;
-    int tableNo = 1 + (int)ilogb(DEFAULT_OCTAVE_SCALING * o->Pitch);
+    unsigned int tableNo = 1 + 
+        (unsigned int)ilogb(DEFAULT_OCTAVE_SCALING * o->Pitch);
 
-    tableNo = abs(tableNo);
     tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
     for (; i < o->Buffer->Size; i++) {
         o->Phase += o->Pitch * o->Wave->Polarity;
         o->Phase = fmodf(o->Phase, (float)DEFAULT_WAVELEN);
         o->Buffer->Values[i] =
-            newInterpolate(o->Wave, o->Wave->NewTable[tableNo], o->Phase) * 
+            interpolate(o->Wave, o->Wave->Table[tableNo], o->Phase) * 
             o->Amplitude * applyEnv(&m->Env) * o->KeyMod;
     }
 }
@@ -85,12 +83,12 @@ modulate(Osc *c, Osc *m, unsigned int i) {
 
     const float pitch = (c->Pitch * c->Wave->Polarity) + 
                         (m->Pitch * m->Buffer->Values[i]);
-    int tableNo = 1 + (int)ilogb(DEFAULT_OCTAVE_SCALING * pitch);
+    unsigned int tableNo = 1 + 
+        (unsigned int)ilogb(DEFAULT_OCTAVE_SCALING * pitch);
 
-    tableNo = abs(tableNo);
     tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
     c->Phase = fmodf(c->Phase + pitch, (float)DEFAULT_WAVELEN);
-    return newInterpolate(c->Wave, c->Wave->NewTable[tableNo], c->Phase);
+    return interpolate(c->Wave, c->Wave->Table[tableNo], c->Phase);
 }
 
 void

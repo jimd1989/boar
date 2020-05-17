@@ -17,17 +17,15 @@ typedef enum WaveType {
 
 typedef struct Wave {
 
-/* A wrapper around the actual wavetable with type information. Wave.Polarity
+/* A wrapper around the actual wavetable with type information. Wave. Polarity
  * marks the direction a wavetable should be read in. */
 
     float          Polarity;
     WaveType       Type;
-    const float *  Table;
-    const float ** NewTable;
+    const float ** Table;
 } Wave;
 
 /* headers */
 void selectWave(Wave *, const int);
-float interpolate(const Wave *, const float);
-float newInterpolate(const Wave *, const float *, const float);
+float interpolate(const Wave *, const float *, const float);
 float interpolateCycle(const Wave *, const float);
