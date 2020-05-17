@@ -65,7 +65,7 @@ readArg(char *line) {
 
     unsigned int t = TYPE_NIL;
 
-    while (*line != 0 && *line != '\n') {
+    while (*line != '\0') {
         if (*line == ' ' || *line == '\t') {
             ;
         } else if (*line == '-') {
@@ -167,13 +167,8 @@ parseLine(Cmd *c, char *line) {
 /* Reads a full line of user input into a Cmd struct, returning any errors
  * it encounters. */ 
 
-    const int span = strcspn(line, "\n");
     unsigned int t = TYPE_UNDEFINED;
 
-    if (span == 0) {
-        /* ignore blank input */
-        return ERROR_NOTHING;
-    }
     /* Parse Cmd.Func */
     if (! isValidFunc(line)) {
         return ERROR_FUNCTION;
