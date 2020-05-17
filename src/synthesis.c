@@ -60,7 +60,7 @@ fillModulatorBuffer(Operator *m) {
     Osc *o = &m->Osc;
     int tableNo = 1 + (int)ilogb(DEFAULT_OCTAVE_SCALING * o->Pitch);
 
-    tableNo = (tableNo < 0) 0 : tableNo;
+    tableNo = (tableNo < 0) ? 0 : tableNo;
     tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
     for (; i < o->Buffer->Size; i++) {
         o->Phase += o->Pitch * o->Wave->Polarity;
@@ -85,7 +85,7 @@ modulate(Osc *c, Osc *m, unsigned int i) {
                         (m->Pitch * m->Buffer->Values[i]);
     int tableNo = 1 + (int)ilogb(DEFAULT_OCTAVE_SCALING * pitch);
 
-    tableNo = (tableNo < 0) 0 : tableNo;
+    tableNo = (tableNo < 0) ? 0 : tableNo;
     tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
     c->Phase = fmodf(c->Phase + pitch, (float)DEFAULT_WAVELEN);
     return interpolate(c->Wave, c->Wave->Table[tableNo], c->Phase);
