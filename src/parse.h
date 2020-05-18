@@ -27,4 +27,5 @@ typedef struct Cmd {
 } Cmd;
 
 /* headers */
+Error newParseLine(Cmd *, char *);
 Error parseLine(Cmd *, char *);

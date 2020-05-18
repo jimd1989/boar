@@ -67,7 +67,7 @@ readArg(char *line) {
     unsigned int t = TYPE_NIL;
 
     while (*line != '\0') {
-        if (*line == ' ' || *line == '\t') {
+        if (isblank((int)*line)) {
             ;
         } else if (*line == '-') {
             t = activateFlag(t, TYPE_FLAG_SIGNED);
@@ -92,6 +92,9 @@ isValidArg(const unsigned int expected, const unsigned int t) {
  * match one another. There are various instances where slightly different
  * types can still be a valid combination. */
 
+    if (t == TYPE_NIL && expected != TYPE_NIL) {
+        return false;
+    }
     if (expected == t || expected == TYPE_ANY) {
         return true;
     }
@@ -221,11 +224,16 @@ parseFunc(Cmd *c, char *line) {
 
     int span = 1;
     unsigned int type = TYPE_UNDEFINED;
-    unsigned int typeIndex = line[0] - DEFAULT_ASCII_A;
+    unsigned int typeIndex = 26; /* defaults to always undefined index */
 
+    for (; isblank((int)*line); line++, span++) {
+        /* chew up any leading whitespace before command */
+        ;
+    }
     if (!isalpha((int)line[0])) {
         return -1;
     }
+    typeIndex = line[0] - DEFAULT_ASCII_A;
     switch (line[1]) {
         case '.':
             type = TYPE_SIGNATURES_PERIOD[typeIndex];
@@ -239,7 +247,7 @@ parseFunc(Cmd *c, char *line) {
             break;
         default:
             type = TYPE_SIGNATURES_PURE[typeIndex];
-            c->Type = typeIndex;
+            c->NewFunc = typeIndex;
     }
     if (type == TYPE_UNDEFINED) {
         return -1;

@@ -215,6 +215,24 @@ printParseErr(const Error err, const char *buffer) {
     }
 }
 
+static Error
+newDispatchCmd(Repl *r) {
+
+/* Runs a command against the Audio struct. */
+
+    switch(r->Cmd.NewFunc) {
+        case FUNC_NOTE_ON:
+            echoNoteCheck(r);
+            voiceOn(&r->Audio->Voices, (uint16_t)r->Cmd.Arg.I);
+            break;
+        case FUNC_NOTE_OFF:
+            echoNoteCheck(r);
+            voiceOff(&r->Audio->Voices, (uint16_t)r->Cmd.Arg.I);
+            break;
+    }
+    return ERROR_OK;
+}
+
 void
 repl(Repl *r) {
 
@@ -236,11 +254,11 @@ repl(Repl *r) {
             r->Buffer[span] = '\0';
             token = strtok(r->Buffer, ";");
             while (token != NULL) {
-                err = parseLine(&r->Cmd, token);
+                err = newParseLine(&r->Cmd, token);
                 if (err != ERROR_OK) {
                     printParseErr(err, r->Buffer);
                 } else {
-                    err = dispatchCmd(r);
+                    err = newDispatchCmd(r);
                     if (err == ERROR_EXIT) {
                         return;
                     }
@@ -250,7 +268,3 @@ repl(Repl *r) {
         }
     }
 }
-
-/* new */
-
-/* need a newDispatchCmd that matches against enums in funcs.h */
