@@ -60,30 +60,30 @@
 /* An array of expected argument types for commands with an unadorned
  * character such as (a), (d), etc */
 static const unsigned int TYPE_SIGNATURES_PURE[58] = {
-    TYPE_UNDEFINED, /* A */
+    TYPE_UFLOAT,    /* A */
     TYPE_UNDEFINED, /* B */
     TYPE_UNDEFINED, /* C */
-    TYPE_UNDEFINED, /* D */
+    TYPE_UFLOAT,    /* D */
     TYPE_UNDEFINED, /* E */
     TYPE_UNDEFINED, /* F */
     TYPE_UNDEFINED, /* G */
     TYPE_UNDEFINED, /* H */
     TYPE_UNDEFINED, /* I */
     TYPE_UNDEFINED, /* J */
-    TYPE_UNDEFINED, /* K */
-    TYPE_UNDEFINED, /* L */
+    TYPE_INT,       /* K */
+    TYPE_UFLOAT,    /* L */
     TYPE_UNDEFINED, /* M */
     TYPE_UNDEFINED, /* N */
     TYPE_UNDEFINED, /* O */
-    TYPE_UNDEFINED, /* P */
+    TYPE_UFLOAT,    /* P */
     TYPE_UNDEFINED, /* Q */
-    TYPE_UNDEFINED, /* R */
-    TYPE_UNDEFINED, /* S */
-    TYPE_UNDEFINED, /* T */
-    TYPE_UNDEFINED, /* U */
+    TYPE_UFLOAT,    /* R */
+    TYPE_UFLOAT,    /* S */
+    TYPE_INT,       /* T */
+    TYPE_UINT,      /* U */
     TYPE_UNDEFINED, /* V */
-    TYPE_UNDEFINED, /* W */
-    TYPE_UNDEFINED, /* X */
+    TYPE_INT,       /* W */
+    TYPE_UFLOAT,    /* X */
     TYPE_UNDEFINED, /* Y */
     TYPE_UNDEFINED, /* Z */
     TYPE_UNDEFINED, /* ignored */
@@ -92,30 +92,30 @@ static const unsigned int TYPE_SIGNATURES_PURE[58] = {
     TYPE_UNDEFINED, /* ignored */
     TYPE_UNDEFINED, /* ignored */
     TYPE_UNDEFINED, /* ignored */
-    TYPE_UNDEFINED, /* a */
+    TYPE_UFLOAT,    /* a */
     TYPE_UNDEFINED, /* b */
     TYPE_UNDEFINED, /* c */
-    TYPE_UNDEFINED, /* d */
-    TYPE_UNDEFINED, /* e */
+    TYPE_UFLOAT,    /* d */
+    TYPE_ANY,       /* e */
     TYPE_UNDEFINED, /* f */
     TYPE_UNDEFINED, /* g */
     TYPE_UNDEFINED, /* h */
     TYPE_UNDEFINED, /* i */
     TYPE_UNDEFINED, /* j */
-    TYPE_UNDEFINED, /* k */
-    TYPE_UNDEFINED, /* l */
+    TYPE_INT,       /* k */
+    TYPE_UFLOAT,    /* l */
     TYPE_UNDEFINED, /* m */
     TYPE_UINT,      /* n */
     TYPE_UINT,      /* o */
-    TYPE_UNDEFINED, /* p */
-    TYPE_UNDEFINED, /* q */
-    TYPE_UNDEFINED, /* r */
-    TYPE_UNDEFINED, /* s */
-    TYPE_UNDEFINED, /* t */
-    TYPE_UNDEFINED, /* u */
+    TYPE_UFLOAT,    /* p */
+    TYPE_NIL,       /* q */
+    TYPE_UFLOAT,    /* r */
+    TYPE_UFLOAT,    /* s */
+    TYPE_INT,       /* t */
+    TYPE_UFLOAT,    /* u */
     TYPE_UNDEFINED, /* v */
-    TYPE_UNDEFINED, /* w */
-    TYPE_UNDEFINED, /* x */
+    TYPE_INT,       /* w */
+    TYPE_UFLOAT,    /* x */
     TYPE_UNDEFINED, /* y */
     TYPE_UNDEFINED, /* z */
 };
@@ -123,10 +123,10 @@ static const unsigned int TYPE_SIGNATURES_PURE[58] = {
 /* An array of expected argument types for commands with period-adorned
  * characters such as (a.), (d.), etc */
 static const unsigned int TYPE_SIGNATURES_PERIOD[58] = {
-    TYPE_UNDEFINED, /* A. */
+    TYPE_INT,       /* A. */
     TYPE_UNDEFINED, /* B. */
     TYPE_UNDEFINED, /* C. */
-    TYPE_UNDEFINED, /* D. */
+    TYPE_INT,       /* D. */
     TYPE_UNDEFINED, /* E. */
     TYPE_UNDEFINED, /* F. */
     TYPE_UNDEFINED, /* G. */
@@ -140,7 +140,7 @@ static const unsigned int TYPE_SIGNATURES_PERIOD[58] = {
     TYPE_UNDEFINED, /* O. */
     TYPE_UNDEFINED, /* P. */
     TYPE_UNDEFINED, /* Q. */
-    TYPE_UNDEFINED, /* R. */
+    TYPE_INT,       /* R. */
     TYPE_UNDEFINED, /* S. */
     TYPE_UNDEFINED, /* T. */
     TYPE_UNDEFINED, /* U. */
@@ -175,7 +175,7 @@ static const unsigned int TYPE_SIGNATURES_PERIOD[58] = {
     TYPE_UNDEFINED, /* r. */
     TYPE_UNDEFINED, /* s. */
     TYPE_UNDEFINED, /* t. */
-    TYPE_UNDEFINED, /* u. */
+    TYPE_INT,       /* u. */
     TYPE_UNDEFINED, /* v. */
     TYPE_UNDEFINED, /* w. */
     TYPE_UNDEFINED, /* x. */
