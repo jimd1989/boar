@@ -26,7 +26,6 @@
 /* headers */
 static void echoNoteCheck(const Repl *);
 static void echoString(const char *);
-static void dispatchIntPointer(Repl *);
 static Error dispatchCmd(Repl *);
 static void printParseErr(const Error, const char *);
 
@@ -39,7 +38,8 @@ echoNoteCheck(const Repl *r) {
  * instances of boar that have been piped together. */
 
     if (r->EchoNotes) {
-        fprintf(DEFAULT_ECHO_FILE, "%c %d\n", r->Cmd.Func, r->Cmd.Arg.I);
+        fprintf(DEFAULT_ECHO_FILE, "%c %d\n", r->Cmd.Func + DEFAULT_ASCII_A, 
+                r->Cmd.Arg.I);
         fflush(DEFAULT_ECHO_FILE);
     }
 }
@@ -54,45 +54,20 @@ echoString(const char *s) {
     fflush(DEFAULT_ECHO_FILE);
 }
 
-static void
-dispatchIntPointer(Repl *r) {
-
-/* Pushes a value to the parameter pointed to by Repl.Pointer. */ 
-
-   switch(r->Pointer) {
-       case 'A':
-           setAttackWave(&r->Audio->Voices.Modulator.Env, r->Cmd.Arg.I);
-           break;
-       case 'a':
-           setAttackWave(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.I);
-           break;
-       case 'D':
-           setDecayWave(&r->Audio->Voices.Modulator.Env, r->Cmd.Arg.I);
-           break;
-       case 'd':
-           setDecayWave(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.I);
-           break;
-       case 'R':
-           setReleaseWave(&r->Audio->Voices.Modulator.Env, r->Cmd.Arg.I);
-           break;
-       case 'r':
-           setReleaseWave(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.I);
-           break;
-       case 'u':
-           selectTuningLayer(&r->Audio->Voices.Keyboard,
-                   (TuningLayer)r->Cmd.Arg.I);
-           break;
-       default:
-           warnx("No valid parameter specified");
-   } 
-}
-
 static Error
 dispatchCmd(Repl *r) {
 
 /* Runs a command against the Audio struct. */
 
-    switch(r->Cmd.NewFunc) {
+    switch(r->Cmd.Func) {
+        case FUNC_NOTE_ON:
+            echoNoteCheck(r);
+            voiceOn(&r->Audio->Voices, (uint16_t)r->Cmd.Arg.I);
+            break;
+        case FUNC_NOTE_OFF:
+            echoNoteCheck(r);
+            voiceOff(&r->Audio->Voices, (uint16_t)r->Cmd.Arg.I);
+            break;
         case FUNC_MOD_ATTACK:
             setAttackLevel(&r->Audio->Voices.Modulator.Env,
                     truncateFloat(r->Cmd.Arg.F, 1.0f));
@@ -101,6 +76,12 @@ dispatchCmd(Repl *r) {
             setAttackLevel(&r->Audio->Voices.Carrier.Env,
                     truncateFloat(r->Cmd.Arg.F, 1.0f));
             break;
+       case FUNC_MOD_ATTACK_WAVE:
+           setAttackWave(&r->Audio->Voices.Modulator.Env, r->Cmd.Arg.I);
+           break;
+       case FUNC_ATTACK_WAVE:
+           setAttackWave(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.I);
+           break;
         case FUNC_MOD_DECAY:
             setDecayLevel(&r->Audio->Voices.Modulator.Env,
                     truncateFloat(r->Cmd.Arg.F, 1.0f));
@@ -109,6 +90,12 @@ dispatchCmd(Repl *r) {
             setDecayLevel(&r->Audio->Voices.Carrier.Env,
                     truncateFloat(r->Cmd.Arg.F, 1.0f));
             break;
+       case FUNC_MOD_DECAY_WAVE:
+           setDecayWave(&r->Audio->Voices.Modulator.Env, r->Cmd.Arg.I);
+           break;
+       case FUNC_DECAY_WAVE:
+           setDecayWave(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.I);
+           break;
         case FUNC_ECHO:
             echoString(r->Cmd.Arg.S);
             break;
@@ -125,14 +112,6 @@ dispatchCmd(Repl *r) {
             break;
         case FUNC_AMPLITUDE:
             setVolume(r->Audio, r->Cmd.Arg.F);
-            break;
-        case FUNC_NOTE_ON:
-            echoNoteCheck(r);
-            voiceOn(&r->Audio->Voices, (uint16_t)r->Cmd.Arg.I);
-            break;
-        case FUNC_NOTE_OFF:
-            echoNoteCheck(r);
-            voiceOff(&r->Audio->Voices, (uint16_t)r->Cmd.Arg.I);
             break;
         case FUNC_MOD_PITCH:
             setPitchRatio(&r->Audio->Voices, false, r->Cmd.Arg.F);
@@ -152,6 +131,12 @@ dispatchCmd(Repl *r) {
             setReleaseLevel(&r->Audio->Voices.Carrier.Env,
                     truncateFloat(r->Cmd.Arg.F, 1.0f));
             break;
+       case FUNC_MOD_RELEASE_WAVE:
+           setReleaseWave(&r->Audio->Voices.Modulator.Env, r->Cmd.Arg.I);
+           break;
+       case FUNC_RELEASE_WAVE:
+           setReleaseWave(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.I);
+           break;
         case FUNC_MOD_SUSTAIN:
             setSustainLevel(&r->Audio->Voices.Modulator.Env,
                     truncateFloat(r->Cmd.Arg.F, 1.0f));
@@ -174,6 +159,10 @@ dispatchCmd(Repl *r) {
         case FUNC_TUNE:
             tuneKey(&r->Audio->Voices.Keyboard, r->Cmd.Arg.F);
             break;
+       case FUNC_TUNE_TARGET:
+           selectTuningLayer(&r->Audio->Voices.Keyboard,
+                   (TuningLayer)r->Cmd.Arg.I);
+           break;
         case FUNC_MOD_WAVE:
             selectWave(&r->Audio->Voices.Modulator.Wave, r->Cmd.Arg.I);
             break;
@@ -228,7 +217,7 @@ repl(Repl *r) {
             r->Buffer[span] = '\0';
             token = strtok(r->Buffer, ";");
             while (token != NULL) {
-                err = newParseLine(&r->Cmd, token);
+                err = parseLine(&r->Cmd, token);
                 if (err != ERROR_OK) {
                     printParseErr(err, r->Buffer);
                 } else {

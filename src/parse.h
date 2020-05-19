@@ -20,12 +20,10 @@ typedef struct Cmd {
  * corresponds with one of boar's functions, Cmd.Type is the signature of the
  * expected argument, and Cmd.Arg is the solitary argument to this function. */
 
-    char                Func;
-    unsigned int        NewFunc;
+    unsigned int        Func;
     unsigned int        Type;
     Arg                 Arg;
 } Cmd;
 
 /* headers */
-Error newParseLine(Cmd *, char *);
 Error parseLine(Cmd *, char *);
