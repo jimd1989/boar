@@ -38,7 +38,7 @@ The number of audio voices that can simultaneously play.
 .El
 .Sh INTERACTIVE SESSION
 .Pp
-Once running, boar accepts a few single character, single argument commands from the user. The parameters to these commands can be one of the following types:
+Once running, boar accepts a few single argument commands from the user. The parameters to these commands can be one of the following types:
 .Bd -literal -offset indent
 \& nil          No parameter at all
 \& uint         A unipolar (positive) integer
@@ -51,7 +51,7 @@ Once running, boar accepts a few single character, single argument commands from
 .Pp
 Functions that expect certain numerical types can accept other numbers in some cases. A function that requires a float will understand `1` as `1.0`, for instance. Unipolar functions cannot accept bipolar values, however.
 .Pp
-boar's commands are as follows:
+boar's commands are as follows. They are single characters that are decorated with a period (f.), a colon (f:), or remain unadorned (f).
 .Bl -tag -width Ds
 .It # [string]
 A comment. Any text behind this is ignored. Useful in annotating files full of boar commands that are expected to be loaded by the program.
@@ -61,12 +61,16 @@ A comment. Any text behind this is ignored. Useful in annotating files full of b
 Sets the envelope attack for the carrier (a) or modulator (A). This is the amount of time the parameter being enveloped takes to reach its full effect. Values between 0.0 and 1.0 are honored.
 .El
 .Bl -tag -width Ds
+.It a./A. [int]
+Sets the envelope attack wave shape for the carrier (a.) or modulator (A.).
+.El
+.Bl -tag -width Ds
 .It d/D [ufloat]
 Sets the envelope decay for the carrier (d) or modulator (D). This is the amount of time the parameter being enveloped takes to reach its sustain level after the attack has taken place. Values between 0.0 and 1.0 are honored.
 .El
 .Bl -tag -width Ds
-.It E [char]
-Extra (E) parameters in boar are hidden behind a stateful interface. Running E against one of these parameters will tell boar to point to it. Arguments to this parameter can be pushed with the value (v) command. See the next section for more info.
+.It d./D. [int]
+Sets the envelope decay wave shape for the carrier (d.) or modulator (D.).
 .El
 .Bl -tag -width Ds
 .It e [string]
@@ -101,6 +105,10 @@ Quits the program. Echos a "q" to stdout to kill all other instances of boar in 
 Sets the envelope release for the carrier (r) or modulator (R). This is the amount of time the parameter being enveloped takes to reach zero after its corresponding note has been turned off. Values between 0.0 and 1.0 are honored.
 .El
 .Bl -tag -width Ds
+.It r./R. [int]
+Sets the envelope release wave shape for the carrier (r.) or modulator (R.).
+.El
+.Bl -tag -width Ds
 .It s/S [ufloat]
 Sets the envelope sustain for the carrier (s) or modulator (S). This is the level at which the parameter being enveloped will be multiplied against after the attack and decay have taken place. Values between 0.0 and 1.0 are honored.
 .El
@@ -117,8 +125,8 @@ Selects a note number to tune. When the tuning command (u) is run, it will targe
 Tunes the selected note's (U) pitch by a float factor. Entering `u 0.75` will tell the selected note to play at three quarters its normal frequency, for instance. Alternative scales can be implemented by tuning each note in terms of an offset from the standard twelve-tone series.
 .El
 .Bl -tag -width Ds
-.It v [int]
-Push an integer argument to the parameter pointed to by the extra parameter (E) command. See the entry for E for more info.
+.It u.
+Which parameter the tuning commands (u/U) should affect. 0 alters carrier tuning and 1 alters the modulator.
 .El
 .Bl -tag -width Ds
 .It w/W [int]
@@ -139,26 +147,6 @@ Providing a negative parameter will tell the affected operator to read its wavet
 .Bl -tag -width Ds
 .It x/X [ufloat]
 Sets the carrier (x) or modulator (X) to a fixed frequency in hz. The specific values of notes will no longer have an effect on the operator's pitch. This is useful for patches that require aharmonic content. Fixed frequency mode is exited when x/X is set to 0.0.
-.El
-.Sh EXTRA PARAMETERS
-.Pp
-The following characters are valid arguments to the extra parameters (E) command. Each one is modified by an integer pushed by the value (v) command:
-.Pp
-.Bl -tag -width Ds
-.It a/A
-The wavetable of the attack stage of a carrier (a) or modulator (A) envelope. Accepts negative values for backwards wavetables.
-.El
-.Bl -tag -width Ds
-.It d/D
-The wavetable of the decay stage of a carrier (d) or modulator (D) envelope. Accepts negative values for backwards wavetables.
-.El
-.Bl -tag -width Ds
-.It r/R
-The wavetable of the release stage of a carrier (r) or modulator (R) envelope. Accepts negative values for backwards wavetables.
-.El
-.Bl -tag -width Ds
-.It u
-Which parameter the tuning commands (u/U) should affect. 0 alters carrier tuning and 1 alters the modulator.
 .El
 .Sh HISTORY
 boar was written in 2019, but it came out of the ashes of aborted (and far more ambitious) efforts in realtime synthesis dating back to 2014. This modest program largely has John Chowning to thank, as it leverages his groundbreaking work in FM synthesis, best elucidated his book "FM Theory and Applications." Curtis Roads also contributed a wealth of knowledge with his "Computer Music Tutorial." The communities at Vintage Synth Explorer and KVR Audio also patiently guided the author through many basic DSP concepts. 

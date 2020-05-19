@@ -2,12 +2,6 @@ Features that boar is lacking, none of which are guaranteed to ever actually
 be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
-Char type:
-Currently the extra (E) command takes the first character from a string
-argument, ignoring whatever is behind it. Should the program explicitly
-parse for a single char parameter, and return an error when anything longer
-is provided?
-
 Info:
 Running the info command (i), followed by a string, should return information
 about the queried parameter to stderr. Like `i W'` would return the shape of
@@ -30,10 +24,6 @@ assuming it isn't too large, should be available in a dedicated type to ease
 the computational impact of frequency domain pitching. Samples used as
 envelopes should maybe use the first 2048 values of their tables.
 
-Value:
-In addition to the (v) value command that accepts integers, there may need to
-be a (V) command for floats. This space has been reserved for future-proofing.
-
 Sample + Hold:
 In addition to pure noise signals, there should be some kind of s+h feature.
 
@@ -53,8 +43,3 @@ A basic table-per-octave solution has been implemented. Oscillators will always
 read from the table in the octave above to prevent aliasing. A more complex
 solution, such as interpolating between two tables, is doable, but I am
 satisfied with the way things sound for now.
-
-Extended syntax:
-Borrowing from the likes of J/K/etc, commands can maybe be two character combos
-such as "a a. a:". This would extend the alphabet and remove the need for the
-awful (E) interface.

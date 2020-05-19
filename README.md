@@ -32,6 +32,11 @@ You can adjust the master volume (loudness) with `l`. Its arguments can be value
 
     l 0.5
 
+Whitespace doesn't matter too much. These are valid functions as well.
+
+    l0.5
+       l   0.5
+
 You shouldn't hear anything yet. You can change that with the `n` command, which takes a MIDI note as its argument:
 
     n 36
@@ -42,6 +47,10 @@ You shouldn't hear anything yet. You can change that with the `n` command, which
     n 96
     n 108
     n 120
+
+Line breaks can be replaced with semicolons. The following is equivalent to the block above:
+
+    n36;n48;n60;n72;n84;n96;n108;n120
 
 A chord of sines should be playing now. These are the fundamental carrier waves. Each one of them has an associated modulator wave that can be adjusted through calls to the `P` and `L` functions. The argument to `P` sets the pitch ratio between the modulator and the note played. If the note's frequency is 440hz, then `P 2.0` will make the modulator 880hz:
 
@@ -129,15 +138,13 @@ Listen to how the following settings affect boar:
 
 Giving different envelope settings to the modulator results in an effect similar to a filter sweep on an analog synthesizer.
 
-Each A, D, and R stage increments/decrements in a linear manner by default, but their patterns actually just reference the same wavetables available in the `w` and `W` commands. It doesn't make too much musical sense, but you can have a sine curve as an attack, or random noise as a release. These tables can be changed by referencing a specific stage with the extra parameter, or `E` command. The following will tell boar to modify the modulator attack wave:
+Each A, D, and R stage increments/decrements in a linear manner by default, but their patterns actually just reference the same wavetables available in the `w` and `W` commands. It doesn't make too much musical sense, but you can have a sine curve as an attack, a backwards sine as decay, and random noise as a release:
 
-    E A
+    A. 1
+    D. -1
+    R. 7
 
-An integer value can be pushed to the parameter pointed to by `E` with the value command `v`. The following sets the modulator attack to a sine:
-
-    v 1
-
-This interface is a slightly unwieldy, but allows the performer to sculpt wave shapes unthinkable on traditional synthesizers.
+Use `a. d. r.` for carriers and `A. D. R.` for modulators.
 
 You can also squeeze more sonic mileage out of boar by running multiple instances of it in a pipe. Running:
 
@@ -163,7 +170,7 @@ Why not throw other things in the pipe? Consider the script `delay.sh`, which ec
     while read n
     do
         sleep $1
-        echo $n
+        echo "$n"
     done
 
 Now you have a primitive delay effect:
