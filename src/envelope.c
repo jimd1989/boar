@@ -46,8 +46,8 @@ incrementAttack(Env *e) {
 
 /* Increments Env.Phase according to envelope's attack speed. */
 
-    e->Phase = truncateFloat(e->Phase + e->Attack->Level, 1.0f);
-    if (e->Phase == 1.0f) {
+    e->Phase = truncateFloat(e->Phase + e->Attack->Level, 0.99f);
+    if (e->Phase >= 0.99f) {
         e->Stage = ENV_DECAY;
         e->Wave = &e->Decay->Wave;
     }
