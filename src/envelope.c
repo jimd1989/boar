@@ -201,7 +201,7 @@ makeEnvs(Envs *es, const unsigned int rate) {
     es->Rate = rate;
     setAttackLevel(es, 0.0f);
     setDecayLevel(es, 0.0f);
-    setSustainLevel(es, 1.0f);
+    setSustainLevel(es, 0.99f);
     setReleaseLevel(es, 0.0f);
     setAttackWave(es, WAVE_TYPE_SAW);
     setDecayWave(es, WAVE_TYPE_SAW);

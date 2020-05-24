@@ -15,6 +15,7 @@
 #include "envelope.h"
 #include "errors.h"
 #include "key.h"
+#include "noise.h"
 #include "synthesis.h"
 #include "wave.h"
 
@@ -217,6 +218,7 @@ makeOperator(Operators *os, Operator *op, Buffer *b) {
     op->Ratio = &os->Ratio;
     op->Osc.Buffer = b;
     op->Osc.Wave = &os->Wave;
+    makeNoise(&op->Osc.Wave->Noise);
     makeEnv(&os->Env, &op->Env);
 }
 

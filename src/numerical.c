@@ -4,6 +4,7 @@
  * etc. in other files that give functions proper context. */
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "numerical.h"
 
@@ -77,4 +78,21 @@ unipolar(const float s) {
         return MIN_FLOAT;
     }
     return f;
+}
+
+float
+interpolate(const float *table, const int len, const float phase) {
+
+/* Where phase ∈ [0, len), find an index of table by truncating phase to an
+ * integer. Then return a weighted average of the values between table[phase]
+ * and table[phase+1] based upon the fractional part of the phase. The phase
+ * must be modulo'd against len before invoking this function, as it will not
+ * bounds check itself. */
+ 
+    const int i = (int)phase;
+    const float r = fabsf(phase) - abs(i);
+    const float s1 = table[(unsigned int)i % len];
+    const float s2 = table[((unsigned int)i+1) % len];
+
+    return ((1.0f - r) * s1) + (r * s2);
 }

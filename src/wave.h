@@ -1,5 +1,7 @@
 #pragma once
 
+#include "noise.h"
+
 /* types */
 typedef enum WaveType {
 
@@ -23,9 +25,9 @@ typedef struct Wave {
     float          Polarity;
     WaveType       Type;
     const float ** Table;
+    Noise          Noise;
 } Wave;
 
 /* headers */
 void selectWave(Wave *, const int);
-float interpolate(const Wave *, const float *, const float);
 float interpolateCycle(const Wave *, const float);

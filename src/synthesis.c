@@ -8,6 +8,8 @@
 
 #include "defaults.h"
 #include "envelope.h"
+#include "noise.h"
+#include "numerical.h"
 #include "wave.h"
 
 /* headers */
@@ -62,12 +64,19 @@ fillModulatorBuffer(Operator *m) {
 
     tableNo = (tableNo < 0) ? 0 : tableNo;
     tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
-    for (; i < o->Buffer->Size; i++) {
-        o->Phase += o->Pitch * o->Wave->Polarity;
-        o->Phase = fmodf(o->Phase, (float)DEFAULT_WAVELEN);
-        o->Buffer->Values[i] =
-            interpolate(o->Wave, o->Wave->Table[tableNo], o->Phase) * 
-            o->Amplitude * applyEnv(&m->Env) * o->KeyMod;
+
+    if (o->Wave->Type == WAVE_TYPE_NOISE) {
+        for (; i < o->Buffer->Size; i++) {
+            o->Buffer->Values[i] = readNoise(&o->Wave->Noise, o->Pitch) *
+                o->Amplitude * applyEnv(&m->Env) * o->KeyMod;
+        }
+    } else {
+        for (; i < o->Buffer->Size; i++) {
+            o->Phase = fmodf(o->Phase + o->Pitch, (float)DEFAULT_WAVELEN);
+            o->Buffer->Values[i] = interpolate(o->Wave->Table[tableNo],
+                    DEFAULT_WAVELEN, o->Phase) * o->Amplitude *
+                applyEnv(&m->Env) * o->KeyMod;
+        }
     }
 }
 
@@ -87,8 +96,12 @@ modulate(Osc *c, Osc *m, unsigned int i) {
 
     tableNo = (tableNo < 0) ? 0 : tableNo;
     tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
-    c->Phase = fmodf(c->Phase + pitch, (float)DEFAULT_WAVELEN);
-    return interpolate(c->Wave, c->Wave->Table[tableNo], c->Phase);
+    if (c->Wave->Type == WAVE_TYPE_NOISE) {
+        return readNoise(&c->Wave->Noise, pitch);
+    } else {
+        c->Phase = fmodf(c->Phase + pitch, (float)DEFAULT_WAVELEN);
+        return interpolate(c->Wave->Table[tableNo], DEFAULT_WAVELEN, c->Phase);
+    }
 }
 
 void
