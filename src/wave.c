@@ -70,6 +70,9 @@ interpolateCycle(const Wave *w, const float phase) {
  * of a wave to a value. This function performs an interpolation over a
  * wavetable using a phase between 0.0 and 1.0. */
 
+    if (w->Type == WAVE_TYPE_NOISE) {
+        return (((float)rand() / (float)RAND_MAX));
+    }
     return unipolar(interpolate(w->Table[0], DEFAULT_WAVELEN, phase * 
                 (float)MAX_WAVE_INDEX * w->Polarity));
 }
