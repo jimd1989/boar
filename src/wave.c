@@ -8,6 +8,7 @@
 #include "defaults.h"
 #include "errors.h"
 #include "maximums.h"
+#include "noise.h"
 #include "numerical.h"
 #include "wavetables/exponential.h"
 #include "wavetables/flat.h"
@@ -63,36 +64,15 @@ selectWave(Wave *w, const int wt) {
 }
 
 float
-interpolate(const Wave *w, const float *table, const float phase) {
-
-/* Since the phase of an oscillator is floating point, the index of the
- * wavetable it reads may sit "between" two actual samples. Linear
- * interpolation simulates this by reading from index n and index n+1 of the
- * table, and weighting these values based upon the distance of the phase
- * between them. */
-
-    float r, s1, s2;
-    int i = 0;
-
-    if (w->Type == WAVE_TYPE_NOISE) {
-        /* Generate white noise instead of wavetable lookup. */
-        return (float)rand() / (float)UINT_MAX;
-    }
-    i = (int)phase;
-    r = fabsf(phase) - abs(i);
-    s1 = table[(unsigned int)i % DEFAULT_WAVELEN];
-    s2 = table[((unsigned int)i+1) % DEFAULT_WAVELEN];
-    return ((1.0f - r) * s1) + (r * s2);
-}
-
-float
 interpolateCycle(const Wave *w, const float phase) {
 
 /* Many wavetable referencing types, such as envelopes, apply a single cycle
  * of a wave to a value. This function performs an interpolation over a
  * wavetable using a phase between 0.0 and 1.0. */
 
-    return unipolar(
-            interpolate(w, w->Table[0], 
-                phase * (float)MAX_WAVE_INDEX * w->Polarity));
+    if (w->Type == WAVE_TYPE_NOISE) {
+        return (((float)rand() / (float)RAND_MAX));
+    }
+    return unipolar(interpolate(w->Table[0], DEFAULT_WAVELEN, phase * 
+                (float)MAX_WAVE_INDEX * w->Polarity));
 }
