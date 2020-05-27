@@ -1,6 +1,5 @@
 #pragma once
 
-/* types */
 typedef struct Noise {
 
 /* A unit for generating random signals. On every sampling instance, the Phase
@@ -8,11 +7,10 @@ typedef struct Noise {
  * DEFAULT_WAVELEN, Amplitude is set to a random value ∈ [-1,1] and the Phase
  * is reset. The Oscillator's buffer will be populated with the Amplitude value
  * until the Phase surpasses DEFAULT_WAVELEN again. */
-    
-    float       Amplitude;
-    float       Phase;
+
+  float       Amplitude;
+  float       Phase;
 } Noise;
 
-/* headers */
 float readNoise(Noise *, const float);
 void makeNoise(Noise *);

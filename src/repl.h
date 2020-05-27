@@ -14,11 +14,10 @@ typedef struct Repl {
  * string is then parsed, and used to populate the fields of Repl.Cmd. An audio
  * function is then performed using Repl.Cmd as its argument. */
 
-    bool          EchoNotes;
-    Cmd           Cmd;
-    char          Buffer[DEFAULT_LINESIZE];
-    Audio       * Audio;
+  bool          EchoNotes;
+  Cmd           Cmd;
+  char          Buffer[DEFAULT_LINESIZE];
+  Audio       * Audio;
 } Repl;
 
-/* headers */
 void repl(Repl *);

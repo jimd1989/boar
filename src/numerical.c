@@ -11,7 +11,6 @@
 #include "maximums.h"
 #include "wavetables/exponential.h"
 
-/* functions */
 float
 truncateFloat(const float f, const float max) {
 
@@ -39,13 +38,13 @@ clip(const float s) {
  * This could potentially be re-written as a macro, but is preserved as a
  * function for readability's sake. */
 
-    if (s > 1.0f) {
-        return 1.0f;
-    } else if (s < -1.0f) {
-        return -1.0f;
-    } else {
-        return s;
-    }
+  if (s > 1.0f) {
+    return 1.0f;
+  } else if (s < -1.0f) {
+    return -1.0f;
+  } else {
+    return s;
+  }
 }
 
 float
@@ -59,7 +58,7 @@ expCurve(const float f) {
  * since the wavetable itself already provides a far superior resolution to
  * traditional synthesis parameters, which are usually between 0 and 127. */
 
-    return WAVE_EXPONENTIALS[0][(unsigned int)(f * (DEFAULT_WAVELEN - 1))];
+  return WAVE_EXPONENTIALS[0][(unsigned int)(f * (DEFAULT_WAVELEN - 1))];
 }
 
 float
@@ -70,14 +69,14 @@ unipolar(const float s) {
  * (MIN_FLOAT ... 1.0) equivalent. This allows normal wavetables to have other
  * applications, such as stages in ASDR envelopes. */
 
-    const float f = 0.5f + (s / 2.0f);
-    
-    if (f == 0.0f) {
+  const float f = 0.5f + (s / 2.0f);
+
+  if (f == 0.0f) {
     /* Envelopes shouldn't take zero values unless explicitly specified
      * by the user in the prompt. */
-        return MIN_FLOAT;
-    }
-    return f;
+    return MIN_FLOAT;
+  }
+  return f;
 }
 
 float
@@ -88,11 +87,11 @@ interpolate(const float *table, const int len, const float phase) {
  * and table[phase+1] based upon the fractional part of the phase. The phase
  * must be modulo'd against len before invoking this function, as it will not
  * bounds check itself. */
- 
-    const int i = (int)phase;
-    const float r = fabsf(phase) - abs(i);
-    const float s1 = table[(unsigned int)i % len];
-    const float s2 = table[((unsigned int)i+1) % len];
 
-    return ((1.0f - r) * s1) + (r * s2);
+  const int i = (int)phase;
+  const float r = fabsf(phase) - abs(i);
+  const float s1 = table[(unsigned int)i % len];
+  const float s2 = table[((unsigned int)i+1) % len];
+
+  return ((1.0f - r) * s1) + (r * s2);
 }

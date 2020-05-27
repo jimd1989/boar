@@ -9,7 +9,6 @@
 #include "synthesis.h"
 #include "wave.h"
 
-/* types */
 typedef struct Voice {
 
 /* A voice plays back an individual note in a polyphonic performance. To do
@@ -18,9 +17,9 @@ typedef struct Voice {
  * the values in Voice.Carrier's buffer are modulated against the values in
  * Voice.Modulator's buffer. */
 
-    unsigned int  Note;
-    Operator      Carrier;
-    Operator      Modulator;
+  unsigned int  Note;
+  Operator      Carrier;
+  Operator      Modulator;
 } Voice;
 
 typedef struct Voices {
@@ -36,19 +35,18 @@ typedef struct Voices {
  * Voices.Current cycles through Voices.All looking for free voices to assign
  * new notes to. */
 
-    unsigned int  Current;
-    unsigned int  Rate;
-    float         Amplitude;
-    size_t        N;
-    uint64_t      Phase;
-    Operators     Carrier;
-    Operators     Modulator;
-    Voice       * All;
-    Voice       * Active[DEFAULT_KEYS_NUM];
-    Keyboard      Keyboard;
+  unsigned int  Current;
+  unsigned int  Rate;
+  float         Amplitude;
+  size_t        N;
+  uint64_t      Phase;
+  Operators     Carrier;
+  Operators     Modulator;
+  Voice       * All;
+  Voice       * Active[DEFAULT_KEYS_NUM];
+  Keyboard      Keyboard;
 } Voices;
 
-/* headers */
 void voiceOn(Voices *, const uint16_t);
 void voiceOff(Voices *, const uint16_t);
 void pollVoice(Voice *);
