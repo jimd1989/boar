@@ -9,9 +9,9 @@ typedef union Arg {
 /* A union where textual user input is parsed to. Can be an int, float, or a
  * string. */
 
-    int32_t       I;
-    float         F;
-    char        * S;
+  int32_t       I;
+  float         F;
+  char        * S;
 } Arg;
 
 typedef struct Cmd {
@@ -20,10 +20,9 @@ typedef struct Cmd {
  * corresponds with one of boar's functions, Cmd.Type is the signature of the
  * expected argument, and Cmd.Arg is the solitary argument to this function. */
 
-    unsigned int        Func;
-    unsigned int        Type;
-    Arg                 Arg;
+  unsigned int        Func;
+  unsigned int        Type;
+  Arg                 Arg;
 } Cmd;
 
-/* headers */
 Error parseLine(Cmd *, char *);

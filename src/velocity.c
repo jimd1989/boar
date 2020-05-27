@@ -6,10 +6,8 @@
 #include "numerical.h"
 #include "wave.h"
 
-/* headers */
 static float getVelocity(const uint16_t note);
 
-/* functions */
 static float
 getVelocity(const uint16_t note) {
 
@@ -21,12 +19,13 @@ getVelocity(const uint16_t note) {
  * touch-sensitive parameters. Note is shifted to the right by 9 places
  * intead of the usual 8, since its value cannot exceed 127. */
 
-    return (float)(note >> 9) / (float)MAX_MIDI_VALUE;
+  return (float)(note >> 9) / (float)MAX_MIDI_VALUE;
 }
+
 float
 applyVelocityCurve(const Wave *vw, const uint16_t note) {
-    
-    const float vel = getVelocity(note);
-    
-    return interpolateCycle(vw, truncateFloat(vel, 1.0f));
+
+  const float vel = getVelocity(note);
+
+  return interpolateCycle(vw, truncateFloat(vel, 1.0f));
 }

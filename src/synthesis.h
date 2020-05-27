@@ -4,7 +4,6 @@
 #include "envelope.h"
 #include "wave.h"
 
-/* types */
 typedef struct Osc {
 
 /* The primitive sound generating type. For every sound sample value generated,
@@ -16,12 +15,12 @@ typedef struct Osc {
  * every buffer-filling cycle, Osc.Phase * Osc.Amplitude * Osc.KeyMod is
  * written to Osc.Buffer.Values[i]. */
 
-    float          KeyMod;
-    float          Amplitude;
-    float          Phase;
-    float          Pitch;
-    Buffer       * Buffer;
-    Wave         * Wave;
+  float          KeyMod;
+  float          Amplitude;
+  float          Phase;
+  float          Pitch;
+  Buffer       * Buffer;
+  Wave         * Wave;
 } Osc;
 
 typedef struct Operator {
@@ -30,10 +29,10 @@ typedef struct Operator {
  * values in a parent Operators struct, which govern the fixed rate and pitch
  * ratio values of the Operator. */
 
-    float       * FixedRate;
-    float       * Ratio;
-    Osc           Osc;
-    Env           Env;
+  float       * FixedRate;
+  float       * Ratio;
+  Osc           Osc;
+  Env           Env;
 } Operator;
 
 typedef struct Operators {
@@ -41,14 +40,13 @@ typedef struct Operators {
 /* A master Operator that contains the wave and envelope settings that
  * individual child Operators point to. No oscillator information is contained
  * here, as that is decided on a Voice by Voice basis. */
-    
-    float       FixedRate;    
-    float       Ratio;
-    Wave        Wave;
-    Envs        Env;
+
+  float       FixedRate;    
+  float       Ratio;
+  Wave        Wave;
+  Envs        Env;
 
 } Operators;
 
-/* headers */
 void setPitch(Operator *, const unsigned int, const unsigned int);
 void fillCarrierBuffer(Operator *, Operator *m);
