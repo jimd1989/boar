@@ -118,7 +118,7 @@ parseFunc(Cmd *c, char *line) {
   typeIndex = line[0] - DEFAULT_ASCII_A;
   if (typeIndex > 57) {
     /* prevent out of bounds access */
-    return -1
+    return -1;
   }
   switch (line[1]) {
     case '.':
