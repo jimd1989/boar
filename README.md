@@ -48,10 +48,6 @@ You shouldn't hear anything yet. You can change that with the `n` command, which
     n 108
     n 120
 
-Line breaks can be replaced with semicolons. The following is equivalent to the block above:
-
-    n36;n48;n60;n72;n84;n96;n108;n120
-
 A chord of sines should be playing now. These are the fundamental carrier waves. Each one of them has an associated modulator wave that can be adjusted through calls to the `P` and `L` functions. The argument to `P` sets the pitch ratio between the modulator and the note played. If the note's frequency is 440hz, then `P 2.0` will make the modulator 880hz:
 
     P 2.0
@@ -163,21 +159,35 @@ Commands prefaced with "e" will not be evaluated in the local instance of boar, 
 
 This will mute the third boar in the pipe.
 
-Why not throw other things in the pipe? Consider the script `delay.sh`, which echoes its input back after $1 seconds:
+Why not throw other things in the pipe? Consider the script `delay.sh`, which is included in the [boar-extras](https://github.com/jimd1989/boar-extras) repository:
 
-    #!/bin/sh
-    
-    while read n
-    do
-        sleep $1
-        echo "$n"
-    done
+    boar -echo-notes | delay 0.5 | boar
 
-Now you have a primitive delay effect:
+There is now a primitive delay effect. This pipe-friendly behavior lends itself to all kinds of extensibility.
 
-    boar -echo-notes | ./delay 0.5 | boar
+## Typical routing
 
-This pipe-friendly simplicity lends itself to all kinds of extensibility. You can write a script that translates MIDI keyboard input to boar on/off notes, then fire them off to a FIFO that boar is listening to. You can run `sed` somewhere in the pipeline to mess with echoed notes. Go hog wild with your imagination; the shell is your DAW.
+When it comes to actual performance, I rarely find myself using a direct boar shell. More often than not, I have it listening to a FIFO, which allows boar to be a "server" with multiple "clients." Consider the following example, with a pipe of two `boar` commands listening to a FIFO `synth`:
+
+    mkfifo synth
+    boar -echo-notes <> synth | boar
+    boar: Welcome. You can exit at any time by pressing q + enter.
+    boar: Welcome. You can exit at any time by pressing q + enter.
+
+Then from another shell, I create a dumb repl with `cat`, piping its output through the `semicolons` command (from [boar-extras](https://github.com/jimd1989/boar-extras)), which allows me to issue multiple operations on a single line—a far saner way of editing patches:
+
+    rlwrap cat | semicolons > synth
+    a0.5;d0.5;s0.5;r0.5
+    ea0.9;ed0.9;es0.5;er0.9
+    ew3
+    n60;n65;n69
+    o60;o65;n69
+
+I usually don't play notes in this repl though; I just use it for configuring settings. Something like [pop](https://github.com/jimd1989/pop) or [boar-midi](https://github.com/jimd1989/boar-midi) can simultaneously send score data into the `synth` FIFO instead.
+
+And since everything is just FIFOs and pipes, there's nothing stopping `synth` from listening to `nc` and having a friend duet with you from his/her own machine. The entire Unix ecosystem is now your DAW.
+
+## And that's not all
 
 Make sure to read `man boar` too. There are even more features, such as touch sensitivity, fixed-rate operators, and reverse waves that are documented there.
 

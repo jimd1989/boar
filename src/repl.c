@@ -8,7 +8,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "repl.h"
 
@@ -201,30 +200,22 @@ repl(Repl *r) {
  * them to the Audio struct for processing. */
 
   Error err = 0;
-  char *token = NULL;
-  unsigned int span = 0;
 
   warnx("Welcome. You can exit at any time by pressing q + enter.");
   while (fgets(r->Buffer, DEFAULT_LINESIZE, stdin) != NULL) {
-    span = strcspn(r->Buffer, "\n");
-    if (span == 0 || r->Buffer[0] == '#') {
+    if (r->Buffer[0] == '\n' || r->Buffer[0] == '#') {
       /* ignore blank or commented input */
       ;
     } else {
       /* read multiple commands buffered by semicolons */
-      r->Buffer[span] = '\0';
-      token = strtok(r->Buffer, ";");
-      while (token != NULL) {
-        err = parseLine(&r->Cmd, token);
-        if (err != ERROR_OK) {
-          printParseErr(err, r->Buffer);
-        } else {
-          err = dispatchCmd(r);
-          if (err == ERROR_EXIT) {
-            return;
-          }
+      err = parseLine(&r->Cmd, r->Buffer);
+      if (err != ERROR_OK) {
+        printParseErr(err, r->Buffer);
+      } else {
+        err = dispatchCmd(r);
+        if (err == ERROR_EXIT) {
+          return;
         }
-        token = strtok(NULL, ";");
       }
     }
   }

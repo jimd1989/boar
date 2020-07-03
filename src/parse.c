@@ -35,7 +35,7 @@ readArg(char *line) {
 
   unsigned int t = TYPE_NIL;
 
-  while (*line != '\0') {
+  while (*line != '\n' && *line != '\0') {
     if (isblank((int)*line)) {
       ;
     } else if (*line == '-') {
