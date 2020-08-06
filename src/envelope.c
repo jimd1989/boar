@@ -124,6 +124,14 @@ resetEnv(Env *e) {
 }
 
 void
+retriggerEnv(Env *e) {
+
+/* Sets an Env back to attack, but leaves its phase. */
+
+  e->Stage = ENV_ATTACK;
+}
+
+void
 setAttackLevel(Envs *es, const float f) {
 
 /* Sets the attack speed for an envelope. */

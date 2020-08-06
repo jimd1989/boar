@@ -4,6 +4,7 @@
  * in "voice.h". */
 
 #include <err.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -20,7 +21,7 @@
 #include "wave.h"
 
 static Voice * findFreeVoice(Voices *);
-static void resetVoice(const Voices *, Voice *, const uint16_t);
+static void resetVoice(const Voices *, Voice *, const uint16_t, const bool);
 static void setVoicesSettings(Voices *, const AudioSettings *);
 static void allocateVoices(Voices *);
 static void makeOperator(Operators *, Operator *, Buffer *);
@@ -51,16 +52,20 @@ findFreeVoice(Voices *vs) {
 }
 
 static void
-resetVoice(const Voices *vs, Voice *v, const uint16_t note) {
+resetVoice(const Voices *vs, Voice *v, const uint16_t note, const bool soft) {
 
 /* Retriggers keyboard settings and envelopes in a Voice. Notes that are
  * turned off then on again without engaging another voice also trigger this
- * branch, which could be a cause of subtle errors in future features. Be
- * advised. */    
+ * branch (with `soft` engaged). */
 
-  applyKey(&vs->Keyboard, &v->Carrier, &v->Modulator, note);
-  resetEnv(&v->Carrier.Env);
-  resetEnv(&v->Modulator.Env);
+  if (soft) {
+    retriggerEnv(&v->Carrier.Env);
+    retriggerEnv(&v->Modulator.Env);
+  } else {
+    applyKey(&vs->Keyboard, &v->Carrier, &v->Modulator, note);
+    resetEnv(&v->Carrier.Env);
+    resetEnv(&v->Modulator.Env);
+  }
 }
 
 void
@@ -81,7 +86,7 @@ voiceOn(Voices *vs, const uint16_t n) {
     return;
   }
   if (vs->Active[note] != NULL) {
-    resetVoice(vs, vs->Active[note], n);
+    resetVoice(vs, vs->Active[note], n, true);
     return;
   }
   v = findFreeVoice(vs);
@@ -93,7 +98,7 @@ voiceOn(Voices *vs, const uint16_t n) {
   }
   v->Note = note;
   vs->Active[note] = v;
-  resetVoice(vs, v, n);
+  resetVoice(vs, v, n, false);
 }
 
 void
