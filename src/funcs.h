@@ -29,6 +29,12 @@
 /* (D.) sets modulator decay waveform*/
 #define FUNC_MOD_DECAY_WAVE (((unsigned int)'D' - DEFAULT_ASCII_A) | TYPE_PERIOD)
 
+/* (d:) sets envelope loop */
+#define FUNC_ENV_LOOP (((unsigned int)'d' - DEFAULT_ASCII_A) | TYPE_COLON)
+
+/* (D:) sets modulator envelope loop */
+#define FUNC_MOD_ENV_LOOP (((unsigned int)'D' - DEFAULT_ASCII_A) | TYPE_COLON)
+
 /* (e) echoes input */
 #define FUNC_ECHO ((unsigned int)'e' - DEFAULT_ASCII_A)
 

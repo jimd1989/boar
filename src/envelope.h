@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #include "wave.h"
 
 /* types */
@@ -47,6 +49,9 @@ typedef struct Env {
    *  All stages of the envelope are optional, but at least one attack, decay,
    *  or sustain value must be provided for x to have any effect.
    *
+   *  If an Env is set to loop, it will cycle through the AD stages until the
+   *  key is released.
+   *
    *  In terms of the program, every Voice has an individual Env struct for each
    *  parameter it expects to be modified by key events. Env.EnvStage and
    *  Env.Phase keep track of the local envelope state, while Env.Attack, 
@@ -57,6 +62,7 @@ typedef struct Env {
 
   EnvStage      Stage;
   float         Phase;
+  bool        * Loop;
   EnvStep     * Attack;
   EnvStep     * Decay;
   float       * Sustain;
@@ -68,6 +74,7 @@ typedef struct Envs {
 
   /* Envs contains master values that Voice-local Env types point to. */
 
+  bool                Loop;  
   unsigned int        Rate;
   EnvStep             Attack;
   EnvStep             Decay;
@@ -79,6 +86,7 @@ typedef struct Envs {
 float applyEnv(Env *);
 void resetEnv(Env *);
 void retriggerEnv(Env *);
+void setLoop(Envs *, bool);
 void setAttackLevel(Envs *, const float);
 void setDecayLevel(Envs *, const float);
 void setSustainLevel(Envs *, const float);

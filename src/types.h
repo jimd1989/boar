@@ -189,7 +189,7 @@ static const unsigned int TYPE_SIGNATURES_COLON[58] = {
   TYPE_UNDEFINED, /* A: */
   TYPE_UNDEFINED, /* B: */
   TYPE_UNDEFINED, /* C: */
-  TYPE_UNDEFINED, /* D: */
+  TYPE_UINT,      /* D: */
   TYPE_UNDEFINED, /* E: */
   TYPE_UNDEFINED, /* F: */
   TYPE_UNDEFINED, /* G: */
@@ -221,7 +221,7 @@ static const unsigned int TYPE_SIGNATURES_COLON[58] = {
   TYPE_UNDEFINED, /* a: */
   TYPE_UNDEFINED, /* b: */
   TYPE_UNDEFINED, /* c: */
-  TYPE_UNDEFINED, /* d: */
+  TYPE_UINT,      /* d: */
   TYPE_UNDEFINED, /* e: */
   TYPE_UNDEFINED, /* f: */
   TYPE_UNDEFINED, /* g: */
