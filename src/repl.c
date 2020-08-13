@@ -56,133 +56,125 @@ dispatchCmd(Repl *r) {
 
 /* Runs a command against the Audio struct. */
 
+  Arg *arg = &r->Cmd.Arg;
+  Operators *carrier = &r->Audio->Voices.Carrier;
+  Operators *modulator = &r->Audio->Voices.Modulator;
+  Voices *voices = &r->Audio->Voices;
+
   switch(r->Cmd.Func) {
     case FUNC_NOTE_ON:
       echoNoteCheck(r);
-      voiceOn(&r->Audio->Voices, (uint16_t)r->Cmd.Arg.I);
+      voiceOn(voices, (uint16_t)arg->I);
       break;
     case FUNC_NOTE_OFF:
       echoNoteCheck(r);
-      voiceOff(&r->Audio->Voices, (uint16_t)r->Cmd.Arg.I);
+      voiceOff(voices, (uint16_t)arg->I);
       break;
     case FUNC_MOD_ATTACK:
-      setAttackLevel(&r->Audio->Voices.Modulator.Env,
-          truncateFloat(r->Cmd.Arg.F, 1.0f));
+      setAttackLevel(&modulator->Env, arg->F);
       break;
     case FUNC_ATTACK:
-      setAttackLevel(&r->Audio->Voices.Carrier.Env,
-          truncateFloat(r->Cmd.Arg.F, 1.0f));
+      setAttackLevel(&carrier->Env, arg->F);
       break;
     case FUNC_MOD_ATTACK_WAVE:
-      setAttackWave(&r->Audio->Voices.Modulator.Env, r->Cmd.Arg.I);
+      setAttackWave(&modulator->Env, arg->I);
       break;
     case FUNC_ATTACK_WAVE:
-      setAttackWave(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.I);
+      setAttackWave(&carrier->Env, arg->I);
       break;
     case FUNC_MOD_DECAY:
-      setDecayLevel(&r->Audio->Voices.Modulator.Env,
-          truncateFloat(r->Cmd.Arg.F, 1.0f));
+      setDecayLevel(&modulator->Env, arg->F);
       break;
     case FUNC_DECAY:
-      setDecayLevel(&r->Audio->Voices.Carrier.Env,
-          truncateFloat(r->Cmd.Arg.F, 1.0f));
+      setDecayLevel(&carrier->Env, arg->F);
       break;
     case FUNC_MOD_DECAY_WAVE:
-      setDecayWave(&r->Audio->Voices.Modulator.Env, r->Cmd.Arg.I);
+      setDecayWave(&modulator->Env, arg->I);
       break;
     case FUNC_DECAY_WAVE:
-      setDecayWave(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.I);
+      setDecayWave(&carrier->Env, arg->I);
       break;
     case FUNC_MOD_ENV_LOOP:
-      setLoop(&r->Audio->Voices.Modulator.Env, (bool)r->Cmd.Arg.I);
+      setLoop(&modulator->Env, (bool)arg->I);
       break;
     case FUNC_ENV_LOOP:
-      setLoop(&r->Audio->Voices.Carrier.Env, (bool)r->Cmd.Arg.I);
+      setLoop(&carrier->Env, (bool)arg->I);
       break;
     case FUNC_ECHO:
-      echoString(r->Cmd.Arg.S);
+      echoString(arg->S);
       break;
     case FUNC_MOD_KEY_FOLLOW:
-      selectWave(&r->Audio->Voices.Keyboard.Modulator.KeyFollowCurve,
-          r->Cmd.Arg.I);
+      selectWave(&voices->Keyboard.Modulator.KeyFollowCurve, arg->I);
       break;
     case FUNC_KEY_FOLLOW:
-      selectWave(&r->Audio->Voices.Keyboard.Carrier.KeyFollowCurve,
-          r->Cmd.Arg.I);
+      selectWave(&voices->Keyboard.Carrier.KeyFollowCurve, arg->I);
       break;
     case FUNC_MOD_AMPLITUDE:
-      setModulation(&r->Audio->Voices, r->Cmd.Arg.F);
+      setModulation(voices, arg->F);
       break;
     case FUNC_AMPLITUDE:
-      setVolume(r->Audio, r->Cmd.Arg.F);
+      setVolume(r->Audio, arg->F);
       break;
     case FUNC_MOD_PITCH:
-      setPitchRatio(&r->Audio->Voices, false, r->Cmd.Arg.F);
+      setPitchRatio(voices, false, arg->F);
       break;
     case FUNC_PITCH:
-      setPitchRatio(&r->Audio->Voices, true, r->Cmd.Arg.F);
+      setPitchRatio(voices, true, arg->F);
       break;
     case FUNC_QUIT:
       fprintf(DEFAULT_ECHO_FILE, "q\n");
       r->Audio->Active = false;
       return ERROR_EXIT;
     case FUNC_MOD_RELEASE:
-      setReleaseLevel(&r->Audio->Voices.Modulator.Env,
-          truncateFloat(r->Cmd.Arg.F, 1.0f));
+      setReleaseLevel(&modulator->Env, arg->F);
       break;
     case FUNC_RELEASE:
-      setReleaseLevel(&r->Audio->Voices.Carrier.Env,
-          truncateFloat(r->Cmd.Arg.F, 1.0f));
+      setReleaseLevel(&carrier->Env, arg->F);
       break;
     case FUNC_MOD_RELEASE_WAVE:
-      setReleaseWave(&r->Audio->Voices.Modulator.Env, r->Cmd.Arg.I);
+      setReleaseWave(&modulator->Env, arg->I);
       break;
     case FUNC_RELEASE_WAVE:
-      setReleaseWave(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.I);
+      setReleaseWave(&carrier->Env, arg->I);
       break;
     case FUNC_MOD_SUSTAIN:
-      setSustainLevel(&r->Audio->Voices.Modulator.Env,
-          truncateFloat(r->Cmd.Arg.F, 1.0f));
-      break;
-    case FUNC_MOD_ENV_DEPTH:
-      setDepth(&r->Audio->Voices.Modulator.Env, r->Cmd.Arg.F);
-      break;
-    case FUNC_ENV_DEPTH:
-      setDepth(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.F);
+      setSustainLevel(&modulator->Env, arg->F);
       break;
     case FUNC_SUSTAIN:
-      setSustainLevel(&r->Audio->Voices.Carrier.Env,
-          truncateFloat(r->Cmd.Arg.F, 1.0f));
+      setSustainLevel(&carrier->Env, arg->F);
+      break;
+    case FUNC_MOD_ENV_DEPTH:
+      setDepth(&modulator->Env, arg->F);
+      break;
+    case FUNC_ENV_DEPTH:
+      setDepth(&carrier->Env, arg->F);
       break;
     case FUNC_MOD_TOUCH:
-      selectWave(&r->Audio->Voices.Keyboard.Modulator.VelocityCurve, 
-          r->Cmd.Arg.I);
+      selectWave(&voices->Keyboard.Modulator.VelocityCurve, arg->I);
       break;
     case FUNC_TOUCH:
-      selectWave(&r->Audio->Voices.Keyboard.Carrier.VelocityCurve, 
-          r->Cmd.Arg.I);
+      selectWave(&voices->Keyboard.Carrier.VelocityCurve, arg->I);
       break;
     case FUNC_TUNE_NOTE:
-      selectTuningKey(&r->Audio->Voices.Keyboard, r->Cmd.Arg.I);
+      selectTuningKey(&voices->Keyboard, arg->I);
       break;
     case FUNC_TUNE:
-      tuneKey(&r->Audio->Voices.Keyboard, r->Cmd.Arg.F);
+      tuneKey(&voices->Keyboard, arg->F);
       break;
     case FUNC_TUNE_TARGET:
-      selectTuningLayer(&r->Audio->Voices.Keyboard,
-          (TuningLayer)r->Cmd.Arg.I);
+      selectTuningLayer(&voices->Keyboard, (TuningLayer)arg->I);
       break;
     case FUNC_MOD_WAVE:
-      selectWave(&r->Audio->Voices.Modulator.Wave, r->Cmd.Arg.I);
+      selectWave(&modulator->Wave, arg->I);
       break;
     case FUNC_WAVE:
-      selectWave(&r->Audio->Voices.Carrier.Wave, r->Cmd.Arg.I);
+      selectWave(&carrier->Wave, arg->I);
       break;
     case FUNC_MOD_FIXED:
-      setFixedRate(&r->Audio->Voices, false, r->Cmd.Arg.F);
+      setFixedRate(voices, false, arg->F);
       break;
     case FUNC_FIXED:
-      setFixedRate(&r->Audio->Voices, true, r->Cmd.Arg.F);
+      setFixedRate(voices, true, arg->F);
       break;
   }
   return ERROR_OK;

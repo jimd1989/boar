@@ -163,7 +163,7 @@ setAttackLevel(Envs *es, const float f) {
 
 /* Sets the attack speed for an envelope. */
 
-  setEnvLevel(es->Rate, &es->Attack, f);
+  setEnvLevel(es->Rate, &es->Attack, truncateFloat(f, 1.0f));
 }
 
 void
@@ -171,7 +171,7 @@ setDecayLevel(Envs *es, const float f) {
 
 /* Sets the decay speed for an envelope. */
 
-  setEnvLevel(es->Rate, &es->Decay, f);
+  setEnvLevel(es->Rate, &es->Decay, truncateFloat(f, 1.0f));
 }
 
 void
@@ -179,7 +179,7 @@ setSustainLevel(Envs *es, const float f) {
 
 /* Sets the sustain level for an envelope. */
 
-  es->Sustain = f;
+  es->Sustain = truncateFloat(f, 1.0f);
 }
 
 void
@@ -187,7 +187,7 @@ setReleaseLevel(Envs *es, const float f) {
 
 /* Sets the release speed for an envelope. */
 
-  setEnvLevel(es->Rate, &es->Release, f);
+  setEnvLevel(es->Rate, &es->Release, truncateFloat(f, 1.0f));
 }
 
 void
