@@ -117,6 +117,10 @@ Sets the envelope release wave shape for the carrier (r.) or modulator (R.).
 Sets the envelope sustain for the carrier (s) or modulator (S). This is the level at which the parameter being enveloped will be multiplied against after the attack and decay have taken place. Values between 0.0 and 1.0 are honored.
 .El
 .Bl -tag -width Ds
+.It s./S. [ufloat]
+Sets the envelope depth for the carrier (s.) or modulator (S.). At its fullest depth (1.0), an envelope will exert complete control over its parameter. At its lowest (0.0) it will have no effect. A value between these extremes will allow the envelope to provide subtle accents to its parameter.
+.El
+.Bl -tag -width Ds
 .It t/T [int]
 Sets the touch sensitivity curve of the carrier (t) or modulator (T). Its argument is one of the wavetables specified in the w/W command entry. Depending upon the curve selected, boar's operators will respond differently to varying pressure on the keyboard. This parameter is set to 0 by default: a flat wavetable that does not respond to pressure at all. Users are advised not to change this value unless they are piping (filtered) musical keyboard input into boar; specifying velocity values in the REPL itself is a tedious process. See the note (n) command for more information.
 .El
@@ -155,6 +159,6 @@ Sets the carrier (x) or modulator (X) to a fixed frequency in hz. The specific v
 .Sh HISTORY
 boar was written in 2019, but it came out of the ashes of aborted (and far more ambitious) efforts in realtime synthesis dating back to 2014. This modest program largely has John Chowning to thank, as it leverages his groundbreaking work in FM synthesis, best elucidated his book "FM Theory and Applications." Curtis Roads also contributed a wealth of knowledge with his "Computer Music Tutorial." The communities at Vintage Synth Explorer and KVR Audio also patiently guided the author through many basic DSP concepts. 
 .Sh AUTHORS
-Written by Jim Dalrymple. https://dalrym.pl
+Written by Jim Dalrymple. http://dalrym.pl
 .Sh CAVEATS
 boar makes no use of readline. If you'd like to scroll through your input history, please call the program in `rlwrap boar`. 

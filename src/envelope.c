@@ -104,21 +104,26 @@ float
 applyEnv(Env *e) {
 
 /* Returns a sample from the envelope's stage's wavetable based upon the
- * envelope's phase. */
+ * envelope's phase. Weights it according to Env.Depth. */
+
+  float level = 0.0f;
 
   incrementEnv(e);
   switch((unsigned int)e->Stage){
     case ENV_ATTACK:
-      return interpolateCycle(&e->Attack->Wave, e->Phase);
+      level = interpolateCycle(&e->Attack->Wave, e->Phase);
+      break;
     case ENV_DECAY:
-      return interpolateCycle(&e->Decay->Wave, e->Phase);
+      level = interpolateCycle(&e->Decay->Wave, e->Phase);
+      break;
     case ENV_SUSTAIN:
       return *e->Sustain;
     case ENV_RELEASE:
-      return interpolateCycle(&e->Release->Wave, e->Phase);
-    default:
-      return 0.0f;
+      level = interpolateCycle(&e->Release->Wave, e->Phase);
+      break;
   }
+  
+  return 1.0f - ((1.0f - level) * *e->Depth);
 }
 
 void
@@ -138,11 +143,19 @@ retriggerEnv(Env *e) {
   e->Stage = ENV_ATTACK;
 }
 void
-setLoop(Envs *es, bool enabled) {
+setLoop(Envs *es, const bool enabled) {
 
 /* Sets the loop state of an envelope. */
 
   es->Loop = enabled;
+}
+
+void
+setDepth(Envs *es, const float level) {
+
+/* Sets the modulation depth of an envelope. */  
+
+  es->Depth = truncateFloat(level, 1.0f);
 }
 
 void
@@ -207,6 +220,7 @@ makeEnv(Envs *es, Env *e) {
 /* Assigns an Env pointers to all the fields in an Envs. */
 
   e->Loop = &es->Loop;
+  e->Depth = &es->Depth;
   e->Attack = &es->Attack;
   e->Decay = &es->Decay;
   e->Sustain = &es->Sustain;
@@ -220,6 +234,7 @@ makeEnvs(Envs *es, const unsigned int rate) {
 /* Assigns Envs its sample rate and sets it to a sustain-only configuration. */
 
   es->Loop = false;
+  es->Depth = 1.0f;
   es->Rate = rate;
   setAttackLevel(es, 0.0f);
   setDecayLevel(es, 0.0f);

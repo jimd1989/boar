@@ -83,6 +83,12 @@
 /* (S) sets modulator sustain */
 #define FUNC_MOD_SUSTAIN ((unsigned int)'S' - DEFAULT_ASCII_A)
 
+/* (s.) sets carrier envelope depth */
+#define FUNC_ENV_DEPTH (((unsigned int)'s' - DEFAULT_ASCII_A) | TYPE_PERIOD)
+
+/* (S.) sets modulator envelope depth */
+#define FUNC_MOD_ENV_DEPTH (((unsigned int)'S' - DEFAULT_ASCII_A) | TYPE_PERIOD)
+
 /* (t) sets touch sensitivity */
 #define FUNC_TOUCH ((unsigned int)'t' - DEFAULT_ASCII_A)
 
