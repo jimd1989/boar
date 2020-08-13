@@ -13,9 +13,9 @@
 
 #include "audio-settings.h"
 #include "buffers.h"
-#include "defaults.h"
-#include "errors.h"
-#include "maximums.h"
+#include "constants/defaults.h"
+#include "constants/errors.h"
+#include "constants/maximums.h"
 #include "voice.h"
 
 static void populateSettings(const AudioSettings *, struct sio_par *); 

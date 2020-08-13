@@ -5,8 +5,8 @@
 
 #include "envelope.h"
 
-#include "defaults.h"
-#include "maximums.h"
+#include "constants/defaults.h"
+#include "constants/maximums.h"
 #include "numerical.h"
 #include "synthesis.h"
 #include "wave.h"

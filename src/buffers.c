@@ -8,7 +8,7 @@
 #include "buffers.h"
 
 #include "audio-settings.h"
-#include "errors.h"
+#include "constants/errors.h"
 
 Buffer *
 makeBuffer(const size_t size) {

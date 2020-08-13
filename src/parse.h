@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "errors.h"
+#include "constants/errors.h"
 
 typedef union Arg {
 

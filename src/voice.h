@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "audio-settings.h"
-#include "defaults.h"
+#include "constants/defaults.h"
 #include "key.h"
 #include "synthesis.h"
 #include "wave.h"

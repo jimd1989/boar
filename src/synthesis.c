@@ -6,7 +6,7 @@
 
 #include "synthesis.h"
 
-#include "defaults.h"
+#include "constants/defaults.h"
 #include "envelope.h"
 #include "noise.h"
 #include "numerical.h"

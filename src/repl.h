@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "audio-init.h"
-#include "defaults.h"
+#include "constants/defaults.h"
 #include "parse.h"
 
 typedef struct Repl {

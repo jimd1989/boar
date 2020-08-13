@@ -8,7 +8,7 @@
 
 #include "numerical.h"
 
-#include "maximums.h"
+#include "constants/maximums.h"
 #include "wavetables/exponential.h"
 
 float

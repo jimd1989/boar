@@ -12,9 +12,9 @@
 
 #include "parse.h"
 
-#include "defaults.h"
-#include "errors.h"
-#include "types.h"
+#include "constants/defaults.h"
+#include "constants/errors.h"
+#include "constants/types.h"
 
 static unsigned int readArg(char *);
 static bool isValidArg(const unsigned int, const unsigned int);

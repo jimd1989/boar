@@ -6,7 +6,7 @@
 
 #include "audio-init.h"
 #include "audio-output.h"
-#include "errors.h"
+#include "constants/errors.h"
 #include "repl.h"
 
 int main(int argc, char **argv) {

@@ -4,7 +4,7 @@
 
 #include "noise.h"
 
-#include "defaults.h"
+#include "constants/defaults.h"
 #include "math.h"
 
 float
