@@ -2,6 +2,36 @@ Features that boar is lacking, none of which are guaranteed to ever actually
 be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
+Binary:
+boar should be futher modularized to accept binary commands rather than
+plaintext. The binary format should be compatible with MIDI for key functions
+such as note on/off events. A separate `boar-bridge` command should convert
+plaintext to binary, for manual user input.
+
+Additional oscs, envs:
+Allow an arbitary number of oscillators and envelopes, and allow the user to
+define the manner in which they modulate one-another.
+
+Remove wavetables:
+Get rid of all wavetables and associated logic. Only use Colin Wallace's
+Chebyshev approximation of a sine [-π/π]:
+
+float approxsin(float x) {
+    float pi_major = (float)M_PI;
+    float pi_minor = -0.00000008742278;
+    float x2 = x*x;
+    float p11 = 0.00000000013291342;
+    float p9  = p11*x2 + -0.000000023317787;
+    float p7  = p9*x2  + 0.0000025222919;
+    float p5  = p7*x2  + -0.00017350505;
+    float p3  = p5*x2  + 0.0066208798;
+    float p1  = p3*x2  + -0.10132118;
+    return (x - pi_major - pi_minor) * (x + pi_major + pi_minor) * p1 * x;
+}
+
+Use stack more:
+Locate performance critical data structures and keep them in stack vs heap.
+
 Info:
 Running the info command (i), followed by a string, should return information
 about the queried parameter to stderr. Like `i W'` would return the shape of
@@ -15,31 +45,11 @@ Modify ByteBuffer:
 Mixed-down int16_t samples can likely be written directly to it, without the
 need for manual bit-shifting.
 
-Sampling:
-A dedicated wavetable based on a .WAV file specified in command-line args.
-Various pitch-shifting algorithms like resampling, SOLA, and phase vocoding.
-Controls over formants and the like. All frequency analysis should ideally take
-place at initialization since the wavetable is known ahead of time. This data,
-assuming it isn't too large, should be available in a dedicated type to ease
-the computational impact of frequency domain pitching. Samples used as
-envelopes should maybe use the first 2048 values of their tables.
-
 Sample + Hold:
 In addition to pure noise signals, there should be some kind of s+h feature.
-
-Rotate Waves:
-Maybe rotate some of the wavetables so that they are less awkward when used
-as envelope stages.
 
 Additional inputs:
 The ability to assign parameters to modwheels, aftertouch, etc. The interface
 for these devices would have to be generic, with an external program
 converting their values into a proper boar command. Maybe two values could be 
-read through mod (m/M) commands, and the routing of these values assigned
-through the extra parameter (E) interface.
-
-Improved band-limited wavetables:
-A basic table-per-octave solution has been implemented. Oscillators will always
-read from the table in the octave above to prevent aliasing. A more complex
-solution, such as interpolating between two tables, is doable, but I am
-satisfied with the way things sound for now.
+read through mod (m/M) commands.
