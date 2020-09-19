@@ -78,6 +78,7 @@ typedef struct Envs {
 /* headers */
 float applyEnv(Env *);
 void resetEnv(Env *);
+void retriggerEnv(Env *);
 void setAttackLevel(Envs *, const float);
 void setDecayLevel(Envs *, const float);
 void setSustainLevel(Envs *, const float);
