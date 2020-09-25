@@ -1,6 +1,8 @@
 /* Functions related to management of Env types. For more detailed information,
  * consult "envelope.h". */
 
+#include <stdbool.h>
+
 #include "envelope.h"
 
 #include "defaults.h"
@@ -58,7 +60,12 @@ incrementDecay(Env *e) {
 
   e->Phase = liftFloat(e->Phase - e->Decay->Level, *e->Sustain);
   if (e->Phase == *e->Sustain) {
-    e->Stage = ENV_SUSTAIN;
+    if (*e->Loop) {
+      e->Stage = ENV_ATTACK;
+      e->Phase = 0.0f;
+    } else {
+      e->Stage = ENV_SUSTAIN;
+    }
   }
 }
 
@@ -130,6 +137,13 @@ retriggerEnv(Env *e) {
 
   e->Stage = ENV_ATTACK;
 }
+void
+setLoop(Envs *es, bool enabled) {
+
+/* Sets the loop state of an envelope. */
+
+  es->Loop = enabled;
+}
 
 void
 setAttackLevel(Envs *es, const float f) {
@@ -192,6 +206,7 @@ makeEnv(Envs *es, Env *e) {
 
 /* Assigns an Env pointers to all the fields in an Envs. */
 
+  e->Loop = &es->Loop;
   e->Attack = &es->Attack;
   e->Decay = &es->Decay;
   e->Sustain = &es->Sustain;
@@ -204,6 +219,7 @@ makeEnvs(Envs *es, const unsigned int rate) {
 
 /* Assigns Envs its sample rate and sets it to a sustain-only configuration. */
 
+  es->Loop = false;
   es->Rate = rate;
   setAttackLevel(es, 0.0f);
   setDecayLevel(es, 0.0f);

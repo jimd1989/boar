@@ -93,6 +93,12 @@ dispatchCmd(Repl *r) {
     case FUNC_DECAY_WAVE:
       setDecayWave(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.I);
       break;
+    case FUNC_MOD_ENV_LOOP:
+      setLoop(&r->Audio->Voices.Modulator.Env, (bool)r->Cmd.Arg.I);
+      break;
+    case FUNC_ENV_LOOP:
+      setLoop(&r->Audio->Voices.Carrier.Env, (bool)r->Cmd.Arg.I);
+      break;
     case FUNC_ECHO:
       echoString(r->Cmd.Arg.S);
       break;
