@@ -6,7 +6,6 @@
 
 #include "wave.h"
 
-/* types */
 typedef enum EnvStage {
 
   /* Marks which stage of A/D/S/R an envelope is currently in. */
@@ -49,6 +48,9 @@ typedef struct Env {
    *  All stages of the envelope are optional, but at least one attack, decay,
    *  or sustain value must be provided for x to have any effect.
    *
+   *  The amount of modulation an envelope performs on its target is governed
+   *  by Env.Depth, which is between 0.0 (none) and 1.0 (full).
+   *
    *  If an Env is set to loop, it will cycle through the AD stages until the
    *  key is released.
    *
@@ -63,6 +65,7 @@ typedef struct Env {
   EnvStage      Stage;
   float         Phase;
   bool        * Loop;
+  float       * Depth;
   EnvStep     * Attack;
   EnvStep     * Decay;
   float       * Sustain;
@@ -75,6 +78,7 @@ typedef struct Envs {
   /* Envs contains master values that Voice-local Env types point to. */
 
   bool                Loop;  
+  float               Depth;
   unsigned int        Rate;
   EnvStep             Attack;
   EnvStep             Decay;
@@ -82,11 +86,11 @@ typedef struct Envs {
   EnvStep             Release;
 } Envs;
 
-/* headers */
 float applyEnv(Env *);
 void resetEnv(Env *);
 void retriggerEnv(Env *);
-void setLoop(Envs *, bool);
+void setLoop(Envs *, const bool);
+void setDepth(Envs *, const float);
 void setAttackLevel(Envs *, const float);
 void setDecayLevel(Envs *, const float);
 void setSustainLevel(Envs *, const float);

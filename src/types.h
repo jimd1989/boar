@@ -141,7 +141,7 @@ static const unsigned int TYPE_SIGNATURES_PERIOD[58] = {
   TYPE_UNDEFINED, /* P. */
   TYPE_UNDEFINED, /* Q. */
   TYPE_INT,       /* R. */
-  TYPE_UNDEFINED, /* S. */
+  TYPE_UFLOAT,    /* S. */
   TYPE_UNDEFINED, /* T. */
   TYPE_UNDEFINED, /* U. */
   TYPE_UNDEFINED, /* V. */
@@ -173,7 +173,7 @@ static const unsigned int TYPE_SIGNATURES_PERIOD[58] = {
   TYPE_UNDEFINED, /* p. */
   TYPE_UNDEFINED, /* q. */
   TYPE_INT,       /* r. */
-  TYPE_UNDEFINED, /* s. */
+  TYPE_UFLOAT,    /* s. */
   TYPE_UNDEFINED, /* t. */
   TYPE_INT,       /* u. */
   TYPE_UNDEFINED, /* v. */

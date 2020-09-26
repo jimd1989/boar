@@ -144,6 +144,12 @@ dispatchCmd(Repl *r) {
       setSustainLevel(&r->Audio->Voices.Modulator.Env,
           truncateFloat(r->Cmd.Arg.F, 1.0f));
       break;
+    case FUNC_MOD_ENV_DEPTH:
+      setDepth(&r->Audio->Voices.Modulator.Env, r->Cmd.Arg.F);
+      break;
+    case FUNC_ENV_DEPTH:
+      setDepth(&r->Audio->Voices.Carrier.Env, r->Cmd.Arg.F);
+      break;
     case FUNC_SUSTAIN:
       setSustainLevel(&r->Audio->Voices.Carrier.Env,
           truncateFloat(r->Cmd.Arg.F, 1.0f));
