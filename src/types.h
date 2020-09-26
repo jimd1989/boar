@@ -51,6 +51,9 @@
 /* Signifies that any and all input is valid for a function. */
 #define TYPE_ANY (unsigned int)(1 << 30)
 
+/* A command with no adornment */
+#define TYPE_NORMAL 0
+
 /* A command with a "." adornment */
 #define TYPE_PERIOD (unsigned int)(1 << 7)
 
