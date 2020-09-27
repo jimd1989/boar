@@ -2,7 +2,7 @@
 
 #include "velocity.h"
 
-#include "maximums.h"
+#include "constants/maximums.h"
 #include "numerical.h"
 #include "wave.h"
 

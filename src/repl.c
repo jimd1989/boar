@@ -13,9 +13,9 @@
 
 #include "audio-init.h"
 #include "audio-output.h"
-#include "defaults.h"
-#include "errors.h"
-#include "funcs.h"
+#include "constants/defaults.h"
+#include "constants/errors.h"
+#include "constants/funcs.h"
 #include "key.h"
 #include "parse.h"
 #include "numerical.h"

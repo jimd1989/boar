@@ -5,9 +5,9 @@
 
 #include "wave.h"
 
-#include "defaults.h"
-#include "errors.h"
-#include "maximums.h"
+#include "constants/defaults.h"
+#include "constants/errors.h"
+#include "constants/maximums.h"
 #include "noise.h"
 #include "numerical.h"
 #include "wavetables/exponential.h"

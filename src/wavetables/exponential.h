@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../defaults.h"
+#include "../constants/defaults.h"
 
 static const float WAVE_EXPONENTIAL_000[DEFAULT_WAVELEN] = {
     -1, -0.977701, -0.955501, -0.94916, -0.945262, -0.936113,

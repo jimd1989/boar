@@ -1,6 +1,6 @@
 # pragma once
 
-#include "defaults.h"
+#include "constants/defaults.h"
 #include "synthesis.h"
 #include "velocity.h"
 #include "wave.h"

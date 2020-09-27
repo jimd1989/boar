@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../defaults.h"
+#include "../constants/defaults.h"
 
 static const float WAVE_TRIANGLE_000[DEFAULT_WAVELEN] = {
     0, 0.00195338, 0.00390682, 0.00586014, 0.00781363, 0.00976693,

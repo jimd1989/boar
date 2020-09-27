@@ -2,6 +2,10 @@ Features that boar is lacking, none of which are guaranteed to ever actually
 be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
+Faster random values:
+Values returned by rand() may be unnecessarily high quality. Consider a more
+basic solution for a performance boost.
+
 Binary:
 boar should be futher modularized to accept binary commands rather than
 plaintext. The binary format should be compatible with MIDI for key functions

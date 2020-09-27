@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 
-#include "errors.h"
+#include "constants/errors.h"
 
 typedef struct AudioSettings {
 

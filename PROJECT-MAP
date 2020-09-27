@@ -78,16 +78,16 @@ available in the files themselves.
 
 /* Universal reference files */
 
-FILE: defaults.h
+FILE: constants/defaults.h
 Contains #defines used to set default values for various parameters throughout
 the program. Some of these defaults are discarded in favor of user-defined
 settings, while others remain constant.
 
-FILE maximums.h
+FILE constants/maximums.h
 Contains constants that set strict upper and lower bounds on user input.
 Nothing here defers to user input.
 
-FILE errors.h
+FILE constants/errors.h
 Contains the Error enum, which is returned by various procedures to signal
 specifically what went wrong with them.
 
@@ -160,10 +160,14 @@ a ByteBuffer and write it to the soundcard.
 
 /* User input */
 
-FILE types.h
+FILE constants/types.h
 Contains bit flags for parsing argument types from user input. Also contains
 TYPE_SIGNATURES, which is an array of the expected argument type for every
 possible command in boar.
+
+FILE constants/funcs.h
+Contains enum values for every user-facing boar procedure, which can be used
+to dispatch functions from repl input.
 
 FILE parse.c parse.h
 Defines the Cmd type, which is where user input is parsed into program data

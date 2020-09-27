@@ -7,7 +7,7 @@
 
 #include "key.h"
 
-#include "maximums.h"
+#include "constants/maximums.h"
 #include "numerical.h"
 #include "synthesis.h"
 #include "velocity.h"

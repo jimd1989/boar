@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../defaults.h"
+#include "../constants/defaults.h"
 
 static const float WAVE_FLAT_000[DEFAULT_WAVELEN] = {
     1, 1, 1, 1, 1, 1, 

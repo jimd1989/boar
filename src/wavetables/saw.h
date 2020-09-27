@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../defaults.h"
+#include "../constants/defaults.h"
 
 static const float WAVE_SAW_000[DEFAULT_WAVELEN] = {
     -1, -0.921422, -0.947433, -0.942619, -0.932586, -0.947691,

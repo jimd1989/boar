@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../defaults.h"
+#include "../constants/defaults.h"
 
 static const float WAVE_LOGARITHMIC_000[DEFAULT_WAVELEN] = {
     -1, -0.551116, -0.453189, -0.368782, -0.290314, -0.24818,

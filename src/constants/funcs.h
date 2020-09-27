@@ -17,7 +17,7 @@
 /* (a.) sets attack waveform */
 #define FUNC_ATTACK_WAVE FUNC_DEF('a', TYPE_PERIOD)
 
-/* (A.) sets modulator attack waveform*/
+/* (A.) sets modulator attack waveform */
 #define FUNC_MOD_ATTACK_WAVE FUNC_DEF('A', TYPE_PERIOD)
 
 /* (d) sets decay */
@@ -29,7 +29,7 @@
 /* (d.) sets decay waveform */
 #define FUNC_DECAY_WAVE FUNC_DEF('d', TYPE_PERIOD)
 
-/* (D.) sets modulator decay waveform*/
+/* (D.) sets modulator decay waveform */
 #define FUNC_MOD_DECAY_WAVE FUNC_DEF('D', TYPE_PERIOD)
 
 /* (d:) sets envelope loop */

@@ -12,9 +12,9 @@
 
 #include "audio-settings.h"
 #include "buffers.h"
-#include "defaults.h"
+#include "constants/defaults.h"
+#include "constants/errors.h"
 #include "envelope.h"
-#include "errors.h"
 #include "key.h"
 #include "noise.h"
 #include "synthesis.h"

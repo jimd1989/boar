@@ -9,9 +9,9 @@
 
 #include "audio-settings.h"
 
-#include "defaults.h"
-#include "errors.h"
-#include "maximums.h"
+#include "constants/defaults.h"
+#include "constants/errors.h"
+#include "constants/maximums.h"
 
 static bool isFlag(const char *, const char *);
 static void parseFlag(const char *, const char *, const unsigned int, 

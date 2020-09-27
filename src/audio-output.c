@@ -11,7 +11,7 @@
 
 #include "audio-init.h"
 #include "buffers.h"
-#include "errors.h"
+#include "constants/errors.h"
 #include "numerical.h"
 #include "voice.h"
 

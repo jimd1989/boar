@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../defaults.h"
+#include "../constants/defaults.h"
 
 static const float WAVE_SINE_000[DEFAULT_WAVELEN] = {
     0, 0.00306796, 0.00613588, 0.00920375, 0.0122715, 0.0153392,
