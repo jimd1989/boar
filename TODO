@@ -2,15 +2,22 @@ Features that boar is lacking, none of which are guaranteed to ever actually
 be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
+New parser:
+Parser can be better. Maybe take ideas from boar-parser experiment repo.
+ - Reintroduce semicolon handling rather than rely on external command.
+ - Allow multiple args, some of which are optional.
+Other features, such as more oscs and better modulation routings, may come from
+this.
+
+Make single threaded:
+The separate input/audio thread model is less than ideal. Remove this and make
+boar serial so that it can respond to user input in a more deterministic manner.
+Parallel processing can be reintroduced on a per voice basis, if it's worth the
+overhead.
+
 Faster random values:
 Values returned by rand() may be unnecessarily high quality. Consider a more
 basic solution for a performance boost.
-
-Binary:
-boar should be futher modularized to accept binary commands rather than
-plaintext. The binary format should be compatible with MIDI for key functions
-such as note on/off events. A separate `boar-bridge` command should convert
-plaintext to binary, for manual user input.
 
 Additional oscs, envs:
 Allow an arbitary number of oscillators and envelopes, and allow the user to
