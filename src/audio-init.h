@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdbool.h>
-#include <stdint.h>
 
 #include "audio-settings.h"
 #include "buffers.h"
@@ -16,13 +15,13 @@ typedef struct Audio {
  * written to Audio.MainBuffer, which is finally converted to sound by
  * Audio.Output. */
 
-  bool                  Active;
-  float                 Amplitude;
-  Buffer 	        * MixingBuffer;
-  ByteBuffer          * MainBuffer;
-  struct sio_hdl      * Output;
-  AudioSettings         Settings;
-  Voices                Voices;
+  bool                    Active;
+  float                   Amplitude;
+  Buffer                * MixingBuffer;
+  ByteBuffer            * MainBuffer;
+  struct sio_hdl        * Output;
+  AudioSettings           Settings;
+  Voices                  Voices;
 } Audio;
 
 void makeAudio(Audio *, const int, char **);
