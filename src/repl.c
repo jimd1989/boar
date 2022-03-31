@@ -5,9 +5,11 @@
  * instances of boar. */
 
 #include <err.h>
+#include <poll.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "repl.h"
 
@@ -203,15 +205,20 @@ repl(Repl *r) {
 /* The main user-facing loop. Reads lines of user input, parses them, and sends
  * them to the Audio struct for processing. */
 
+  int bytesRead = 0;
   Error err = 0;
+  struct pollfd pfds[1] = {{0}};
 
+  pfds[0].fd = STDIN_FILENO;
+  pfds[0].events = POLLIN;
   warnx("Welcome. You can exit at any time by pressing q + enter.");
-  while (fgets(r->Buffer, DEFAULT_LINESIZE, stdin) != NULL) {
-    if (r->Buffer[0] == '\n' || r->Buffer[0] == '#') {
-      /* ignore blank or commented input */
-      ;
-    } else {
-      /* read multiple commands buffered by semicolons */
+  while(poll(pfds, 1, 0) != -1) {
+    if (pfds[0].revents & POLLIN) {
+      bytesRead = read(STDIN_FILENO, r->Buffer, DEFAULT_LINESIZE);
+      if (bytesRead < 1 || r->Buffer[0] == '\n' || r->Buffer[0] == '#') {
+        continue;
+      }
+      r->Buffer[bytesRead - 1] = '\0';
       err = parseLine(&r->Cmd, r->Buffer);
       if (err != ERROR_OK) {
         printParseErr(err, r->Buffer);

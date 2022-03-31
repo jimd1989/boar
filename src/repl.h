@@ -10,7 +10,7 @@
 typedef struct Repl {
 
 /* A struct containing everything needed for a user-facing loop. During every
- * cycle of the REPL, user input is read with fgets() into Repl.Buffer. This
+ * cycle of the REPL, user input is read with read() into Repl.Buffer. This
  * string is then parsed, and used to populate the fields of Repl.Cmd. An audio
  * function is then performed using Repl.Cmd as its argument. */
 
