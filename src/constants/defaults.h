@@ -10,14 +10,19 @@
 /* Bit depth of an individual sample */
 #define DEFAULT_BITS 16
 
-/* Audio output buffer size (in frames) */
-#define DEFAULT_BUFSIZE 960
+/* Sample rate */
+#define DEFAULT_RATE 48000
+
+/* Number of times to poll for user input per second */
+#define DEFAULT_RESOLUTION 375
+
+/* Ideal audio output buffer size (in frames, not bytes). Even if audio output
+ * does not respect this size, it will be used for the timing of user input,
+ * ensuring a resolution of DEFAULT_RESOLUTION  */
+#define DEFAULT_BUFSIZE (DEFAULT_RATE / DEFAULT_RESOLUTION)
 
 /* Number of channels */
 #define DEFAULT_CHAN 1
-
-/* Sample rate */
-#define DEFAULT_RATE 48000
 
 /* Number of simultaneous voices */
 #define DEFAULT_POLYPHONY 8

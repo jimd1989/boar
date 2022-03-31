@@ -21,6 +21,7 @@
 static void populateSettings(const AudioSettings *, struct sio_par *); 
 static void openOutput(struct sio_hdl **);
 static void suggestSettings(struct sio_hdl *, struct sio_par *);
+static int roundBuffer(AudioSettings *, const struct sio_par *);
 static void setSetting(const unsigned int, const unsigned int,
     unsigned int *, const char *); 
 static void setSettings(AudioSettings *, const struct sio_par *);
@@ -81,16 +82,28 @@ setSetting(const unsigned int expected, const unsigned int reality,
   *field = reality;
 }
 
+static int
+roundBuffer(AudioSettings *aos, const struct sio_par *sp) {
+
+/* Round the buffer size according to hardware suggestions. */
+
+  int frames = aos->Bufsize;
+  frames = frames + sp->round - 1;
+  frames -= frames % sp->round;
+  return frames;
+}
+
 static void
 setSettings(AudioSettings *aos, const struct sio_par *sp) {
 
 /* Runs setSetting() on essential playback parameters. */
 
   setSetting(aos->Bits, sp->bits, &aos->Bits, "bits");
-  setSetting(aos->Bufsize, sp->appbufsz, &aos->Bufsize, "bufsize");
+  setSetting(aos->Bufsize, roundBuffer(aos, sp), &aos->Bufsize, "bufsize");
   setSetting(aos->Chan, sp->pchan, &aos->Chan, "chan");
   setSetting(aos->Rate, sp->rate, &aos->Rate, "rate");
   aos->BufsizeMain = aos->Bufsize * aos->Chan * (aos->Bits / 8);
+  aos->WindowSize = DEFAULT_BUFSIZE * aos->Chan * (aos->Bits / 8);
 }
 
 static void
