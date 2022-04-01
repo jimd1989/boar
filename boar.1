@@ -25,10 +25,6 @@ The size of an audio buffer, in full frames, that boar will suggest to sndio. It
 The number of channels to play back audio in. This has only been tested on monophonic and stereophonic hardware, but boar should theoretically support an arbitrary number of channels.
 .El
 .Bl -tag -width Ds
-.It Fl echo-notes
-Requires no additional values. If this option is enabled, all note on/off commands sent to boar will be echoed back to stdout. This allows the user to pipe together multiple instances of boar with different settings, but send them the same note at once, simulating a single instrument with 4+ operators.
-.El
-.Bl -tag -width Ds
 .It Fl rate
 The sample rate of audio output.
 .El
@@ -77,10 +73,6 @@ Sets the envelope decay wave shape for the carrier (d.) or modulator (D.).
 Set the envelope to loop between the A/D stages if enabled with a value of 1. Pass 0 to disable. Can be used as a LFO over carrier/modulator amplitude.
 .El
 .Bl -tag -width Ds
-.It e [string]
-All text after e will be echoed in its literal form to stdout. If multiple instances of boar are piped together, this allows the user to change the settings on one instance, but not another. In the pipe `boar | boar`, `e n 60` will play note 60 on the second program in the pipe, but not the first. Echos can be stacked; `e e n 60` would tell the third boar in the pipeline to play, and so on.
-.El
-.Bl -tag -width Ds
 .It k/K [int]
 Set the key follow curve of the carrier (k) or the modulator (K). The curve is a wavetable from the w/W command. The amplitude of operators will be multiplied by the note number's place along this curve. The performer will usually want to dampen the amplitudes found at higher note numbers, so negative values are recommended to produce reversed curves.
 .El
@@ -102,7 +94,7 @@ Set the pitch ratio between the note and the carrier (p) or modulator (P) oscill
 .El
 .Bl -tag -width Ds
 .It q [nil]
-Quits the program. Echos a "q" to stdout to kill all other instances of boar in the pipeline.
+Quits the program.
 .El
 .Bl -tag -width Ds
 .It r/R [ufloat]

@@ -38,9 +38,6 @@
 /* (D:) sets modulator envelope loop */
 #define FUNC_MOD_ENV_LOOP FUNC_DEF('D', TYPE_COLON)
 
-/* (e) echoes input */
-#define FUNC_ECHO FUNC_DEF('e', TYPE_NORMAL)
-
 /* (k) sets key follow */
 #define FUNC_KEY_FOLLOW FUNC_DEF('k', TYPE_NORMAL)
 

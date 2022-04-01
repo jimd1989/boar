@@ -6,10 +6,9 @@
 
 int main(int argc, char **argv) {
   Audio a = {0};
-  Repl r = {0};
+  Repl r = {{0}};
 
   makeAudio(&a, argc, argv);
-  r.EchoNotes = a.Settings.EchoNotes;
   r.Audio = &a;
   repl(&r);
   killAudio(&a);

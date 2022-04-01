@@ -2,21 +2,12 @@ Features that boar is lacking, none of which are guaranteed to ever actually
 be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
-[YES] Remove echo:
-Remove the echoing function in favor of extant unix constructs like tee.
-
 [YES] New parser:
 Parser can be better. Maybe take ideas from boar-parser experiment repo.
- - Reintroduce semicolon handling rather than rely on external command.
  - Allow multiple args, some of which are optional.
+ - Use real names for waves, etc instead of numbers
 Other features, such as more oscs and better modulation routings, may come from
 this.
-
-[YES] Make single threaded:
-The separate input/audio thread model is less than ideal. Remove this and make
-boar serial so that it can respond to user input in a more deterministic manner.
-Parallel processing can be reintroduced on a per voice basis, if it's worth the
-overhead.
 
 [MAYBE] Faster random values:
 Values returned by rand() may be unnecessarily high quality. Consider a more

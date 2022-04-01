@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
-
 #include "constants/errors.h"
 
 typedef struct AudioSettings {
@@ -12,7 +10,6 @@ typedef struct AudioSettings {
  * of this code need to make use of any of them. Other structs might contain
  * pointers to or local copies of these read-only values. */
 
-  bool          EchoNotes;
   unsigned int  Bits;
   unsigned int  Bufsize;     /* TODO - bytes or frames? */
   unsigned int  BufsizeMain; /* Output bufsize, in bytes */

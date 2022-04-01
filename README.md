@@ -17,7 +17,6 @@ boar starts with sane defaults, but it has some command-line flags. Almost all o
 + `bits`: The bit-depth of the audio output. Currently locked to 16bit signed ints.
 + `bufsize`: The size of the audio output buffer in frames. Shorter buffers result in more responsiveness, but are taxing upon system resources.
 + `chan`: The number of channels of audio output.
-+ `echo-notes`: This flag requires no additional arguments. When enabled, note on/off commands are echoed to stdout, which allows multiple instances of boar to work in a pipeline and function as one instrument.
 + `polyphony`: The number of notes possible to play at once. Users are advised to set a value high enough to avoid voice stealing, which could have unpleasant clicks.
 + `rate`: The sample rate of the audio output.
 
@@ -142,50 +141,24 @@ Each A, D, and R stage increments/decrements in a linear manner by default, but 
 
 Use `a. d. r.` for carriers and `A. D. R.` for modulators.
 
-You can also squeeze more sonic mileage out of boar by running multiple instances of it in a pipe. Running:
-
-    rlwrap boar -echo-notes | boar
-
-will chain together two boars, giving a 4 operator instrument with parallel carrier:modulator paths—similar to a certain algorithm on the Yamaha TX81Z. The `echo-notes` option ensures that both boars receive note commands at the same time.
-
-Of course these extra oscillators are of no use unless they can be given distinct settings. The echo command does this:
-
-    e P 0.001
-    e L 400.0
-
-Commands prefaced with "e" will not be evaluated in the local instance of boar, but echoed to stdout, where the next boar in the pipe can run them. Echoes can stack too:
-
-    e e l 0.0
-
-This will mute the third boar in the pipe.
-
-Why not throw other things in the pipe? Consider the script `delay.sh`, which is included in the [boar-extras](https://github.com/jimd1989/boar-extras) repository:
-
-    boar -echo-notes | delay 0.5 | boar
-
-There is now a primitive delay effect. This pipe-friendly behavior lends itself to all kinds of extensibility.
-
 ## Typical routing
 
 When it comes to actual performance, I rarely find myself using a direct boar shell. More often than not, I have it listening to a FIFO, which allows boar to be a "server" with multiple "clients." Consider the following example, with a pipe of two `boar` commands listening to a FIFO `synth`:
 
     mkfifo synth
-    boar -echo-notes <> synth | boar
-    boar: Welcome. You can exit at any time by pressing q + enter.
+    boar <> synth
     boar: Welcome. You can exit at any time by pressing q + enter.
 
-Then from another shell, I create a dumb repl with `cat`, piping its output through the `semicolons` command (from [boar-extras](https://github.com/jimd1989/boar-extras)), which allows me to issue multiple operations on a single line—a far saner way of editing patches:
+Then from another shell, I create a dumb repl with `cat`, which allows me to issue multiple operations on a single line—a far saner way of editing patches:
 
-    rlwrap cat | semicolons > synth
+    rlwrap cat > synth
     a0.5;d0.5;s0.5;r0.5
-    ea0.9;ed0.9;es0.5;er0.9
-    ew3
     n60;n65;n69
     o60;o65;n69
 
 I usually don't play notes in this repl though; I just use it for configuring settings. Something like [pop](https://github.com/jimd1989/pop) or [boar-midi](https://github.com/jimd1989/boar-midi) can simultaneously send score data into the `synth` FIFO instead.
 
-And since everything is just FIFOs and pipes, there's nothing stopping `synth` from listening to `nc` and having a friend duet with you from his/her own machine. The entire Unix ecosystem is now your DAW.
+And since everything is just FIFOs and pipes, there's nothing stopping `synth` from listening to `nc` and having a friend duet with you from his/her own machine. You aren't limited to a single carrier:modulator pair either of course. Use `tee` to send the same notes to multiple instances of `boar`. The entire Unix ecosystem is now your DAW.
 
 ## And that's not all
 

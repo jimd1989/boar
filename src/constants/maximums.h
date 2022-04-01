@@ -21,8 +21,8 @@
 /* The maximum polyphony allowed */
 #define MAX_POLYPHONY 128
 
-/* The maximum command line flag length (currently "-echo-notes") */
-#define MAX_FLAG_LEN 11
+/* The maximum command line flag length (currently "polyphony") */
+#define MAX_FLAG_LEN 10
 
 /* The maximum amount of time, in seconds, an envelope stage runs for */
 #define MAX_ENV_TIME 10.0f

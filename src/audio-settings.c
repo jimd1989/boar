@@ -71,8 +71,6 @@ makeAudioSettings(AudioSettings *aos, const int argc, char **argv) {
       parseFlag(arg, argv[++i], 1, MAX_RATE, &aos->Rate);
     } else if (isFlag(arg, "-polyphony") && i+1 < argc) {
       parseFlag(arg, argv[++i], 1, MAX_POLYPHONY, &aos->Polyphony);
-    } else if (isFlag(arg, "-echo-notes")) {
-      aos->EchoNotes = true;
     } else {
       errx(ERROR_ARG, "Malformed parameter: %s", arg);
     } 

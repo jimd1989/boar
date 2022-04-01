@@ -3,7 +3,7 @@ introduce the codebase and make contributing easier.
 
 /* General info */
 
-All lines, including comments, are under 80 chars in length.
+All lines, including comments, are at or under 80 chars in length.
 
 All functions and types defined `static` within a .c file are intended for
 local use within the context of larger functions. Their headers are located at
@@ -18,9 +18,12 @@ All newly-defined structs and enums are typedef'd to StructName and EnumName.
 They are referred to as such throughout the program. Types defined by external
 libraries are not typedef'd, and retain their original formatting.
 
-All struct fields are CamelCase. All enum and #defines are ALL_CAPPED.
-Constants such as these should reveal which file they were defined in. The
-default sample rate, defined in "defaults.h" is DEFAULT_RATE, for instance.
+All struct fields are PascalCase. This was an accident of history, based on the
+author's former enthusiasm for and half understanding of the Go language. Maybe
+they will all be refactored to camelCase at some stage. All enum and #defines 
+are ALL_CAPPED. Constants such as these should reveal which file they were 
+defined in. The default sample rate, defined in "defaults.h" is DEFAULT_RATE, 
+for instance.
 
 All function names are camelCase. The return type of a function (including any
 possible pointers) is expressed on its own line. The function name and
@@ -96,8 +99,8 @@ specifically what went wrong with them.
 FILE audio-settings.c audio-settings.h
 Defines the AudioSettings type and its related functions, which parse the
 user input into playback settings. AudioSettings remains immutable after its
-initialization and is only accessible to other parts of the program in a
-read-only manner.
+initialization and is accessible to other parts of the program in a read-only 
+manner.
 
 FILE buffers.c buffers.h
 Audio output centers around summing synthesis data into an array of floats,

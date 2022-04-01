@@ -67,6 +67,3 @@
 
 /* Maximum user line input */
 #define DEFAULT_LINESIZE 4096
-
-/* Where echo (e) commands are written to */
-#define DEFAULT_ECHO_FILE stdout
