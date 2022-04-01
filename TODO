@@ -2,28 +2,31 @@ Features that boar is lacking, none of which are guaranteed to ever actually
 be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
-New parser:
+[YES] Remove echo:
+Remove the echoing function in favor of extant unix constructs like tee.
+
+[YES] New parser:
 Parser can be better. Maybe take ideas from boar-parser experiment repo.
  - Reintroduce semicolon handling rather than rely on external command.
  - Allow multiple args, some of which are optional.
 Other features, such as more oscs and better modulation routings, may come from
 this.
 
-Make single threaded:
+[YES] Make single threaded:
 The separate input/audio thread model is less than ideal. Remove this and make
 boar serial so that it can respond to user input in a more deterministic manner.
 Parallel processing can be reintroduced on a per voice basis, if it's worth the
 overhead.
 
-Faster random values:
+[MAYBE] Faster random values:
 Values returned by rand() may be unnecessarily high quality. Consider a more
 basic solution for a performance boost.
 
-Additional oscs, envs:
+[YES] Additional oscs, envs:
 Allow an arbitary number of oscillators and envelopes, and allow the user to
 define the manner in which they modulate one-another.
 
-Remove wavetables:
+[MAYBE] Remove wavetables:
 Get rid of all wavetables and associated logic. Only use Colin Wallace's
 Chebyshev approximation of a sine [-π/π]:
 
@@ -40,26 +43,30 @@ float approxsin(float x) {
     return (x - pi_major - pi_minor) * (x + pi_major + pi_minor) * p1 * x;
 }
 
-Use stack more:
+[MAYBE] Fixed point phase:
+Use fixed point phase, which may be simpler for wavetables (but harder for
+everything else).
+
+[MAYBE] Use stack more:
 Locate performance critical data structures and keep them in stack vs heap.
 
-Info:
+[YES] Info:
 Running the info command (i), followed by a string, should return information
 about the queried parameter to stderr. Like `i W'` would return the shape of
 the modulator wave, etc.
 
-Help:
+[YES] Help:
 A help (h) command followed by a command char could explain the purpose of
 each command. 
 
-Modify ByteBuffer:
+[MAYBE] Modify ByteBuffer:
 Mixed-down int16_t samples can likely be written directly to it, without the
 need for manual bit-shifting.
 
-Sample + Hold:
+[MAYBE] Sample + Hold:
 In addition to pure noise signals, there should be some kind of s+h feature.
 
-Additional inputs:
+[YES] Additional inputs:
 The ability to assign parameters to modwheels, aftertouch, etc. The interface
 for these devices would have to be generic, with an external program
 converting their values into a proper boar command. Maybe two values could be 

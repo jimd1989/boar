@@ -15,7 +15,6 @@ typedef struct Audio {
  * written to Audio.MainBuffer, which is finally converted to sound by
  * Audio.Output. */
 
-  bool                    Active;
   float                   Amplitude;
   Buffer                * MixingBuffer;
   ByteBuffer            * MainBuffer;

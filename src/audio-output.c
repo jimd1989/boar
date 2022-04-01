@@ -1,4 +1,4 @@
-/* Functions related to audio output, including the main playback loop. */
+/* Functions related to audio output, including the main playback function. */
 
 #include <err.h>
 #include <limits.h>
@@ -103,19 +103,12 @@ writeBuffer(Audio *a) {
   }
 }
 
-void *
-audioLoop(void *args) {
+void
+play(Audio *a) {
 
-/* Main audio output loop. Runs inside a POSIX thread. The contents of the
- * Audio struct can be modified from outside the thread without any locks. */
+/* Calculate and output a buffer's worth of synthesis information. */
 
-  Audio *a = (Audio *)args;
-
-  a->Active = true;
-  while (a->Active) {
-    clearBuffer(a->MixingBuffer);
-    fillBuffer(a);
-    writeBuffer(a);
-  }
-  return NULL;
+  clearBuffer(a->MixingBuffer);
+  fillBuffer(a);
+  writeBuffer(a);
 }

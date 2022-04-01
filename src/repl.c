@@ -1,8 +1,6 @@
 /* The REPL is the user-facing interface for the program. It reads commands
- * from stdin and passes them to an already-running output thread via the 
- * Audio struct. The REPL can also echo commands to the file specified by
- * DEFAULT_ECHO_FILE, which can be used to pipe information between multiple
- * instances of boar. */
+ * from stdin and passes them to sndio thread via the Audio struct. The REPL can also echo commands to the file specified by  DEFAULT_ECHO_FILE, which can be used to 
+ * pipe information between multiple instances of boar. */
 
 #include <err.h>
 #include <poll.h>
@@ -125,7 +123,6 @@ dispatchCmd(Repl *r) {
       break;
     case FUNC_QUIT:
       fprintf(DEFAULT_ECHO_FILE, "q\n");
-      r->Audio->Active = false;
       return ERROR_EXIT;
     case FUNC_MOD_RELEASE:
       setReleaseLevel(&modulator->Env, arg->F);
@@ -222,12 +219,13 @@ repl(Repl *r) {
       err = parseLine(&r->Cmd, r->Buffer);
       if (err != ERROR_OK) {
         printParseErr(err, r->Buffer);
-      } else {
-        err = dispatchCmd(r);
-        if (err == ERROR_EXIT) {
-          return;
-        }
+        continue;
+      }
+      err = dispatchCmd(r);
+      if (err == ERROR_EXIT) {
+        return;
       }
     }
+    play(r->Audio);
   }
 }
