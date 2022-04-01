@@ -26,6 +26,7 @@ static void echoNoteCheck(const Repl *);
 static void echoString(const char *);
 static Error dispatchCmd(Repl *);
 static void printParseErr(const Error, const char *);
+static Error readLine(Repl *);
 
 static void
 echoNoteCheck(const Repl *r) {
@@ -196,47 +197,51 @@ printParseErr(const Error err, const char *buffer) {
   }
 }
 
+static Error
+readLine(Repl *r) {
+  int bytesParsed = 0;
+  int totalBytesParsed = 0;
+  int bytesRead = 0;
+  Error err = ERROR_OK;
+  char *line = NULL;
+  bytesRead = read(STDIN_FILENO, r->Buffer, DEFAULT_LINESIZE);
+  if (bytesRead < 1 || r->Buffer[0] == '\n' || r->Buffer[0] == '#') {
+    return ERROR_NOTHING;
+  }
+  r->Buffer[bytesRead - 1] = '\0'; /* Input is newline buffered still */
+  bytesRead--; /* Might be able to optimize away */
+  line = r->Buffer;
+  while (totalBytesParsed < bytesRead) {
+    bytesParsed = parseCmd(&r->Cmd, line);
+    totalBytesParsed += bytesParsed;
+    if (r->Cmd.Error != ERROR_OK) {
+      printParseErr(r->Cmd.Error, line);
+    } else {
+      err = dispatchCmd(r); /* Rewrite dispatch to set error again */
+      if (err == ERROR_EXIT) {
+        return ERROR_EXIT;
+      }
+    }
+    line += bytesParsed;
+  }
+  return err;
+}
+
 void
 repl(Repl *r) {
 
 /* The main user-facing loop. Reads lines of user input, parses them, and sends
  * them to the Audio struct for processing. */
 
-  int bytesRead = 0;
-  int n = 0;
-  int m = 0;
-  Error err = ERROR_OK;
   struct pollfd pfds[1] = {{0}};
-  char *line = NULL;
 
   pfds[0].fd = STDIN_FILENO;
   pfds[0].events = POLLIN;
   warnx("Welcome. You can exit at any time by pressing q + enter.");
   while(poll(pfds, 1, 0) != -1) {
     if (pfds[0].revents & POLLIN) {
-      bytesRead = read(STDIN_FILENO, r->Buffer, DEFAULT_LINESIZE);
-      if (bytesRead < 1 || r->Buffer[0] == '\n' || r->Buffer[0] == '#') {
-        continue;
-      }
-      r->Buffer[bytesRead - 1] = '\0';
-      bytesRead--;
-      line = r->Buffer;
-      n = 0;
-      m = 0;
-      while (n < bytesRead) {
-        m = parseCmd(&r->Cmd, line);
-        n += m;
-        warnx("%d %d (%s)", n, bytesRead, line);
-        if (r->Cmd.Error != ERROR_OK) {
-          printParseErr(err, line);
-        } else {
-          err = dispatchCmd(r); /* Remove echo for this to work */
-          printParseErr(err, line);
-          if (err == ERROR_EXIT) {
-            return;
-          }
-        }
-        line += m;
+      if (readLine(r) == ERROR_EXIT) {
+        return;
       }
     }
     play(r->Audio);
