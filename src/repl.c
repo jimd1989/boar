@@ -203,8 +203,11 @@ repl(Repl *r) {
  * them to the Audio struct for processing. */
 
   int bytesRead = 0;
-  Error err = 0;
+  int n = 0;
+  int m = 0;
+  Error err = ERROR_OK;
   struct pollfd pfds[1] = {{0}};
+  char *line = NULL;
 
   pfds[0].fd = STDIN_FILENO;
   pfds[0].events = POLLIN;
@@ -216,14 +219,24 @@ repl(Repl *r) {
         continue;
       }
       r->Buffer[bytesRead - 1] = '\0';
-      err = parseLine(&r->Cmd, r->Buffer);
-      if (err != ERROR_OK) {
-        printParseErr(err, r->Buffer);
-        continue;
-      }
-      err = dispatchCmd(r);
-      if (err == ERROR_EXIT) {
-        return;
+      bytesRead--;
+      line = r->Buffer;
+      n = 0;
+      m = 0;
+      while (n < bytesRead) {
+        m = parseCmd(&r->Cmd, line);
+        n += m;
+        warnx("%d %d (%s)", n, bytesRead, line);
+        if (r->Cmd.Error != ERROR_OK) {
+          printParseErr(err, line);
+        } else {
+          err = dispatchCmd(r); /* Remove echo for this to work */
+          printParseErr(err, line);
+          if (err == ERROR_EXIT) {
+            return;
+          }
+        }
+        line += m;
       }
     }
     play(r->Audio);
