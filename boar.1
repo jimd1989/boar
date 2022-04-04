@@ -21,10 +21,6 @@ The bit depth of the audio output. Currently locked to signed 16bit ints. boar w
 The size of an audio buffer, in full frames, that boar will suggest to sndio. It's quite likely that sndio will modify this number slightly. Generally speaking, smaller buffers ensure more responsive audio but are more taxing on system resources.
 .El
 .Bl -tag -width Ds
-.It Fl chan
-The number of channels to play back audio in. This has only been tested on monophonic and stereophonic hardware, but boar should theoretically support an arbitrary number of channels.
-.El
-.Bl -tag -width Ds
 .It Fl rate
 The sample rate of audio output.
 .El

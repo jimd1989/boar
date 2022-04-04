@@ -43,7 +43,7 @@ typedef struct BufferX {
 
   float         * Mix;
   uint8_t       * Output;
-}
+} BufferX;
 
 Buffer * makeBuffer(const size_t);
 ByteBuffer * makeByteBuffer(const AudioSettings *);

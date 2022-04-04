@@ -53,7 +53,6 @@ makeAudioSettings(AudioSettings *aos, const int argc, char **argv) {
 
   aos->Bits = DEFAULT_BITS;
   aos->Bufsize = DEFAULT_BUFSIZE;
-  aos->Chan = DEFAULT_CHAN;
   aos->Rate = DEFAULT_RATE;
   aos->Polyphony = DEFAULT_POLYPHONY;
   for (; i < argc ; i++) {
@@ -65,8 +64,6 @@ makeAudioSettings(AudioSettings *aos, const int argc, char **argv) {
       }
     } else if (isFlag(arg, "-bufsize") && i+1 < argc) {
       parseFlag(arg, argv[++i], 1, MAX_BUFSIZE, &aos->Bufsize);
-    } else if (isFlag(arg, "-chan") && i+1 < argc) {
-      parseFlag(arg, argv[++i], 1, MAX_CHAN, &aos->Chan);
     } else if (isFlag(arg, "-rate") && i+1 < argc) {
       parseFlag(arg, argv[++i], 1, MAX_RATE, &aos->Rate);
     } else if (isFlag(arg, "-polyphony") && i+1 < argc) {

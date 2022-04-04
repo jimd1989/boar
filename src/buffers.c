@@ -8,6 +8,7 @@
 #include "buffers.h"
 
 #include "audio-settings.h"
+#include "constants/defaults.h"
 #include "constants/errors.h"
 
 Buffer *
@@ -42,8 +43,7 @@ makeByteBuffer(const AudioSettings *aos) {
   if (bb->Values == NULL) {
     errx(ERROR_ALLOC, "Error initializing audio output buffer");
   }
-  bb->Chan = aos->Chan;
-  bb->ChanBytes = (size_t)aos->Chan * 2;
+  bb->ChanBytes = (size_t)DEFAULT_CHAN * 2;
   bb->Size = (size_t)aos->BufsizeMain;
   return bb;
 }

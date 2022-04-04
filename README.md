@@ -16,7 +16,6 @@ boar starts with sane defaults, but it has some command-line flags. Almost all o
 
 + `bits`: The bit-depth of the audio output. Currently locked to 16bit signed ints.
 + `bufsize`: The size of the audio output buffer in frames. Shorter buffers result in more responsiveness, but are taxing upon system resources.
-+ `chan`: The number of channels of audio output.
 + `polyphony`: The number of notes possible to play at once. Users are advised to set a value high enough to avoid voice stealing, which could have unpleasant clicks.
 + `rate`: The sample rate of the audio output.
 

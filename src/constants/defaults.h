@@ -21,8 +21,8 @@
  * ensuring a resolution of DEFAULT_RESOLUTION  */
 #define DEFAULT_BUFSIZE (DEFAULT_RATE / DEFAULT_RESOLUTION)
 
-/* Number of channels */
-#define DEFAULT_CHAN 1
+/* Number of channels. Hardcoded to stereo for now. */
+#define DEFAULT_CHAN 2
 
 /* Number of simultaneous voices */
 #define DEFAULT_POLYPHONY 8

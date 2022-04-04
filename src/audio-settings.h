@@ -13,10 +13,8 @@ typedef struct AudioSettings {
   unsigned int  Bits;
   unsigned int  Bufsize;     /* TODO - bytes or frames? */
   unsigned int  BufsizeMain; /* Output bufsize, in bytes */
-  unsigned int  Chan;
   unsigned int  Rate;
   unsigned int  Polyphony;
-  unsigned int  WindowSize;  /* Size of user input sampling window, in bytes */
 } AudioSettings;
 
 void makeAudioSettings(AudioSettings *, const int, char **);

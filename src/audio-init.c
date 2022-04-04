@@ -39,7 +39,6 @@ populateSettings(const AudioSettings *aos, struct sio_par *sp) {
   sio_initpar(sp);
   sp->bits = aos->Bits;
   sp->appbufsz = aos->Bufsize;
-  sp->pchan = aos->Chan;
   sp->rate = aos->Rate;
 }
 
@@ -100,10 +99,8 @@ setSettings(AudioSettings *aos, const struct sio_par *sp) {
 
   setSetting(aos->Bits, sp->bits, &aos->Bits, "bits");
   setSetting(aos->Bufsize, roundBuffer(aos, sp), &aos->Bufsize, "bufsize");
-  setSetting(aos->Chan, sp->pchan, &aos->Chan, "chan");
   setSetting(aos->Rate, sp->rate, &aos->Rate, "rate");
-  aos->BufsizeMain = aos->Bufsize * aos->Chan * (aos->Bits / 8);
-  aos->WindowSize = DEFAULT_BUFSIZE * aos->Chan * (aos->Bits / 8);
+  aos->BufsizeMain = aos->Bufsize * DEFAULT_CHAN * (aos->Bits / 8);
 }
 
 static void

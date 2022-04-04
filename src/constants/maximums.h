@@ -12,9 +12,6 @@
 /* The maximum bufsize allowed */
 #define MAX_BUFSIZE 100000
 
-/* The maximum number of channels allowed */
-#define MAX_CHAN 128
-
 /* The maximum sample rate allowed */
 #define MAX_RATE 384000
 
