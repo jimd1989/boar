@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "audio-settings.h"
+#include "constants/defaults.h"
 
 typedef struct Buffer {
 
@@ -37,15 +38,21 @@ typedef struct BufferX {
  * another. The internal synthesis data is fundamentally monophonic, but if 
  * multichannel output is specified, then one sample of Mix will be written
  * multiple times to Output, potentially at different final amplitudes. With
- * this in mind, the Output buffer needs to track various sizing variables:
- * number of channels, number of frames, number of bytes, while Mix is only
- * manipulated in terms of frames. */
+ * this in mind, the Output buffer needs to track various sizing variables, 
+ * while Mix is only manipulated in terms of frames. */
 
-  float         * Mix;
+/* Hard lock to stereo. In future: stereo mixing. */
+
+  size_t          OutputFramesWritten;
+  size_t          OutputSizeFrames;
+  size_t          OutputSizeBytes;
+  float           Mix[DEFAULT_BUFSIZE];
   uint8_t       * Output;
 } BufferX;
 
+BufferX makeBufferX(const size_t);
 Buffer * makeBuffer(const size_t);
 ByteBuffer * makeByteBuffer(const AudioSettings *);
+void killBufferX(BufferX *);
 void killBuffer(Buffer *);
 void killByteBuffer(ByteBuffer *);

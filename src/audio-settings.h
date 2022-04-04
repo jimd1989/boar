@@ -11,6 +11,7 @@ typedef struct AudioSettings {
  * pointers to or local copies of these read-only values. */
 
   unsigned int  Bits;
+  unsigned int  BufsizeX;    /* New buffer size to use -- in frames */
   unsigned int  Bufsize;     /* TODO - bytes or frames? */
   unsigned int  BufsizeMain; /* Output bufsize, in bytes */
   unsigned int  Rate;

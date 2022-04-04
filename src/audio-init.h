@@ -16,6 +16,7 @@ typedef struct Audio {
  * Audio.Output. */
 
   float                   Amplitude;
+  Bufferx                 Buffer;
   Buffer                * MixingBuffer;
   ByteBuffer            * MainBuffer;
   struct sio_hdl        * Output;

@@ -11,6 +11,29 @@
 #include "constants/defaults.h"
 #include "constants/errors.h"
 
+BufferX
+makeBufferX(const size_t size) {
+
+/* Sets Buffer size constants, and allocates Output array. */
+
+  BufferX b = {0};
+  b.OutputSizeFrames = size;
+  b.OutputSizeBytes = size * DEFAULT_CHAN * (sizeof(int16_t) / 8);
+  b.Output = malloc(sizeof(*b.Output) * b.OutputSizeBytes);
+  if (b.Output == NULL) {
+    errx(ERROR_ALLOC, "Error initializing audio buffer");
+  }
+  return b;
+}
+
+void
+killBufferX(BufferX *b) {
+
+/* Free the Buffer's Output array allocation. */
+
+  free(b->Output);
+}
+
 Buffer *
 makeBuffer(const size_t size) {
 
