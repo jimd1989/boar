@@ -248,6 +248,8 @@ makeOperators(Operators *os, const unsigned int rate) {
 void
 makeVoices(Voices *vs, Buffer *cBuffer, const AudioSettings *aos) {
 
+  /* USE DEFAULT BUFSIZE NOW */
+
 /* Initializes a Voices type. Errors are fatal. */
 
   unsigned int i = 0;

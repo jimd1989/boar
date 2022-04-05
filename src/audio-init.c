@@ -99,6 +99,7 @@ setSettings(AudioSettings *aos, const struct sio_par *sp) {
 
   setSetting(aos->Bits, sp->bits, &aos->Bits, "bits");
   setSetting(aos->Bufsize, roundBuffer(aos, sp), &aos->Bufsize, "bufsize");
+  setSetting(aos->BufsizeX, roundBuffer(aos, sp), &aos->BufsizeX, "bufsize");
   setSetting(aos->Rate, sp->rate, &aos->Rate, "rate");
   aos->BufsizeMain = aos->Bufsize * DEFAULT_CHAN * (aos->Bits / 8);
 }
@@ -136,6 +137,7 @@ makeAudio(Audio *a, const int argc, char **argv) {
   suggestSettings(a->Output, &sp);
   setSettings(&a->Settings, &sp);
   KLUDGE_bitCheck(a->Settings.Bits);
+  a->Buffer = makeBufferX(a->Settings.Bufsize);
   allocateBuffers(&a->MixingBuffer, &a->MainBuffer, &a->Settings);
   makeVoices(&a->Voices, a->MixingBuffer, &a->Settings);
   a->Amplitude = 0.1f;
