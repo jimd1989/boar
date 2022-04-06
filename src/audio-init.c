@@ -139,7 +139,7 @@ makeAudio(Audio *a, const int argc, char **argv) {
   KLUDGE_bitCheck(a->Settings.Bits);
   a->Buffer = makeBufferX(a->Settings.Bufsize);
   allocateBuffers(&a->MixingBuffer, &a->MainBuffer, &a->Settings);
-  makeVoices(&a->Voices, a->MixingBuffer, &a->Settings);
+  makeVoices(&a->Voices, &a->Settings);
   a->Amplitude = 0.1f;
   startAudio(a->Output);
 }

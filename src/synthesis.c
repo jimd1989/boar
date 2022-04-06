@@ -64,14 +64,14 @@ fillModulatorBuffer(Operator *m) {
   tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
 
   if (o->Wave->Type == WAVE_TYPE_NOISE) {
-    for (; i < o->Buffer->Size; i++) {
-      o->Buffer->Values[i] = readNoise(&o->Wave->Noise, o->Pitch) *
+    for (; i < DEFAULT_BUFSIZE ; i++) {
+      o->Buffer[i] = readNoise(&o->Wave->Noise, o->Pitch) *
         o->Amplitude * applyEnv(&m->Env) * o->KeyMod;
     }
   } else {
-    for (; i < o->Buffer->Size; i++) {
+    for (; i < DEFAULT_BUFSIZE ; i++) {
       o->Phase = fmodf(o->Phase + o->Pitch, (float)DEFAULT_WAVELEN);
-      o->Buffer->Values[i] = interpolate(o->Wave->Table[tableNo],
+      o->Buffer[i] = interpolate(o->Wave->Table[tableNo],
           DEFAULT_WAVELEN, o->Phase) * o->Amplitude *
         applyEnv(&m->Env) * o->KeyMod;
     }
@@ -89,7 +89,7 @@ modulate(Osc *c, Osc *m, unsigned int i) {
  * against the carrier Osc's wavetable. */
 
   const float pitch = (c->Pitch * c->Wave->Polarity) + 
-    (m->Pitch * m->Buffer->Values[i]);
+    (m->Pitch * m->Buffer[i]);
   int tableNo = 1 + (int)ilogb(DEFAULT_OCTAVE_SCALING * pitch);
 
   tableNo = (tableNo < 0) ? 0 : tableNo;
@@ -112,8 +112,8 @@ fillCarrierBuffer(Operator *c, Operator *m) {
   unsigned int i = 0;
 
   fillModulatorBuffer(m);
-  for (; i < c->Osc.Buffer->Size ; i++) {
-    c->Osc.Buffer->Values[i] += modulate(&c->Osc, &m->Osc, i) *
+  for (; i < DEFAULT_BUFSIZE ; i++) {
+    c->Osc.Buffer[i] += modulate(&c->Osc, &m->Osc, i) *
       c->Osc.Amplitude * applyEnv(&c->Env) * c->Osc.KeyMod;
   }
 }

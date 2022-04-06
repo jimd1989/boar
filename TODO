@@ -2,6 +2,11 @@ Features that boar is lacking, none of which are guaranteed to ever actually
 be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
+[YES] Band limiting adjustment:
+All complex wave forms are band limited just below the aliasing limit, which
+still might be too harmonically complex to actually sound good. Should have
+a command that tells boar to read +/- wavetables from the default. 
+
 [YES] New parser:
 Parser can be better. Maybe take ideas from boar-parser experiment repo.
  - Allow multiple args, some of which are optional.
