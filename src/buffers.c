@@ -18,7 +18,7 @@ makeBufferX(const size_t size) {
 
   BufferX b = {0};
   b.OutputSizeFrames = size;
-  b.OutputSizeBytes = size * DEFAULT_CHAN * (sizeof(int16_t) / 8);
+  b.OutputSizeBytes = size * DEFAULT_CHAN * DEFAULT_BYTES;
   b.Output = malloc(sizeof(*b.Output) * b.OutputSizeBytes);
   if (b.Output == NULL) {
     errx(ERROR_ALLOC, "Error initializing audio buffer");
