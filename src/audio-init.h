@@ -18,8 +18,6 @@ typedef struct Audio {
 
   float                   Amplitude;
   BufferX                 Buffer;
-  Buffer                * MixingBuffer;
-  ByteBuffer            * MainBuffer;
   struct sio_hdl        * Output;
   AudioSettings           Settings;
   Voices                  Voices;

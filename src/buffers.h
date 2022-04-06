@@ -43,6 +43,7 @@ typedef struct BufferX {
 
 /* Hard lock to stereo. In future: stereo mixing. */
 
+  size_t          OutputBytesWritten;
   size_t          OutputFramesWritten;
   size_t          OutputSizeFrames;
   size_t          OutputSizeBytes;

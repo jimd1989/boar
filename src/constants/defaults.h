@@ -10,6 +10,9 @@
 /* Bit depth of an individual sample */
 #define DEFAULT_BITS 16
 
+/* Byte depth of an individual sample */
+#define DEFAULT_BYTES (DEFAULT_BITS / 8)
+
 /* Sample rate */
 #define DEFAULT_RATE 48000
 

@@ -45,7 +45,6 @@ typedef struct Voices {
   Voice         * All;
   Voice         * Active[DEFAULT_KEYS_NUM];
   Keyboard        Keyboard;
-  float           CarrierBuffer[DEFAULT_BUFSIZE];
   float           ModulatorBuffer[DEFAULT_BUFSIZE];
 } Voices;
 
@@ -55,5 +54,5 @@ void pollVoice(Voice *);
 void setPitchRatio(Voices *, const bool, const float);
 void setFixedRate(Voices *, const bool, const float);
 void setModulation(Voices *, const float);
-void makeVoices(Voices *, const AudioSettings *);
+void makeVoices(Voices *, float *, const AudioSettings *);
 void killVoices(Voices *);

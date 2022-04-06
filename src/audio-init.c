@@ -25,7 +25,6 @@ static int roundBuffer(AudioSettings *, const struct sio_par *);
 static void setSetting(const unsigned int, const unsigned int,
     unsigned int *, const char *); 
 static void setSettings(AudioSettings *, const struct sio_par *);
-static void allocateBuffers(Buffer **, ByteBuffer **, const AudioSettings *);
 static void startAudio(struct sio_hdl *);
 static void KLUDGE_bitCheck(const unsigned int);
 
@@ -105,15 +104,6 @@ setSettings(AudioSettings *aos, const struct sio_par *sp) {
 }
 
 static void
-allocateBuffers(Buffer **b, ByteBuffer **bb, const AudioSettings *aos) {
-
-/* Allocates space for both the mixing and main audio buffers. */
-
-  *b = makeBuffer((size_t)aos->Bufsize);
-  *bb = makeByteBuffer(aos);
-}
-
-static void
 startAudio(struct sio_hdl *o) {
 
 /* Primes the sndio device to start accepting audio output. */
@@ -138,8 +128,7 @@ makeAudio(Audio *a, const int argc, char **argv) {
   setSettings(&a->Settings, &sp);
   KLUDGE_bitCheck(a->Settings.Bits);
   a->Buffer = makeBufferX(a->Settings.Bufsize);
-  allocateBuffers(&a->MixingBuffer, &a->MainBuffer, &a->Settings);
-  makeVoices(&a->Voices, &a->Settings);
+  makeVoices(&a->Voices, a->Buffer.Mix, &a->Settings);
   a->Amplitude = 0.1f;
   startAudio(a->Output);
 }
@@ -150,8 +139,7 @@ killAudio(Audio *a) {
 /* Stops sndio. Frees all memory allocated by Audio type. */
 
   sio_close(a->Output); 
-  killBuffer(a->MixingBuffer);
-  killByteBuffer(a->MainBuffer);
+  killBufferX(&a->Buffer);
   killVoices(&a->Voices);
 }
 
