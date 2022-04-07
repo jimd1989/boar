@@ -52,7 +52,15 @@ fillBuffer(Audio *a) {
   for (; i < a->Settings.Polyphony ; i++) {
     pollVoice(&a->Voices.All[i]);
   }
-  a->Voices.Phase += DEFAULT_BUFSIZE;
+  a->Voices.Phase += DEFAULT_BUFSIZE; /* Maybe something else */
+  a->Buffer.OutputFramesToWrite = DEFAULT_BUFSIZE; /* Maybe not needed */
+}
+
+static void
+writeFrames(Audio *a) {
+  BufferX *b = &a->Buffer;
+  size_t remaining = b->OutputSizeFrames - b->OutputFramesWritten;
+  size_t limit = LESSER(remaining, DEFAULT_BUFSIZE);
 }
 
 static void
