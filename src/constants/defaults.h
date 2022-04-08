@@ -10,6 +10,9 @@
 /* Bit depth of an individual sample */
 #define DEFAULT_BITS 16
 
+/* Byte depth of an individual sample */
+#define DEFAULT_BYTES (DEFAULT_BITS / 8)
+
 /* Sample rate */
 #define DEFAULT_RATE 48000
 
@@ -22,7 +25,7 @@
 #define DEFAULT_BUFSIZE (DEFAULT_RATE / DEFAULT_RESOLUTION)
 
 /* Number of channels */
-#define DEFAULT_CHAN 1
+#define DEFAULT_CHAN 2
 
 /* Number of simultaneous voices */
 #define DEFAULT_POLYPHONY 8

@@ -38,7 +38,7 @@ populateSettings(const AudioSettings *aos, struct sio_par *sp) {
 
   sio_initpar(sp);
   sp->bits = aos->Bits;
-  sp->appbufsz = aos->Bufsize;
+  sp->appbufsz = aos->BufSizeFrames;
   sp->pchan = aos->Chan;
   sp->rate = aos->Rate;
 }
@@ -87,7 +87,7 @@ roundBuffer(AudioSettings *aos, const struct sio_par *sp) {
 
 /* Round the buffer size according to hardware suggestions. */
 
-  int frames = aos->Bufsize;
+  int frames = aos->BufSizeFrames;
   frames = frames + sp->round - 1;
   frames -= frames % sp->round;
   return frames;
@@ -99,11 +99,10 @@ setSettings(AudioSettings *aos, const struct sio_par *sp) {
 /* Runs setSetting() on essential playback parameters. */
 
   setSetting(aos->Bits, sp->bits, &aos->Bits, "bits");
-  setSetting(aos->Bufsize, roundBuffer(aos, sp), &aos->Bufsize, "bufsize");
+  setSetting(aos->BufSizeFrames, roundBuffer(aos, sp), &aos->BufSizeFrames, "bufsize");
   setSetting(aos->Chan, sp->pchan, &aos->Chan, "chan");
   setSetting(aos->Rate, sp->rate, &aos->Rate, "rate");
-  aos->BufsizeMain = aos->Bufsize * aos->Chan * (aos->Bits / 8);
-  aos->WindowSize = DEFAULT_BUFSIZE * aos->Chan * (aos->Bits / 8);
+  aos->BufSizeBytes = aos->BufSizeFrames * aos->Chan * (aos->Bits / 8);
 }
 
 static void
@@ -111,7 +110,7 @@ allocateBuffers(Buffer **b, ByteBuffer **bb, const AudioSettings *aos) {
 
 /* Allocates space for both the mixing and main audio buffers. */
 
-  *b = makeBuffer((size_t)aos->Bufsize);
+  *b = makeBuffer((size_t)aos->BufSizeFrames);
   *bb = makeByteBuffer(aos);
 }
 

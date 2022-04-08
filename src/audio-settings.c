@@ -52,7 +52,7 @@ makeAudioSettings(AudioSettings *aos, const int argc, char **argv) {
   char *arg = NULL;
 
   aos->Bits = DEFAULT_BITS;
-  aos->Bufsize = DEFAULT_BUFSIZE;
+  aos->BufSizeFrames = DEFAULT_BUFSIZE;
   aos->Chan = DEFAULT_CHAN;
   aos->Rate = DEFAULT_RATE;
   aos->Polyphony = DEFAULT_POLYPHONY;
@@ -64,9 +64,7 @@ makeAudioSettings(AudioSettings *aos, const int argc, char **argv) {
         errx(ERROR_ARG, "-bits must be a multiple of 8");
       }
     } else if (isFlag(arg, "-bufsize") && i+1 < argc) {
-      parseFlag(arg, argv[++i], 1, MAX_BUFSIZE, &aos->Bufsize);
-    } else if (isFlag(arg, "-chan") && i+1 < argc) {
-      parseFlag(arg, argv[++i], 1, MAX_CHAN, &aos->Chan);
+      parseFlag(arg, argv[++i], 1, MAX_BUFSIZE, &aos->BufSizeFrames);
     } else if (isFlag(arg, "-rate") && i+1 < argc) {
       parseFlag(arg, argv[++i], 1, MAX_RATE, &aos->Rate);
     } else if (isFlag(arg, "-polyphony") && i+1 < argc) {

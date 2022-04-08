@@ -51,7 +51,7 @@ fillBuffer(Audio *a) {
   for (; i < a->Settings.Polyphony ; i++) {
     pollVoice(&a->Voices.All[i]);
   }
-  a->Voices.Phase += a->Settings.Bufsize;
+  a->Voices.Phase += a->Settings.BufSizeFrames;
 }
 
 static size_t
@@ -97,9 +97,9 @@ writeBuffer(Audio *a) {
     s = mixdownSample(a->MixingBuffer->Values[i], a->Amplitude);
     j += writeSample(a->MainBuffer, s, j);
   }
-  if (sio_write(a->Output, a->MainBuffer->Values, a->Settings.BufsizeMain) !=
-      a->Settings.BufsizeMain) {
-    warnx("Buffer error: %u bytes expected", a->Settings.BufsizeMain);
+  if (sio_write(a->Output, a->MainBuffer->Values, a->Settings.BufSizeBytes) !=
+      a->Settings.BufSizeBytes) {
+    warnx("Buffer error: %u bytes expected", a->Settings.BufSizeBytes);
   }
 }
 
