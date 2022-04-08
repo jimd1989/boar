@@ -25,8 +25,8 @@ static int roundBuffer(AudioSettings *, const struct sio_par *);
 static void setSetting(const unsigned int, const unsigned int,
     unsigned int *, const char *); 
 static void setSettings(AudioSettings *, const struct sio_par *);
+static void checkSettings(struct sio_par *);
 static void startAudio(struct sio_hdl *);
-static void KLUDGE_bitCheck(const unsigned int);
 
 static void
 populateSettings(const AudioSettings *aos, struct sio_par *sp) {
@@ -39,6 +39,7 @@ populateSettings(const AudioSettings *aos, struct sio_par *sp) {
   sp->bits = aos->Bits;
   sp->appbufsz = aos->Bufsize;
   sp->rate = aos->Rate;
+  sp->pchan = DEFAULT_CHAN;
 }
 
 static void
@@ -113,6 +114,19 @@ startAudio(struct sio_hdl *o) {
   }
 }
 
+static void
+checkSettings(struct sio_par *sp) {
+
+/* Kill program if certain sndio settings aren't satisfied. */
+
+  if (sp->bits != DEFAULT_BITS) {
+    errx(ERROR_SIO, "Expected %d bit output.", DEFAULT_BITS);
+  }
+  if (sp->pchan != DEFAULT_CHAN) {
+    errx(ERROR_SIO, "Expected %d channels.", DEFAULT_CHAN);
+  }
+}
+
 void
 makeAudio(Audio *a, const int argc, char **argv) {
 
@@ -126,7 +140,7 @@ makeAudio(Audio *a, const int argc, char **argv) {
   openOutput(&a->Output);
   suggestSettings(a->Output, &sp);
   setSettings(&a->Settings, &sp);
-  KLUDGE_bitCheck(a->Settings.Bits);
+  checkSettings(&sp);
   a->Buffer = makeBufferX(a->Settings.Bufsize);
   makeVoices(&a->Voices, a->Buffer.Mix, &a->Settings);
   a->Amplitude = 0.1f;
@@ -141,16 +155,4 @@ killAudio(Audio *a) {
   sio_close(a->Output); 
   killBufferX(&a->Buffer);
   killVoices(&a->Voices);
-}
-
-static void
-KLUDGE_bitCheck(const unsigned int bits) {
-
-/* This function should not exist. It is a temporary guard against non-16bit
- * ints, which are not supported yet. */    
-
-  if (bits != 16) {
-    errx(ERROR_ARG, "Sorry, only 16 bit audio output is actually"
-        " supported for now. Other resolutions will be added later.");
-  }
 }
