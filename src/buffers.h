@@ -5,13 +5,13 @@
 
 #include "audio-settings.h"
 
-typedef struct Buffer {
+typedef struct FloatBuffer {
 
 /* An audio buffer for internal mixing and synthesis. */
 
   size_t        Size;
   float       * Values;
-} Buffer;
+} FloatBuffer;
 
 typedef struct ByteBuffer {
 
@@ -23,7 +23,7 @@ typedef struct ByteBuffer {
   uint8_t             * Values;
 } ByteBuffer;
 
-Buffer * makeBuffer(const size_t);
+FloatBuffer * makeBuffer(const size_t);
 ByteBuffer * makeByteBuffer(const AudioSettings *);
-void killBuffer(Buffer *);
+void killBuffer(FloatBuffer *);
 void killByteBuffer(ByteBuffer *);

@@ -15,12 +15,12 @@ typedef struct Osc {
  * every buffer-filling cycle, Osc.Phase * Osc.Amplitude * Osc.KeyMod is
  * written to Osc.Buffer.Values[i]. */
 
-  float          KeyMod;
-  float          Amplitude;
-  float          Phase;
-  float          Pitch;
-  Buffer       * Buffer;
-  Wave         * Wave;
+  float           KeyMod;
+  float           Amplitude;
+  float           Phase;
+  float           Pitch;
+  FloatBuffer   * Buffer;
+  Wave          * Wave;
 } Osc;
 
 typedef struct Operator {

@@ -25,7 +25,7 @@ static int roundBuffer(AudioSettings *, const struct sio_par *);
 static void setSetting(const unsigned int, const unsigned int,
     unsigned int *, const char *); 
 static void setSettings(AudioSettings *, const struct sio_par *);
-static void allocateBuffers(Buffer **, ByteBuffer **, const AudioSettings *);
+static void allocateBuffers(FloatBuffer **, ByteBuffer **, const AudioSettings *);
 static void startAudio(struct sio_hdl *);
 static void KLUDGE_bitCheck(const unsigned int);
 
@@ -106,7 +106,7 @@ setSettings(AudioSettings *aos, const struct sio_par *sp) {
 }
 
 static void
-allocateBuffers(Buffer **b, ByteBuffer **bb, const AudioSettings *aos) {
+allocateBuffers(FloatBuffer **b, ByteBuffer **bb, const AudioSettings *aos) {
 
 /* Allocates space for both the mixing and main audio buffers. */
 

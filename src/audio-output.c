@@ -15,7 +15,7 @@
 #include "numerical.h"
 #include "voice.h"
 
-static void clearBuffer(Buffer *);
+static void clearBuffer(FloatBuffer *);
 static void fillBuffer(Audio *);
 static size_t writeSample(ByteBuffer *, const int16_t, const unsigned int);
 static int16_t mixdownSample(const float, const float);
@@ -30,7 +30,7 @@ setVolume(Audio *a, const float f) {
 }
 
 static void
-clearBuffer(Buffer *b) {
+clearBuffer(FloatBuffer *b) {
 
 /* Explicitly zeroes Audio.MixingBuffer, since sample data is summed up inside
  * of it. This differs from Audio.MainBuffer, which can simply be overwritten

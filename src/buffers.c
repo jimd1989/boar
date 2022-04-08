@@ -11,13 +11,13 @@
 #include "constants/defaults.h"
 #include "constants/errors.h"
 
-Buffer *
+FloatBuffer *
 makeBuffer(const size_t size) {
 
 /* Allocates the space needed for a Buffer, then allocates the space needed for
  * Buffer.Values. */
 
-  Buffer *b = malloc(sizeof(*b));
+  FloatBuffer *b = malloc(sizeof(*b));
   if (b == NULL) {
     errx(ERROR_ALLOC, "Error initializing audio mixing buffer struct");
   }
@@ -50,7 +50,7 @@ makeByteBuffer(const AudioSettings *aos) {
 }
 
 void
-killBuffer(Buffer *b) {
+killBuffer(FloatBuffer *b) {
 
 /* Frees all memory allocated by a Buffer. */
 

@@ -24,8 +24,8 @@ static Voice * findFreeVoice(Voices *);
 static void resetVoice(const Voices *, Voice *, const uint16_t, const bool);
 static void setVoicesSettings(Voices *, const AudioSettings *);
 static void allocateVoices(Voices *);
-static void makeOperator(Operators *, Operator *, Buffer *);
-static void makeVoice(Voices *, Voice *, Buffer *, Buffer *);
+static void makeOperator(Operators *, Operator *, FloatBuffer *);
+static void makeVoice(Voices *, Voice *, FloatBuffer *, FloatBuffer *);
 static void makeOperators(Operators *, const unsigned int);
 
 static Voice *
@@ -213,7 +213,7 @@ allocateVoices(Voices *vs) {
 }
 
 static void
-makeOperator(Operators *os, Operator *op, Buffer *b) {
+makeOperator(Operators *os, Operator *op, FloatBuffer *b) {
 
 /* Initializes an Operator type within a voice. */
 
@@ -226,7 +226,7 @@ makeOperator(Operators *os, Operator *op, Buffer *b) {
 }
 
 static void
-makeVoice(Voices *vs, Voice *v, Buffer *cB, Buffer *mB) {
+makeVoice(Voices *vs, Voice *v, FloatBuffer *cB, FloatBuffer *mB) {
 
 /* Initializes a Voice type within Voices.All. */
 
@@ -246,12 +246,12 @@ makeOperators(Operators *os, const unsigned int rate) {
 }
 
 void
-makeVoices(Voices *vs, Buffer *cBuffer, const AudioSettings *aos) {
+makeVoices(Voices *vs, FloatBuffer *cBuffer, const AudioSettings *aos) {
 
 /* Initializes a Voices type. Errors are fatal. */
 
   unsigned int i = 0;
-  Buffer *mBuffer = makeBuffer(cBuffer->Size);
+  FloatBuffer *mBuffer = makeBuffer(cBuffer->Size);
   Voice *v = NULL;
 
   setVoicesSettings(vs, aos);

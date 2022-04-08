@@ -53,5 +53,5 @@ void pollVoice(Voice *);
 void setPitchRatio(Voices *, const bool, const float);
 void setFixedRate(Voices *, const bool, const float);
 void setModulation(Voices *, const float);
-void makeVoices(Voices *, Buffer *, const AudioSettings *);
+void makeVoices(Voices *, FloatBuffer *, const AudioSettings *);
 void killVoices(Voices *);
