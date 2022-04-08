@@ -196,7 +196,7 @@ setVoicesSettings(Voices *vs, const AudioSettings *aos) {
   vs->Rate = aos->Rate;
   vs->Carrier.Ratio = 1.0f;
   vs->Modulator.Ratio = 1.0f;
-  vs->Phase = 1;
+  vs->Phase = 0;
   vs->Amplitude = 1.0f / (float)vs->N;
 }
 

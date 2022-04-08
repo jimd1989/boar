@@ -3,14 +3,6 @@
 
 #pragma once
 
-/* The minimum bit depth allowed */
-#define MIN_BITS 8
-
-/* The maximum bit depth allowed */
-#define MAX_BITS 32
-
-/* The maximum bufsize allowed */
-#define MAX_BUFSIZE 100000
 
 /* The maximum sample rate allowed */
 #define MAX_RATE 384000

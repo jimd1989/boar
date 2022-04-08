@@ -2,6 +2,11 @@ Features that boar is lacking, none of which are guaranteed to ever actually
 be implemented. If you are interested in contributing to boar's codebase, these
 may be good ideas to work on.
 
+[YES] Env time in seconds:
+Rather than having an arbitrary limit, express envelope time in seconds. May
+complicate external MIDI control if such a thing ever moves beyond note on/off,
+but this is not a priority.
+
 [YES] Channel level volume:
 Hard lock boar to stereo output, but allow left right channels to set volume
 independenly.

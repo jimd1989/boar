@@ -97,8 +97,8 @@ writeFrames(Audio *a) {
     }
     localFramesWritten += limit;
     b->FramesWritten += limit;
-    if (b->FramesWritten >= b->SizeFrames) {
-      /* (void)sio_write(a->Output, b->Output, b->SizeBytes); */
+    if (b->FramesWritten == b->SizeFrames) {
+      sio_write(a->Output, b->Output, b->SizeBytes);
       b->FramesWritten = 0;
       b->BytesWritten = 0;
     }
