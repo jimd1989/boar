@@ -97,10 +97,7 @@ writeBuffer(Audio *a) {
     s = mixdownSample(a->MixingBuffer->Values[i], a->Amplitude);
     j += writeSample(a->MainBuffer, s, j);
   }
-  if (sio_write(a->Output, a->MainBuffer->Values, a->Settings.BufSizeBytes) !=
-      a->Settings.BufSizeBytes) {
-    warnx("Buffer error: %u bytes expected", a->Settings.BufSizeBytes);
-  }
+  sio_write(a->Output, a->MainBuffer->Values, a->Settings.BufSizeBytes);
 }
 
 void

@@ -16,6 +16,7 @@ typedef struct AudioSettings {
   unsigned int  Chan;
   unsigned int  Rate;
   unsigned int  Polyphony;
+  unsigned int  WindowSizeFrames;
 } AudioSettings;
 
 void makeAudioSettings(AudioSettings *, const int, char **);

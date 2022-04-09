@@ -25,7 +25,8 @@ static int roundBuffer(AudioSettings *, const struct sio_par *);
 static void setSetting(const unsigned int, const unsigned int,
     unsigned int *, const char *); 
 static void setSettings(AudioSettings *, const struct sio_par *);
-static void allocateBuffers(FloatBuffer **, ByteBuffer **, const AudioSettings *);
+static void allocateBuffers(FloatBuffer **, ByteBuffer **, 
+    const AudioSettings *);
 static void startAudio(struct sio_hdl *);
 static void KLUDGE_bitCheck(const unsigned int);
 
@@ -103,6 +104,7 @@ setSettings(AudioSettings *aos, const struct sio_par *sp) {
   setSetting(aos->Chan, sp->pchan, &aos->Chan, "chan");
   setSetting(aos->Rate, sp->rate, &aos->Rate, "rate");
   aos->BufSizeBytes = aos->BufSizeFrames * aos->Chan * (aos->Bits / 8);
+  aos->WindowSizeFrames = DEFAULT_BUFSIZE;
 }
 
 static void

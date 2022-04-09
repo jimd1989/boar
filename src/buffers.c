@@ -45,7 +45,7 @@ makeByteBuffer(const AudioSettings *aos) {
   }
   bb->Chan = aos->Chan;
   bb->ChanBytes = (size_t)aos->Chan * DEFAULT_BYTES;
-  bb->Size = (size_t)aos->BufSizeBytes;
+  bb->SizeBytes = (size_t)aos->BufSizeBytes;
   return bb;
 }
 

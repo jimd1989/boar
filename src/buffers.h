@@ -17,10 +17,11 @@ typedef struct ByteBuffer {
 
 /* An audio buffer for output of mixed and interleaved sound data. */
 
-  unsigned int          Chan;
-  size_t                ChanBytes;
-  size_t                Size;
-  uint8_t             * Values;
+  unsigned int    Chan;
+  size_t          BytesWritten;
+  size_t          ChanBytes;
+  size_t          SizeBytes;
+  uint8_t       * Values;
 } ByteBuffer;
 
 FloatBuffer * makeBuffer(const size_t);
