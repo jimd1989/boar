@@ -112,7 +112,7 @@ allocateBuffers(FloatBuffer **b, ByteBuffer **bb, const AudioSettings *aos) {
 
 /* Allocates space for both the mixing and main audio buffers. */
 
-  *b = makeBuffer((size_t)aos->BufSizeFrames);
+  *b = makeBuffer((size_t)aos->WindowSizeFrames);
   *bb = makeByteBuffer(aos);
 }
 

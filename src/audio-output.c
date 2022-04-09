@@ -97,7 +97,8 @@ writeBuffer(Audio *a) {
     s = mixdownSample(a->MixingBuffer->Values[i], a->Amplitude);
     j += writeSample(a->MainBuffer, s, j);
   }
-  sio_write(a->Output, a->MainBuffer->Values, a->Settings.BufSizeBytes);
+  /* WORKS: do actual buffer size now */
+  sio_write(a->Output, a->MainBuffer->Values, a->Settings.WindowSizeFrames * 4);
 }
 
 void
