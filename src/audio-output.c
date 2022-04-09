@@ -20,6 +20,7 @@ static void fillBuffer(Audio *);
 static size_t writeSample(ByteBuffer *, const int16_t, const unsigned int);
 static int16_t mixdownSample(const float, const float);
 static void writeBuffer(Audio *);
+static void writeFrames(Audio *);
 
 void
 setVolume(Audio *a, const float f) {
@@ -114,8 +115,9 @@ writeFrames(Audio *a) {
   while (localFramesWritten < fb->SizeFrames) {
     limit = LESSER(remaining, fb->SizeFrames);
     for (n = 0 ; n < limit ; n++) {
-      sl = mixdownSample(fb->Values[localFramesWritten], a->Amplitude);
-      sr = mixdownSample(fb->Values[localFramesWritten], a->Amplitude);
+      /* Amplitudes will eventually be channel independent. */
+      sl = mixdownSample(fb->Values[n], a->Amplitude);
+      sr = mixdownSample(fb->Values[n], a->Amplitude);
       bb->Values[bb->BytesWritten++] = (uint8_t)(sl & 255);
       bb->Values[bb->BytesWritten++] = (uint8_t)(sl >> 8);
       bb->Values[bb->BytesWritten++] = (uint8_t)(sr & 255);
@@ -124,7 +126,7 @@ writeFrames(Audio *a) {
     localFramesWritten += limit;
     bb->FramesWritten += limit;
     if (bb->FramesWritten == bb->SizeFrames) {
-      /* sio_write(a->Output, bb->Values, bb->SizeBytes); */
+      sio_write(a->Output, bb->Values, bb->SizeBytes);
       bb->BytesWritten = 0;
       bb->FramesWritten = 0;
     }
