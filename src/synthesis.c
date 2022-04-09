@@ -64,12 +64,12 @@ fillModulatorBuffer(Operator *m) {
   tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
 
   if (o->Wave->Type == WAVE_TYPE_NOISE) {
-    for (; i < o->Buffer->Size; i++) {
+    for (; i < o->Buffer->SizeFrames; i++) {
       o->Buffer->Values[i] = readNoise(&o->Wave->Noise, o->Pitch) *
         o->Amplitude * applyEnv(&m->Env) * o->KeyMod;
     }
   } else {
-    for (; i < o->Buffer->Size; i++) {
+    for (; i < o->Buffer->SizeFrames; i++) {
       o->Phase = fmodf(o->Phase + o->Pitch, (float)DEFAULT_WAVELEN);
       o->Buffer->Values[i] = interpolate(o->Wave->Table[tableNo],
           DEFAULT_WAVELEN, o->Phase) * o->Amplitude *
@@ -112,7 +112,7 @@ fillCarrierBuffer(Operator *c, Operator *m) {
   unsigned int i = 0;
 
   fillModulatorBuffer(m);
-  for (; i < c->Osc.Buffer->Size ; i++) {
+  for (; i < c->Osc.Buffer->SizeFrames ; i++) {
     c->Osc.Buffer->Values[i] += modulate(&c->Osc, &m->Osc, i) *
       c->Osc.Amplitude * applyEnv(&c->Env) * c->Osc.KeyMod;
   }

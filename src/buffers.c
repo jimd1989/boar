@@ -25,7 +25,7 @@ makeBuffer(const size_t size) {
   if (b->Values == NULL) {
     errx(ERROR_ALLOC, "Error initializing audio mixing buffer");
   }
-  b->Size = size;
+  b->SizeFrames = size;
   return b;
 }
 
@@ -45,7 +45,10 @@ makeByteBuffer(const AudioSettings *aos) {
   }
   bb->Chan = aos->Chan;
   bb->ChanBytes = (size_t)aos->Chan * DEFAULT_BYTES;
+  bb->BytesWritten = 0;
+  bb->FramesWritten = 0;
   bb->SizeBytes = (size_t)aos->BufSizeBytes;
+  bb->SizeFrames = (size_t)aos->BufSizeFrames;
   return bb;
 }
 

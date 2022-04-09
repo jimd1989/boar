@@ -36,7 +36,7 @@ clearBuffer(FloatBuffer *b) {
  * of it. This differs from Audio.MainBuffer, which can simply be overwritten
  * during each cycle. */
 
-  memset(b->Values, 0, sizeof(*b->Values) * b->Size);
+  memset(b->Values, 0, sizeof(*b->Values) * b->SizeFrames);
 }
 
 static void
@@ -93,12 +93,43 @@ writeBuffer(Audio *a) {
   unsigned int i, j;
   int16_t s;
 
-  for (i = 0, j = 0 ; i < a->MixingBuffer->Size ; i++) {
+  for (i = 0, j = 0 ; i < a->MixingBuffer->SizeFrames ; i++) {
     s = mixdownSample(a->MixingBuffer->Values[i], a->Amplitude);
     j += writeSample(a->MainBuffer, s, j);
   }
   /* WORKS: do actual buffer size now */
   sio_write(a->Output, a->MainBuffer->Values, a->Settings.WindowSizeFrames * 4);
+}
+
+static void
+writeFrames(Audio *a) {
+  int16_t sl = 0;
+  int16_t sr = 0;
+  size_t n = 0;
+  size_t localFramesWritten = 0;
+  size_t limit = 0;
+  FloatBuffer *fb = a->MixingBuffer;
+  ByteBuffer *bb = a->MainBuffer;
+  size_t remaining = bb->SizeFrames - bb->FramesWritten;
+  while (localFramesWritten < fb->SizeFrames) {
+    limit = LESSER(remaining, fb->SizeFrames);
+    for (n = 0 ; n < limit ; n++) {
+      sl = mixdownSample(fb->Values[localFramesWritten], a->Amplitude);
+      sr = mixdownSample(fb->Values[localFramesWritten], a->Amplitude);
+      bb->Values[bb->BytesWritten++] = (uint8_t)(sl & 255);
+      bb->Values[bb->BytesWritten++] = (uint8_t)(sl >> 8);
+      bb->Values[bb->BytesWritten++] = (uint8_t)(sr & 255);
+      bb->Values[bb->BytesWritten++] = (uint8_t)(sr >> 8);
+    }
+    localFramesWritten += limit;
+    bb->FramesWritten += limit;
+    if (bb->FramesWritten == bb->SizeFrames) {
+      /* sio_write(a->Output, bb->Values, bb->SizeBytes); */
+      bb->BytesWritten = 0;
+      bb->FramesWritten = 0;
+    }
+    limit = fb->SizeFrames - localFramesWritten;
+  }
 }
 
 void
@@ -108,5 +139,5 @@ play(Audio *a) {
 
   clearBuffer(a->MixingBuffer);
   fillBuffer(a);
-  writeBuffer(a);
+  writeFrames(a);
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#define LESSER(x, y) (x > y ? y : x)
+
 float truncateFloat(const float, const float);
 float liftFloat(const float, const float);
 float clip(const float);

@@ -9,7 +9,7 @@ typedef struct FloatBuffer {
 
 /* An audio buffer for internal mixing and synthesis. */
 
-  size_t        Size;
+  size_t        SizeFrames;
   float       * Values;
 } FloatBuffer;
 
@@ -20,7 +20,9 @@ typedef struct ByteBuffer {
   unsigned int    Chan;
   size_t          BytesWritten;
   size_t          ChanBytes;
+  size_t          FramesWritten;
   size_t          SizeBytes;
+  size_t          SizeFrames;
   uint8_t       * Values;
 } ByteBuffer;
 

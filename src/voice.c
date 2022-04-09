@@ -251,7 +251,7 @@ makeVoices(Voices *vs, FloatBuffer *cBuffer, const AudioSettings *aos) {
 /* Initializes a Voices type. Errors are fatal. */
 
   unsigned int i = 0;
-  FloatBuffer *mBuffer = makeBuffer(cBuffer->Size);
+  FloatBuffer *mBuffer = makeBuffer(cBuffer->SizeFrames);
   Voice *v = NULL;
 
   setVoicesSettings(vs, aos);
