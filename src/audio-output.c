@@ -88,8 +88,8 @@ writeFrames(Audio *a) {
     limit = LESSER(remaining, DEFAULT_BUFSIZE);
     for (n = 0 ; n < limit ; n++) {
       /* Will eventually have channel independent amplitudes here. */
-      sl = mixdownSample(b->Mix[localFramesWritten], a->Amplitude);
-      sr = mixdownSample(b->Mix[localFramesWritten], a->Amplitude);
+      sl = mixdownSample(b->Mix[n], a->Amplitude);
+      sr = mixdownSample(b->Mix[n], a->Amplitude);
       b->Output[b->BytesWritten++] = (uint8_t)(sl & 255);
       b->Output[b->BytesWritten++] = (uint8_t)(sl >> 8);
       b->Output[b->BytesWritten++] = (uint8_t)(sr & 255);
