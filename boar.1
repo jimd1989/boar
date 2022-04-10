@@ -49,6 +49,10 @@ Sets the envelope attack for the carrier (a) or modulator (A). This is the amoun
 Sets the envelope attack wave shape for the carrier (a.) or modulator (A.).
 .El
 .Bl -tag -width Ds
+.It b [ufloat]
+Sets the left/right audio output channel balance. 0.5 represents full volume in both left/right channels. 0.0 represents full volume in the left channel with the right one muted. 1.0 represents full volume in the right channel with the left one muted.
+.El
+.Bl -tag -width Ds
 .It d/D [ufloat]
 Sets the envelope decay for the carrier (d) or modulator (D). This is the amount of time the parameter being enveloped takes to reach its sustain level after the attack has taken place. Values between 0.0 and 1.0 are honored.
 .El

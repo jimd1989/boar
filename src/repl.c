@@ -92,7 +92,7 @@ dispatchCmd(Repl *r) {
       setPitchRatio(voices, true, arg->F);
       break;
     case FUNC_CHAN_BALANCE:
-      warnx("Channel balance %f", arg->F);
+      setBalance(&r->Audio->Amplitude, arg->F);
       break;
     case FUNC_QUIT:
       r->Cmd.Error = ERROR_EXIT;

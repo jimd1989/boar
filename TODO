@@ -12,10 +12,6 @@ Rather than having an arbitrary limit, express envelope time in seconds. May
 complicate external MIDI control if such a thing ever moves beyond note on/off,
 but this is not a priority.
 
-[YES] Channel level volume:
-Hard lock boar to stereo output, but allow left right channels to set volume
-independently.
-
 [YES] Band limiting adjustment:
 All complex wave forms are band limited just below the aliasing limit, which
 still might be too harmonically complex to actually sound good. Should have
@@ -68,13 +64,6 @@ the modulator wave, etc.
 [YES] Help:
 A help (h) command followed by a command char could explain the purpose of
 each command. 
-
-[MAYBE] Modify ByteBuffer:
-Mixed-down int16_t samples can likely be written directly to it, without the
-need for manual bit-shifting.
-
-[MAYBE] Sample + Hold:
-In addition to pure noise signals, there should be some kind of s+h feature.
 
 [YES] Additional inputs:
 The ability to assign parameters to modwheels, aftertouch, etc. The interface
