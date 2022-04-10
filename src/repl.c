@@ -1,13 +1,12 @@
 /* The REPL is the user-facing interface for the program. It reads commands
- * from stdin and passes them to an already-running output thread via the 
- * Audio struct. The REPL can also echo commands to the file specified by
- * DEFAULT_ECHO_FILE, which can be used to pipe information between multiple
- * instances of boar. */
+ * from stdin and passes them to sndio thread via the Audio struct. */ 
 
 #include <err.h>
+#include <poll.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "repl.h"
 
@@ -22,36 +21,11 @@
 #include "voice.h"
 #include "wave.h"
 
-static void echoNoteCheck(const Repl *);
-static void echoString(const char *);
-static Error dispatchCmd(Repl *);
+static void dispatchCmd(Repl *);
 static void printParseErr(const Error, const char *);
+static void readLine(Repl *);
 
 static void
-echoNoteCheck(const Repl *r) {
-
-/* If DEFAULT_ECHO_NOTES is enabled, all note on/off commands will be echoed
- * to DEFAULT_ECHO file. This is used to send the same note to multiple
- * instances of boar that have been piped together. */
-
-  if (r->EchoNotes) {
-    fprintf(DEFAULT_ECHO_FILE, "%c %d\n", r->Cmd.Func + DEFAULT_ASCII_A, 
-        r->Cmd.Arg.I);
-    fflush(DEFAULT_ECHO_FILE);
-  }
-}
-
-static void
-echoString(const char *s) {
-
-/* Echoes a string to DEFAULT_ECHO_FILE. This is uses to send arbitrary
- * commands to other instances of boar in the pipeline. */
-
-  fprintf(DEFAULT_ECHO_FILE, "%s\n", s);
-  fflush(DEFAULT_ECHO_FILE);
-}
-
-static Error
 dispatchCmd(Repl *r) {
 
 /* Runs a command against the Audio struct. */
@@ -63,11 +37,9 @@ dispatchCmd(Repl *r) {
 
   switch(r->Cmd.Func) {
     case FUNC_NOTE_ON:
-      echoNoteCheck(r);
       voiceOn(voices, (uint16_t)arg->I);
       break;
     case FUNC_NOTE_OFF:
-      echoNoteCheck(r);
       voiceOff(voices, (uint16_t)arg->I);
       break;
     case FUNC_MOD_ATTACK:
@@ -100,9 +72,6 @@ dispatchCmd(Repl *r) {
     case FUNC_ENV_LOOP:
       setLoop(&carrier->Env, (bool)arg->I);
       break;
-    case FUNC_ECHO:
-      echoString(arg->S);
-      break;
     case FUNC_MOD_KEY_FOLLOW:
       selectWave(&voices->Keyboard.Modulator.KeyFollowCurve, arg->I);
       break;
@@ -122,9 +91,8 @@ dispatchCmd(Repl *r) {
       setPitchRatio(voices, true, arg->F);
       break;
     case FUNC_QUIT:
-      fprintf(DEFAULT_ECHO_FILE, "q\n");
-      r->Audio->Active = false;
-      return ERROR_EXIT;
+      r->Cmd.Error = ERROR_EXIT;
+      return;
     case FUNC_MOD_RELEASE:
       setReleaseLevel(&modulator->Env, arg->F);
       break;
@@ -177,7 +145,7 @@ dispatchCmd(Repl *r) {
       setFixedRate(voices, true, arg->F);
       break;
   }
-  return ERROR_OK;
+  r->Cmd.Error = ERROR_OK;
 }
 
 static void
@@ -197,30 +165,62 @@ printParseErr(const Error err, const char *buffer) {
   }
 }
 
+static void
+readLine(Repl *r) {
+
+/* Reads a full line of user input, which can be a single command terminated
+ * by a newline, or multiple commands delimited by semicolons, but also ending
+ * in a newline. Dispatches a command immediately after it is parsed. Has to use
+ * read() in order to leave audio playback unblocked. This is more troublesome
+ * than fgets(). */  
+
+  int bytesParsed = 0;
+  int totalBytesParsed = 0;
+  int bytesRead = 0;
+  char *line = NULL;
+
+  bytesRead = read(STDIN_FILENO, r->Buffer, DEFAULT_LINESIZE);
+  if (bytesRead < 1 || r->Buffer[0] == '\n' || r->Buffer[0] == '#') {
+    r->Cmd.Error = ERROR_NOTHING;
+    return;
+  }
+  /* Since all input is newline buffered, should terminate string one char
+   * early to avoid persisting the \n. */
+  r->Buffer[--bytesRead] = '\0';
+  line = r->Buffer;
+  while (totalBytesParsed < bytesRead) {
+    bytesParsed = parseCmd(&r->Cmd, line);
+    totalBytesParsed += bytesParsed;
+    if (r->Cmd.Error != ERROR_OK) {
+      printParseErr(r->Cmd.Error, line);
+    } else {
+      if (r->Cmd.Error == ERROR_EXIT) {
+        return;
+      }
+      dispatchCmd(r);
+    }
+    line += bytesParsed;
+  }
+}
+
 void
 repl(Repl *r) {
 
 /* The main user-facing loop. Reads lines of user input, parses them, and sends
  * them to the Audio struct for processing. */
 
-  Error err = 0;
+  struct pollfd pfds[1] = {{0}};
 
+  pfds[0].fd = STDIN_FILENO;
+  pfds[0].events = POLLIN;
   warnx("Welcome. You can exit at any time by pressing q + enter.");
-  while (fgets(r->Buffer, DEFAULT_LINESIZE, stdin) != NULL) {
-    if (r->Buffer[0] == '\n' || r->Buffer[0] == '#') {
-      /* ignore blank or commented input */
-      ;
-    } else {
-      /* read multiple commands buffered by semicolons */
-      err = parseLine(&r->Cmd, r->Buffer);
-      if (err != ERROR_OK) {
-        printParseErr(err, r->Buffer);
-      } else {
-        err = dispatchCmd(r);
-        if (err == ERROR_EXIT) {
-          return;
-        }
+  while(poll(pfds, 1, 0) != -1) {
+    if (pfds[0].revents & POLLIN) {
+      readLine(r);
+      if (r->Cmd.Error == ERROR_EXIT) {
+        return;
       }
     }
+    play(r->Audio);
   }
 }

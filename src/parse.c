@@ -16,42 +16,54 @@
 #include "constants/errors.h"
 #include "constants/types.h"
 
-static unsigned int readArg(char *);
+static int readArg(unsigned int *, char *);
 static bool isValidArg(const unsigned int, const unsigned int);
 static int parseFunc(Cmd *, char *);
-static Error parseArg(Cmd *, const unsigned int, char *);
+static void parseArg(Cmd *, const unsigned int, char *);
 static char * printArg(unsigned int);
+static int flushCmd(char *);
 
 #define ACTIVATE_FLAG(n, x) (n | x)
 #define IS_FLAG_ACTIVE(n, x) ((bool)(n & x))
+#define IS_DELIMETER(c) (c == ';' || c == '\n' || c == '\0')
 
-static unsigned int
-readArg(char *line) {
+static int
+readArg(unsigned int *t, char *line) {
 
-/* Reads a line of input, and engages relevant TYPE_FLAG_* bits based upon the
+/* Reads a line of input, and engages relevant TYPE_FLAG_* bits of t based upon
  * characters it encounters. It will not break early even if contradictory
  * flags are engaged. The task of actually making sense of the returned type
- * value falls upon isValidArg() */
+ * value falls upon isValidArg(). Adds a null terminator to the delimeter index
+ * so that the argument can be parsed even if more commands were issued on the
+ * same line. Returns number of bytes read, including the delimeter, to aid in 
+ * further parsing. */
 
-  unsigned int t = TYPE_NIL;
+  int span = 0;
+  *t = TYPE_NIL;
 
-  while (*line != '\n' && *line != '\0') {
+  while (!IS_DELIMETER(*line)) {
     if (isblank((int)*line)) {
       ;
     } else if (*line == '-') {
-      t = ACTIVATE_FLAG(t, TYPE_FLAG_SIGNED);
+      *t = ACTIVATE_FLAG(*t, TYPE_FLAG_SIGNED);
     }else if (*line == '.') {
-      t = ACTIVATE_FLAG(t, TYPE_FLAG_FLOATING);
+      *t = ACTIVATE_FLAG(*t, TYPE_FLAG_FLOATING);
     } else if (isdigit((int)*line)) {
-      t = ACTIVATE_FLAG(t, TYPE_FLAG_NUMBER);
+      *t = ACTIVATE_FLAG(*t, TYPE_FLAG_NUMBER);
     } else if (isalpha((int)*line)) {
-      t = ACTIVATE_FLAG(t, TYPE_FLAG_TEXT); 
+      *t = ACTIVATE_FLAG(*t, TYPE_FLAG_TEXT); 
     } else {
-      t = ACTIVATE_FLAG(t, TYPE_FLAG_MISC);
+      *t = ACTIVATE_FLAG(*t, TYPE_FLAG_MISC);
     }
     line++;
+    span++;
   }
-  return t;
+  if (*line == '\0') {
+    return span;
+  } else {
+    *line = '\0';
+    return ++span;
+  }
 }
 
 static bool
@@ -102,7 +114,8 @@ parseFunc(Cmd *c, char *line) {
 
 /* Populates a Cmd struct with the Func and Type of the command depicted in
  * line. Returns the length of command (and trailing whitespace) to aid further 
- * parsing. Returns -1 if the command is invalid. */
+ * parsing. Returns -1 if the command is invalid, but the success of this
+ * operation is checked with Cmd.Error. */
 
   int span = 1;
   unsigned int type = TYPE_UNDEFINED;
@@ -113,11 +126,13 @@ parseFunc(Cmd *c, char *line) {
     ;
   }
   if (!isalpha((int)line[0])) {
+    c->Error = ERROR_FUNCTION;
     return -1;
   }
   typeIndex = line[0] - DEFAULT_ASCII_A;
   if (typeIndex > 57) {
     /* prevent out of bounds access */
+    c->Error = ERROR_FUNCTION;
     return -1;
   }
   switch (line[1]) {
@@ -136,6 +151,7 @@ parseFunc(Cmd *c, char *line) {
       c->Func = typeIndex;
   }
   if (type == TYPE_UNDEFINED) {
+    c->Error = ERROR_FUNCTION;
     return -1;
   }
   c->Type = type;
@@ -146,13 +162,13 @@ parseFunc(Cmd *c, char *line) {
   return span;
 }
 
-static Error
+static void
 parseArg(Cmd *c, const unsigned int t, char *line) {
 
 /* After isValidArg() has ruled out any contradictory type flags, parseArg()
  * reads the user input into an actual numerical value that can be used by
  * boar commands. Floats and ints can be cast to one another to meet function
- * argument expectations. */
+ * argument expectations.*/
 
   if (IS_FLAG_ACTIVE(t, TYPE_FLAG_FLOATING) &&
       (! IS_FLAG_ACTIVE(c->Type, TYPE_FLAG_FLOATING)) &&
@@ -160,48 +176,70 @@ parseArg(Cmd *c, const unsigned int t, char *line) {
     /* If an integer is c->Type but a float is provided, the float is
      * truncated and converted to an int. */
     if (sscanf(line, "%f", &c->Arg.F) == 0) {
-      return ERROR_INPUT;
+      c->Error = ERROR_INPUT;
     }
     c->Arg.I = floorf(c->Arg.F);
   } else if (IS_FLAG_ACTIVE(c->Type, TYPE_FLAG_FLOATING)) {
     if (sscanf(line, "%f", &c->Arg.F) == 0) {
-      return ERROR_INPUT;
+      c->Error = ERROR_INPUT;
     }
   } else if (IS_FLAG_ACTIVE(c->Type, TYPE_FLAG_NUMBER)) {
     if (sscanf(line, "%d", &c->Arg.I) == 0) {
-      return ERROR_INPUT;
+      c->Error = ERROR_INPUT;
     }
   } else {
     /* "line" is the REPL's buffer. Because no value of Cmd.Arg needs to live
-     * in lone-term memory, it is acceptable to point Cmd.Arg.S directly to
+     * in long-term memory, it is acceptable to point Cmd.Arg.S directly to
      * the buffer, which is guaranteed not be overwritten during the lifetime
      * of function evaluation. */
     c->Arg.S = line;
   }
-  return ERROR_OK;
 }
 
-Error
-parseLine(Cmd *c, char *line) {
+static int
+flushCmd(char *line) {
 
-/* Reads a full line of user input into a Cmd struct, returning any errors
- * it encounters. */ 
+/* If user input does not represent a valid command, iterate until a delimeter
+ * is encountered without any further parsing. Return number of bytes so the
+ * parser can skip over these garbage inputs. */
+
+  int span = 0;
+
+  while (!IS_DELIMETER(*line)) {
+    line++;
+    span++;
+  }
+  return ++span;
+}
+
+int
+parseCmd(Cmd *c, char *line) {
+
+/* Reads a single command worth of user input into a Cmd struct, along with any
+ * errors it encounters. Returns the number of bytes read, including the
+ * delimeter, to aid in the parsing of other commands issued on the same 
+ * line. */
 
   int span = 0;
   unsigned int t = TYPE_UNDEFINED;
 
+
+  c->Error = ERROR_OK;
   span = parseFunc(c, line);
-  if (span == -1) {
-    return ERROR_FUNCTION;
+  if (c->Error != ERROR_OK) {
+    span = flushCmd(line);
+    return span;
   }
   line += span;
-  t = readArg(line);
+  span += readArg(&t, line);
   if (!isValidArg(c->Type, t)) {
     warnx("Invalid argument %s. Expected %s, got %s", line,
         printArg(c->Type), printArg(t));
-    return ERROR_ARG;
+    c->Error = ERROR_ARG;
+    return span;
   }
-  return parseArg(c, t, line);
+  parseArg(c, t, line);
+  return span;
 }
 
 static char *

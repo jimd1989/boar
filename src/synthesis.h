@@ -1,6 +1,5 @@
 #pragma once
 
-#include "buffers.h"
 #include "envelope.h"
 #include "wave.h"
 
@@ -13,14 +12,14 @@ typedef struct Osc {
  * modulator or carrier. Osc.KeyMod is the aggregate values of the velocity
  * and key follow settings of the struck key that engaged the Osc. At step i of
  * every buffer-filling cycle, Osc.Phase * Osc.Amplitude * Osc.KeyMod is
- * written to Osc.Buffer.Values[i]. */
+ * written to Osc.Buffer[i]. */
 
-  float          KeyMod;
-  float          Amplitude;
-  float          Phase;
-  float          Pitch;
-  Buffer       * Buffer;
-  Wave         * Wave;
+  float   KeyMod;
+  float   Amplitude;
+  float   Phase;
+  float   Pitch;
+  float * Buffer;
+  Wave  * Wave;
 } Osc;
 
 typedef struct Operator {

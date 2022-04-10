@@ -11,7 +11,6 @@
 #include "voice.h"
 
 #include "audio-settings.h"
-#include "buffers.h"
 #include "constants/defaults.h"
 #include "constants/errors.h"
 #include "envelope.h"
@@ -24,8 +23,8 @@ static Voice * findFreeVoice(Voices *);
 static void resetVoice(const Voices *, Voice *, const uint16_t, const bool);
 static void setVoicesSettings(Voices *, const AudioSettings *);
 static void allocateVoices(Voices *);
-static void makeOperator(Operators *, Operator *, Buffer *);
-static void makeVoice(Voices *, Voice *, Buffer *, Buffer *);
+static void makeOperator(Operators *, Operator *, float *);
+static void makeVoice(Voices *, Voice *, float *, float *);
 static void makeOperators(Operators *, const unsigned int);
 
 static Voice *
@@ -197,7 +196,7 @@ setVoicesSettings(Voices *vs, const AudioSettings *aos) {
   vs->Rate = aos->Rate;
   vs->Carrier.Ratio = 1.0f;
   vs->Modulator.Ratio = 1.0f;
-  vs->Phase = 1;
+  vs->Phase = 0;
   vs->Amplitude = 1.0f / (float)vs->N;
 }
 
@@ -213,7 +212,7 @@ allocateVoices(Voices *vs) {
 }
 
 static void
-makeOperator(Operators *os, Operator *op, Buffer *b) {
+makeOperator(Operators *os, Operator *op, float *b) {
 
 /* Initializes an Operator type within a voice. */
 
@@ -226,7 +225,7 @@ makeOperator(Operators *os, Operator *op, Buffer *b) {
 }
 
 static void
-makeVoice(Voices *vs, Voice *v, Buffer *cB, Buffer *mB) {
+makeVoice(Voices *vs, Voice *v, float *cB, float *mB) {
 
 /* Initializes a Voice type within Voices.All. */
 
@@ -246,12 +245,14 @@ makeOperators(Operators *os, const unsigned int rate) {
 }
 
 void
-makeVoices(Voices *vs, Buffer *cBuffer, const AudioSettings *aos) {
+makeVoices(Voices *vs, float *carrierBuffer, const AudioSettings *aos) {
 
-/* Initializes a Voices type. Errors are fatal. */
+/* Initializes a Voices type. Errors are fatal. All voices share the same
+ * carrier and modulator buffers. The modulator buffer exists internally to
+ * the struct, while the carrier buffer is a pointer to the main mixing buffer
+ * used in audio output. */
 
   unsigned int i = 0;
-  Buffer *mBuffer = makeBuffer(cBuffer->Size);
   Voice *v = NULL;
 
   setVoicesSettings(vs, aos);
@@ -260,7 +261,7 @@ makeVoices(Voices *vs, Buffer *cBuffer, const AudioSettings *aos) {
   makeOperators(&vs->Modulator, aos->Rate);
   for (; i < vs->N ; i++) {
     v = &vs->All[i];
-    makeVoice(vs, v, cBuffer, mBuffer);
+    makeVoice(vs, v, carrierBuffer, vs->ModulatorBuffer);
   }
   makeKeyboard(&vs->Keyboard, vs->Rate, &vs->Phase);
 }
@@ -268,10 +269,7 @@ makeVoices(Voices *vs, Buffer *cBuffer, const AudioSettings *aos) {
 void
 killVoices(Voices *vs) {
 
-/* Frees memory allocated during initialization of Voices struct. Does not free
- * Voice.CarrierBuffer, since this was allocated during the initialization of
- * the Audio struct. */
+/* Frees memory allocated during initialization of Voices struct. */
 
-  killBuffer(vs->All[0].Modulator.Osc.Buffer);
   free(vs->All);
 }

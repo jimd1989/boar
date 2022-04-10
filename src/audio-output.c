@@ -1,4 +1,4 @@
-/* Functions related to audio output, including the main playback loop. */
+/* Functions related to audio output, including the main playback function. */
 
 #include <err.h>
 #include <limits.h>
@@ -11,15 +11,15 @@
 
 #include "audio-init.h"
 #include "buffers.h"
+#include "constants/defaults.h"
 #include "constants/errors.h"
 #include "numerical.h"
 #include "voice.h"
 
 static void clearBuffer(Buffer *);
 static void fillBuffer(Audio *);
-static size_t writeSample(ByteBuffer *, const int16_t, const unsigned int);
 static int16_t mixdownSample(const float, const float);
-static void writeBuffer(Audio *);
+static void writeFrames(Audio *);
 
 void
 setVolume(Audio *a, const float f) {
@@ -32,43 +32,26 @@ setVolume(Audio *a, const float f) {
 static void
 clearBuffer(Buffer *b) {
 
-/* Explicitly zeroes Audio.MixingBuffer, since sample data is summed up inside
- * of it. This differs from Audio.MainBuffer, which can simply be overwritten
+/* Explicitly zeroes Audio.Buffer.Mix, since sample data is summed up inside
+ * of it. This differs from Audio.Buffer.Output, which can simply be overwritten
  * during each cycle. */
 
-  memset(b->Values, 0, sizeof(*b->Values) * b->Size);
+  memset(b->Mix, 0, sizeof(*b->Mix) * DEFAULT_BUFSIZE);
 }
 
 static void
 fillBuffer(Audio *a) {
 
 /* Calculates all sample data from Audio.Voices and sums it up in
- * Audio.MixingBuffer. The master phase is incremented by Audio.Bufsize as a
+ * Audio.Buffer.Mix. The master phase is incremented by DEFAULT_BUFSIZE as a
  * rough phase-tracking heuristic for new notes. */ 
 
-  unsigned int i = 0;
+  unsigned int n = 0;
 
-  for (; i < a->Settings.Polyphony ; i++) {
-    pollVoice(&a->Voices.All[i]);
+  for (; n < a->Settings.Polyphony ; n++) {
+    pollVoice(&a->Voices.All[n]);
   }
-  a->Voices.Phase += a->Settings.Bufsize;
-}
-
-static size_t
-writeSample(ByteBuffer *bb, const int16_t s, const unsigned int i) {
-
-/* int16_t s is a sample from Audio.Mixing buffer. All dithering, clipping,
- * etc of the sample is assumed to have taken place already. This function
- * writes the sample to every channel of the final output buffer. Returns the
- * number of bytes written. */
-
-  unsigned int j;
-
-  for (j = 0 ; j < bb->ChanBytes; j+=2) {
-    bb->Values[i+j]   = (uint8_t)(s & 255);
-    bb->Values[i+j+1] = (uint8_t)(s >> 8); 
-  }
-  return bb->ChanBytes;
+  a->Voices.Phase += DEFAULT_BUFSIZE; /* Maybe something else */
 }
 
 static int16_t
@@ -85,37 +68,53 @@ mixdownSample(const float s, const float amplitude) {
 }
 
 static void
-writeBuffer(Audio *a) {
+writeFrames(Audio *a) {
 
-/* Writes the contents of Audio.MixingBuffer to Audio.MainBuffer. Errors are
- * fatal. */
+/* Writes DEFAULT_BUFSIZE worth of frames from Audio.Buffer.Mix to
+ * Audio.Buffer.Output. These floats representing an internal monophonic
+ * signal are dithered and output as 16 bit signed integers representing
+ * the stereo signal. Since DEFAULT_BUFSIZE may not be a perfect multiple of
+ * Audio.Buffer.SizeFrames, a call to sio_write may take place within the middle 
+ * of this loop. */
 
-  unsigned int i, j;
-  int16_t s;
-
-  for (i = 0, j = 0 ; i < a->MixingBuffer->Size ; i++) {
-    s = mixdownSample(a->MixingBuffer->Values[i], a->Amplitude);
-    j += writeSample(a->MainBuffer, s, j);
-  }
-  if (sio_write(a->Output, a->MainBuffer->Values, a->Settings.BufsizeMain) !=
-      a->Settings.BufsizeMain) {
-    warnx("Buffer error: %u bytes expected", a->Settings.BufsizeMain);
+  int16_t sl = 0;
+  int16_t sr = 0;
+  size_t n = 0;
+  size_t localFramesWritten = 0;
+  size_t limit = 0;
+  Buffer *b = &a->Buffer;
+  size_t tillWrite = b->SizeFrames - b->FramesWritten;
+  while (localFramesWritten < DEFAULT_BUFSIZE) {
+    limit = LESSER(tillWrite, DEFAULT_BUFSIZE);
+    for (n = 0 ; n < limit ; n++) {
+      /* Will eventually have channel independent amplitudes here. */
+      sl = mixdownSample(b->Mix[localFramesWritten + n], a->Amplitude);
+      sr = mixdownSample(b->Mix[localFramesWritten + n], a->Amplitude);
+      b->Output[b->BytesWritten++] = (uint8_t)(sl & 255);
+      b->Output[b->BytesWritten++] = (uint8_t)(sl >> 8);
+      b->Output[b->BytesWritten++] = (uint8_t)(sr & 255);
+      b->Output[b->BytesWritten++] = (uint8_t)(sr >> 8);
+    }
+    localFramesWritten += limit;
+    b->FramesWritten += limit;
+    if (b->FramesWritten == b->SizeFrames) {
+      sio_write(a->Output, b->Output, b->SizeBytes);
+      b->FramesWritten = 0;
+      b->BytesWritten = 0;
+    }
+    tillWrite = DEFAULT_BUFSIZE - localFramesWritten;
   }
 }
 
-void *
-audioLoop(void *args) {
+void
+play(Audio *a) {
 
-/* Main audio output loop. Runs inside a POSIX thread. The contents of the
- * Audio struct can be modified from outside the thread without any locks. */
+/* Calculates DEFAULT_BUFSIZE frames worth of synthesis data and writes them to
+ * Audio.Buffer.Output. This output buffer will eventually be dumped to sndio, 
+ * but this may not occur during every invocation of this function. It depends 
+ * on the Audio.Buffer.SizeFrames returned by the hardware settings. */
 
-  Audio *a = (Audio *)args;
-
-  a->Active = true;
-  while (a->Active) {
-    clearBuffer(a->MixingBuffer);
-    fillBuffer(a);
-    writeBuffer(a);
-  }
-  return NULL;
+  clearBuffer(&a->Buffer);
+  fillBuffer(a);
+  writeFrames(a);
 }

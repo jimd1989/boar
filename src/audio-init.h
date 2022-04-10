@@ -6,6 +6,7 @@
 #include "buffers.h"
 #include "voice.h"
 
+
 typedef struct Audio {
 
 /* During an audio playback cycle, all synthesis takes place in Audio.Voices.
@@ -15,10 +16,8 @@ typedef struct Audio {
  * written to Audio.MainBuffer, which is finally converted to sound by
  * Audio.Output. */
 
-  bool                    Active;
   float                   Amplitude;
-  Buffer                * MixingBuffer;
-  ByteBuffer            * MainBuffer;
+  Buffer                  Buffer;
   struct sio_hdl        * Output;
   AudioSettings           Settings;
   Voices                  Voices;
