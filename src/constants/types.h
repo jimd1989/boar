@@ -96,7 +96,7 @@ static const unsigned int TYPE_SIGNATURES_PURE[58] = {
   TYPE_UNDEFINED, /* ignored */
   TYPE_UNDEFINED, /* ignored */
   TYPE_UFLOAT,    /* a */
-  TYPE_UNDEFINED, /* b */
+  TYPE_UFLOAT,    /* b */
   TYPE_UNDEFINED, /* c */
   TYPE_UFLOAT,    /* d */
   TYPE_UNDEFINED, /* e */

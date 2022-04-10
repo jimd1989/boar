@@ -11,6 +11,7 @@
 
 #include "audio-init.h"
 
+#include "amplitude.h"
 #include "audio-settings.h"
 #include "buffers.h"
 #include "constants/defaults.h"
@@ -142,7 +143,7 @@ makeAudio(Audio *a, const int argc, char **argv) {
   checkSettings(&sp);
   a->Buffer = makeBuffer(a->Settings.BufSizeFrames);
   makeVoices(&a->Voices, a->Buffer.Mix, &a->Settings);
-  a->Amplitude = 0.1f;
+  a->Amplitude = makeAmplitude();
   startAudio(a->Output);
 }
 

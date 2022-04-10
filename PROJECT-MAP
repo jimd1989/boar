@@ -156,6 +156,10 @@ functions here are a three-way crossroads between the Audio type, the Operator
 types, and user input. All management of polyphonic playback also takes place
 here.
 
+FILE amplitude.c amplitude.h
+A very simple struct that governs master volume as well as the left/right
+balance of the stereo channels.
+
 FILE audio-output.c audio-output.h
 After a cycle of data has been synthesized, it is written to the Audio type's
 Buffer. It is the job of the functions in this file to read the Buffer into
