@@ -9,12 +9,12 @@
 #include "constants/defaults.h"
 #include "constants/errors.h"
 
-BufferX
-makeBufferX(const size_t size) {
+Buffer
+makeBuffer(const size_t size) {
 
 /* Sets Buffer size constants, and allocates Output array. */
 
-  BufferX b = {0};
+  Buffer b = {0};
   b.SizeFrames = size;
   b.SizeBytes = size * DEFAULT_CHAN * DEFAULT_BYTES;
   b.Output = malloc(sizeof(*b.Output) * b.SizeBytes);
@@ -25,7 +25,7 @@ makeBufferX(const size_t size) {
 }
 
 void
-killBufferX(BufferX *b) {
+killBuffer(Buffer *b) {
 
 /* Free the Buffer's Output array allocation. */
 

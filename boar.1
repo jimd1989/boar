@@ -13,14 +13,6 @@ The Barely Operational Audio REPL (BOAR) is a small program that opens a handle 
 .Pp
 All startup options are paired with a single integer as their parameter unless otherwise indicated. boar already starts with sane defaults, so the user needn't dive through these too often. Some of these flags are not even implemented yet and have no effect.
 .Bl -tag -width Ds
-.It Fl bits
-The bit depth of the audio output. Currently locked to signed 16bit ints. boar will not start if another value is provided. This will change in future releases. 
-.El
-.Bl -tag -width Ds
-.It Fl bufsize
-The size of an audio buffer, in full frames, that boar will suggest to sndio. It's quite likely that sndio will modify this number slightly. Generally speaking, smaller buffers ensure more responsive audio but are more taxing on system resources.
-.El
-.Bl -tag -width Ds
 .It Fl rate
 The sample rate of audio output.
 .El

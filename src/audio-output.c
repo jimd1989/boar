@@ -16,7 +16,7 @@
 #include "numerical.h"
 #include "voice.h"
 
-static void clearBuffer(BufferX *);
+static void clearBuffer(Buffer *);
 static void fillBuffer(Audio *);
 static int16_t mixdownSample(const float, const float);
 static void writeFrames(Audio *);
@@ -30,7 +30,7 @@ setVolume(Audio *a, const float f) {
 }
 
 static void
-clearBuffer(BufferX *b) {
+clearBuffer(Buffer *b) {
 
 /* Explicitly zeroes Audio.Buffer.Mix, since sample data is summed up inside
  * of it. This differs from Audio.Buffer.Output, which can simply be overwritten
@@ -82,7 +82,7 @@ writeFrames(Audio *a) {
   size_t n = 0;
   size_t localFramesWritten = 0;
   size_t limit = 0;
-  BufferX *b = &a->Buffer;
+  Buffer *b = &a->Buffer;
   size_t tillWrite = b->SizeFrames - b->FramesWritten;
   while (localFramesWritten < DEFAULT_BUFSIZE) {
     limit = LESSER(tillWrite, DEFAULT_BUFSIZE);

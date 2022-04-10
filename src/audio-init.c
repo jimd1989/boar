@@ -37,7 +37,7 @@ populateSettings(const AudioSettings *aos, struct sio_par *sp) {
 
   sio_initpar(sp);
   sp->bits = aos->Bits;
-  sp->appbufsz = aos->BufsizeX;
+  sp->appbufsz = aos->BufSizeFrames;
   sp->rate = aos->Rate;
   sp->pchan = DEFAULT_CHAN;
 }
@@ -86,7 +86,7 @@ roundBuffer(AudioSettings *aos, const struct sio_par *sp) {
 
 /* Round the buffer size according to hardware suggestions. */
 
-  int frames = aos->BufsizeX;
+  int frames = aos->BufSizeFrames;
   frames = frames + sp->round - 1;
   frames -= frames % sp->round;
   return frames;
@@ -98,7 +98,8 @@ setSettings(AudioSettings *aos, const struct sio_par *sp) {
 /* Runs setSetting() on essential playback parameters. */
 
   setSetting(aos->Bits, sp->bits, &aos->Bits, "bits");
-  setSetting(aos->BufsizeX, roundBuffer(aos, sp), &aos->BufsizeX, "bufsize");
+  setSetting(aos->BufSizeFrames, roundBuffer(aos, sp), &aos->BufSizeFrames, 
+      "bufsize");
   setSetting(aos->Rate, sp->rate, &aos->Rate, "rate");
 }
 
@@ -139,7 +140,7 @@ makeAudio(Audio *a, const int argc, char **argv) {
   suggestSettings(a->Output, &sp);
   setSettings(&a->Settings, &sp);
   checkSettings(&sp);
-  a->Buffer = makeBufferX(a->Settings.BufsizeX);
+  a->Buffer = makeBuffer(a->Settings.BufSizeFrames);
   makeVoices(&a->Voices, a->Buffer.Mix, &a->Settings);
   a->Amplitude = 0.1f;
   startAudio(a->Output);
@@ -151,6 +152,6 @@ killAudio(Audio *a) {
 /* Stops sndio. Frees all memory allocated by Audio type. */
 
   sio_close(a->Output); 
-  killBufferX(&a->Buffer);
+  killBuffer(&a->Buffer);
   killVoices(&a->Voices);
 }

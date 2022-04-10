@@ -52,7 +52,7 @@ makeAudioSettings(AudioSettings *aos, const int argc, char **argv) {
   char *arg = NULL;
 
   aos->Bits = DEFAULT_BITS;
-  aos->BufsizeX = DEFAULT_BUFSIZE;
+  aos->BufSizeFrames = DEFAULT_BUFSIZE;
   aos->Rate = DEFAULT_RATE;
   aos->Polyphony = DEFAULT_POLYPHONY;
   for (; i < argc ; i++) {

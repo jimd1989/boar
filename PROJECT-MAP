@@ -105,8 +105,8 @@ manner.
 FILE buffers.c buffers.h
 Audio output centers around summing synthesis data into an array of floats,
 then writing it to the soundcard in an array of bytes. These files describe
-Buffer (for internal floats) and ByteBuffer (for soundcard output), which
-accomplish these tasks.
+a monophonic buffer for internal floats and a byte buffer for stereo output to
+the soundcard.
 
 FILE audio-init.c audio-init.h
 Describes the Audio type, which uses AudioSettings to establish a link to the
