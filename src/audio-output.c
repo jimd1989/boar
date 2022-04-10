@@ -9,6 +9,7 @@
 
 #include "audio-output.h"
 
+#include "amplitude.h"
 #include "audio-init.h"
 #include "buffers.h"
 #include "constants/defaults.h"
@@ -18,7 +19,7 @@
 
 static void clearBuffer(Buffer *);
 static void fillBuffer(Audio *);
-static int16_t mixdownSample(const float, const float);
+static int16_t mixdownSample(const float, const float, const float);
 static void writeFrames(Audio *);
 
 void
@@ -26,7 +27,7 @@ setVolume(Audio *a, const float f) {
 
 /* Sets master amplitude, without getting too loud. */
 
-  a->Amplitude = unipolar(expCurve(truncateFloat(f, 1.0f)));
+  a->Amplitude.Master = unipolar(expCurve(truncateFloat(f, 1.0f)));
 }
 
 static void
@@ -55,7 +56,7 @@ fillBuffer(Audio *a) {
 }
 
 static int16_t
-mixdownSample(const float s, const float amplitude) {
+mixdownSample(const float s, const float masterAmp, const float chanAmp) {
 
 /* Takes a float from Audio.MixingBuffer and returns an int16_t with simple
  * dither noise added to it. This algorithm was adapted from Jonas Norberg's
@@ -64,7 +65,7 @@ mixdownSample(const float s, const float amplitude) {
   float r = (rand() / ((float)RAND_MAX * 0.5f)) - 1.0f;
 
   r /= (float)(USHRT_MAX + 1);
-  return (int16_t)(roundf(clip(s + r) * (float)SHRT_MAX) * amplitude);
+  return (int16_t)(roundf(clip(s + r) * (float)SHRT_MAX) * masterAmp * chanAmp);
 }
 
 static void
@@ -79,6 +80,7 @@ writeFrames(Audio *a) {
 
   int16_t sl = 0;
   int16_t sr = 0;
+  float s = 0.0f;
   size_t n = 0;
   size_t localFramesWritten = 0;
   size_t limit = 0;
@@ -88,8 +90,9 @@ writeFrames(Audio *a) {
     limit = LESSER(tillWrite, DEFAULT_BUFSIZE);
     for (n = 0 ; n < limit ; n++) {
       /* Will eventually have channel independent amplitudes here. */
-      sl = mixdownSample(b->Mix[localFramesWritten + n], a->Amplitude);
-      sr = mixdownSample(b->Mix[localFramesWritten + n], a->Amplitude);
+      s = b->Mix[localFramesWritten + n];
+      sl = mixdownSample(s, a->Amplitude.Master, a->Amplitude.L);
+      sr = mixdownSample(s, a->Amplitude.Master, a->Amplitude.R);
       b->Output[b->BytesWritten++] = (uint8_t)(sl & 255);
       b->Output[b->BytesWritten++] = (uint8_t)(sl >> 8);
       b->Output[b->BytesWritten++] = (uint8_t)(sr & 255);

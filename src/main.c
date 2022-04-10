@@ -5,7 +5,7 @@
 #include "repl.h"
 
 int main(int argc, char **argv) {
-  Audio a = {0};
+  Audio a = {{0}};
   Repl r = {{0}};
 
   makeAudio(&a, argc, argv);
