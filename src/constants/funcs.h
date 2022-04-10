@@ -20,6 +20,9 @@
 /* (A.) sets modulator attack waveform */
 #define FUNC_MOD_ATTACK_WAVE FUNC_DEF('A', TYPE_PERIOD)
 
+/* (b) sets left/right channel balance*/
+#define FUNC_CHAN_BALANCE FUNC_DEF('b', TYPE_NORMAL)
+
 /* (d) sets decay */
 #define FUNC_DECAY FUNC_DEF('d', TYPE_NORMAL)
 

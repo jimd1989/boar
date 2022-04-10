@@ -10,6 +10,7 @@
 
 #include "repl.h"
 
+#include "amplitude.h"
 #include "audio-init.h"
 #include "audio-output.h"
 #include "constants/defaults.h"
@@ -82,13 +83,16 @@ dispatchCmd(Repl *r) {
       setModulation(voices, arg->F);
       break;
     case FUNC_AMPLITUDE:
-      setVolume(r->Audio, arg->F);
+      setVolume(&r->Audio->Amplitude, arg->F);
       break;
     case FUNC_MOD_PITCH:
       setPitchRatio(voices, false, arg->F);
       break;
     case FUNC_PITCH:
       setPitchRatio(voices, true, arg->F);
+      break;
+    case FUNC_CHAN_BALANCE:
+      warnx("Channel balance %f", arg->F);
       break;
     case FUNC_QUIT:
       r->Cmd.Error = ERROR_EXIT;

@@ -2,5 +2,4 @@
 
 #include "audio-init.h"
 
-void setVolume(Audio *, const float);
 void play(Audio *);

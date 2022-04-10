@@ -22,14 +22,6 @@ static void fillBuffer(Audio *);
 static int16_t mixdownSample(const float, const float, const float);
 static void writeFrames(Audio *);
 
-void
-setVolume(Audio *a, const float f) {
-
-/* Sets master amplitude, without getting too loud. */
-
-  a->Amplitude.Master = unipolar(expCurve(truncateFloat(f, 1.0f)));
-}
-
 static void
 clearBuffer(Buffer *b) {
 
