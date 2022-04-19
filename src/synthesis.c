@@ -12,9 +12,10 @@
 #include "numerical.h"
 #include "wave.h"
 
-static void fillModulatorBuffer(Operator *);
 static float hzToPitch(const float, const unsigned int);
 static float pitch(const unsigned int, const unsigned int);
+static int wavetableIndex(const int, const float);
+static void fillModulatorBuffer(Operator *);
 static float modulate(Osc *, Osc *, const unsigned int);
 
 static float
@@ -49,6 +50,22 @@ setPitch(Operator *o, const unsigned int note, const unsigned int rate) {
   o->Osc.Pitch = *o->Ratio * pitch(note, rate);
 }
 
+static int
+wavetableIndex(const int complexity, const float pitch) {
+
+/* Return the index of proper wavetable to sample, based upon pitch and offset
+ * from Osc.Complexity. This avoids reflected harmonics, unless the user is 
+ * specifically trying to create them. */
+
+  int tn = complexity + 1 + (int)ilogb(DEFAULT_OCTAVE_SCALING * pitch);
+  if (tn < 0) {
+    return 0;
+  } else if (tn >= DEFAULT_OCTAVES) {
+    return DEFAULT_OCTAVES - 1;
+  }
+  return tn;
+}
+
 static void
 fillModulatorBuffer(Operator *m) {
 
@@ -58,10 +75,7 @@ fillModulatorBuffer(Operator *m) {
 
   unsigned int i = 0;
   Osc *o = &m->Osc;
-  int tableNo = 1 + (int)ilogb(DEFAULT_OCTAVE_SCALING * o->Pitch);
-
-  tableNo = (tableNo < 0) ? 0 : tableNo;
-  tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
+  int tableNo = wavetableIndex(*o->Complexity, o->Pitch);
 
   if (o->Wave->Type == WAVE_TYPE_NOISE) {
     for (; i < DEFAULT_BUFSIZE ; i++) {
@@ -90,10 +104,8 @@ modulate(Osc *c, Osc *m, unsigned int i) {
 
   const float pitch = (c->Pitch * c->Wave->Polarity) + 
     (m->Pitch * m->Buffer[i]);
-  int tableNo = 1 + (int)ilogb(DEFAULT_OCTAVE_SCALING * pitch);
+  int tableNo = wavetableIndex(*c->Complexity, pitch);
 
-  tableNo = (tableNo < 0) ? 0 : tableNo;
-  tableNo = (tableNo >= DEFAULT_OCTAVES) ? DEFAULT_OCTAVES - 1 : tableNo;
   if (c->Wave->Type == WAVE_TYPE_NOISE) {
     return readNoise(&c->Wave->Noise, pitch);
   } else {
@@ -117,3 +129,4 @@ fillCarrierBuffer(Operator *c, Operator *m) {
       c->Osc.Amplitude * applyEnv(&c->Env) * c->Osc.KeyMod;
   }
 }
+

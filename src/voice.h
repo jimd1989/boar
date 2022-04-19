@@ -53,6 +53,7 @@ void voiceOff(Voices *, const uint16_t);
 void pollVoice(Voice *);
 void setPitchRatio(Voices *, const bool, const float);
 void setFixedRate(Voices *, const bool, const float);
+void setWaveComplexity(Voices *, const bool, const int);
 void setModulation(Voices *, const float);
 void makeVoices(Voices *, float *, const AudioSettings *);
 void killVoices(Voices *);

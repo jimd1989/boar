@@ -53,6 +53,10 @@ Sets the envelope attack wave shape for the carrier (a.) or modulator (A.).
 Sets the left/right audio output channel balance. 0.5 represents full volume in both left/right channels. 0.0 represents full volume in the left channel with the right one muted. 1.0 represents full volume in the right channel with the left one muted.
 .El
 .Bl -tag -width Ds
+.It c/C [uint]
+Adjust the harmonic complexity muting on carrier (c) or modulator (C). At the default value of zero, the full harmonics of a wave are audible, but higher values will produce a more mellow signal. This has no effect on sines or noise.
+.El
+.Bl -tag -width Ds
 .It d/D [ufloat]
 Sets the envelope decay for the carrier (d) or modulator (D). This is the amount of time the parameter being enveloped takes to reach its sustain level after the attack has taken place. Values between 0.0 and 1.0 are honored.
 .El

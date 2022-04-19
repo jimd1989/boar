@@ -65,7 +65,7 @@
 static const unsigned int TYPE_SIGNATURES_PURE[58] = {
   TYPE_UFLOAT,    /* A */
   TYPE_UNDEFINED, /* B */
-  TYPE_UNDEFINED, /* C */
+  TYPE_UINT,      /* C */
   TYPE_UFLOAT,    /* D */
   TYPE_UNDEFINED, /* E */
   TYPE_UNDEFINED, /* F */
@@ -97,7 +97,7 @@ static const unsigned int TYPE_SIGNATURES_PURE[58] = {
   TYPE_UNDEFINED, /* ignored */
   TYPE_UFLOAT,    /* a */
   TYPE_UFLOAT,    /* b */
-  TYPE_UNDEFINED, /* c */
+  TYPE_UINT,      /* c */
   TYPE_UFLOAT,    /* d */
   TYPE_UNDEFINED, /* e */
   TYPE_UNDEFINED, /* f */
