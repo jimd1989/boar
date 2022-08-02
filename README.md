@@ -115,7 +115,7 @@ set the ADSR of the carrier, and:
     S
     R
 
-sets the ADSR of the modulator. All commands accept values between 0.0 and 1.0, where 0 indicates an instantaneous effect, and 1 is a 10 second long envelope stage.
+sets the ADSR of the modulator. All commands are in seconds.
 
 Listen to how the following settings affect boar:
 

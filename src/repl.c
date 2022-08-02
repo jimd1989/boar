@@ -142,6 +142,12 @@ dispatchCmd(Repl *r) {
     case FUNC_WAVE:
       selectWave(&carrier->Wave, arg->I);
       break;
+    case FUNC_MOD_WAVE_COMPLEXITY:
+      setWaveComplexity(voices, false, arg->I);
+      break;
+    case FUNC_WAVE_COMPLEXITY:
+      setWaveComplexity(voices, true, arg->I);
+      break;
     case FUNC_MOD_FIXED:
       setFixedRate(voices, false, arg->F);
       break;

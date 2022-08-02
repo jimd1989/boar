@@ -174,6 +174,18 @@ setFixedRate(Voices *vs, const bool isCarrier, const float r) {
 }
 
 void
+setWaveComplexity(Voices *vs, const bool isCarrier, const int n) {
+
+/* Set the harmonic complexity offset of the carrier or modulator signal. */  
+
+  if (isCarrier) {
+    vs->Carrier.Complexity = n;
+  } else {
+    vs->Modulator.Complexity = n;
+  }
+}
+
+void
 setModulation(Voices *vs, const float m) {
 
 /* Sets modulation index on all voices. Since this variable makes use of
@@ -220,6 +232,7 @@ makeOperator(Operators *os, Operator *op, float *b) {
   op->FixedRate = &os->FixedRate;
   op->Ratio = &os->Ratio;
   op->Osc.Buffer = b;
+  op->Osc.Complexity = &os->Complexity;
   op->Osc.Wave = &os->Wave;
   makeNoise(&op->Osc.Wave->Noise);
   makeEnv(&os->Env, &op->Env);
@@ -241,6 +254,7 @@ makeOperators(Operators *os, const unsigned int rate) {
 
 /* Initializes a Voices.Operators type. */    
 
+  os->Complexity = 0;
   makeEnvs(&os->Env, rate);
   selectWave(&os->Wave, WAVE_TYPE_SINE);
 }

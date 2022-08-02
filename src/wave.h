@@ -21,10 +21,10 @@ typedef struct Wave {
 /* A wrapper around the actual wavetable with type information. Wave. Polarity
  * marks the direction a wavetable should be read in. */
 
-  float          Polarity;
-  WaveType       Type;
-  const float ** Table;
-  Noise          Noise;
+  float            Polarity;
+  WaveType         Type;
+  const float   ** Table;
+  Noise            Noise;
 } Wave;
 
 void selectWave(Wave *, const int);
