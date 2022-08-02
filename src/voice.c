@@ -85,8 +85,7 @@ voiceOn(Voices *vs, const uint16_t n) {
     return;
   }
   if (vs->Active[note] != NULL) {
-    /* Purpose of soft reset? Remove potentially. */
-    resetVoice(vs, vs->Active[note], n, false);
+    resetVoice(vs, vs->Active[note], n, true);
     return;
   }
   v = findFreeVoice(vs);
