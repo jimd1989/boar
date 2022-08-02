@@ -18,15 +18,19 @@ static void incrementDecay(Env *);
 static void incrementRelease(Env *);
 
 static float
-envSpeed(const unsigned int rate, const float f) {
+envSpeed(const unsigned int rate, float f) {
 
 /* Derives the increment value of an envelope stage, and hence its speed, from
  * the overall sample rate of the program "rate", and a user-specified float
- * value between 0.0 and 1.0 "f". */
+ * value between 0.0 and 1.0 "f", where "f" is the number of seconds the
+ * envelope stage should last. Due to float (not double) resolution, the
+ * timing becomes inaccurate above 30 seconds. Unsure if longer envelopes are
+ * worth converting all phase to a higher resolution. */
 
-  float curve = unipolar(expCurve(f));
-
-  return 1.0f / ((float)rate * curve * MAX_ENV_TIME);
+  if (!f) {
+    f = 0.000001f;
+  }
+  return 1.0f / ((float)rate * f);
 }
 
 static void
@@ -163,7 +167,7 @@ setAttackLevel(Envs *es, const float f) {
 
 /* Sets the attack speed for an envelope. */
 
-  setEnvLevel(es->Rate, &es->Attack, truncateFloat(f, 1.0f));
+  setEnvLevel(es->Rate, &es->Attack, liftFloat(f, 0.0f));
 }
 
 void
@@ -171,7 +175,7 @@ setDecayLevel(Envs *es, const float f) {
 
 /* Sets the decay speed for an envelope. */
 
-  setEnvLevel(es->Rate, &es->Decay, truncateFloat(f, 1.0f));
+  setEnvLevel(es->Rate, &es->Decay, liftFloat(f, 0.0f));
 }
 
 void
@@ -187,7 +191,7 @@ setReleaseLevel(Envs *es, const float f) {
 
 /* Sets the release speed for an envelope. */
 
-  setEnvLevel(es->Rate, &es->Release, truncateFloat(f, 1.0f));
+  setEnvLevel(es->Rate, &es->Release, liftFloat(f, 0.0f));
 }
 
 void

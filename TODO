@@ -10,12 +10,15 @@ succession.
 [YES] Env time in seconds:
 Rather than having an arbitrary limit, express envelope time in seconds. May
 complicate external MIDI control if such a thing ever moves beyond note on/off,
-but this is not a priority.
+but this is not a priority. This is currently implemented, but is buggy with
+long envelopes due to floating point resolution of phase. Unsure if it's worth
+converting to double for extra long envelopes.
 
 [YES] Band limiting adjustment:
 All complex wave forms are band limited just below the aliasing limit, which
 still might be too harmonically complex to actually sound good. Should have
-a command that tells boar to read +/- wavetables from the default. 
+a command that tells boar to read +/- wavetables from the default. This is
+currently implemented, but only to mute harmonics, not augment them.
 
 [YES] New parser:
 Parser can be better. Maybe take ideas from boar-parser experiment repo.
