@@ -1,8 +1,8 @@
-The Barely Operational Audio REPL (BOAR) is a modest polyphonic synthesizer written in ANSI C. It opens a handle to a [sndio](http://www.sndio.org) device, drops the user in a shell, and allows him or her to issue quick and easy audio-generating commands. boar operates through stdin so it can accept piped output in the context of larger scripts. While it lacks many features that fully-fledged synths boast, it is a hassle-free easel to explore timbres with. The source code was also written to be terse and readable, which will hopefully demystify certain audio programming concepts to anybody curious enough to peer into it. 
+The Barely Operational Audio REPL (BOAR) is a modest polyphonic synthesizer written in C. It opens a handle to a [sndio](http://www.sndio.org) device, drops the user in a shell, and allows him or her to issue quick and easy audio-generating commands. boar operates through stdin so it can accept piped output in the context of larger scripts. While it lacks many features that fully-fledged synths boast, it is a hassle-free easel to explore timbres with. The source code was also written to be terse and readable, which will hopefully demystify certain audio programming concepts to anybody curious enough to peer into it. 
 
 ## Installation
 
-boar was written on OpenBSD with the sndio library as its sole target. If sndio is not already installed on your machine, you will have to get it through your distro's package manager. The C code itself should be largely standard; let me know if there's a BSDism that I didn't account for.
+boar was written on OpenBSD with the sndio library as its sole target. If sndio is not already installed on your machine, you will have to get it through your distro's package manager. The C code itself should be largely C89, but some BSD extensions were used. A different C standard may have to be specified with `-lbsd` in the Makefile if building on other OSes.
 
 Installation is the typical process:
 
