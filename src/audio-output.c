@@ -3,6 +3,7 @@
 #include <err.h>
 #include <limits.h>
 #include <math.h>
+#include <poll.h>
 #include <sndio.h>
 #include <stdint.h>
 #include <string.h>
@@ -61,6 +62,26 @@ mixdownSample(const float s, const float masterAmp, const float chanAmp) {
 }
 
 static void
+waitReady(Audio *a) {
+
+/* Allows non-blocking audio IO by waiting to write. 
+ * Shamelessly pilfered from https://sndio.org/tips.html */
+
+    int nfds = 0;
+    int revents = 0;
+    struct pollfd pfds[1] = {0};
+    do {
+        nfds = sio_pollfd(a->Output, pfds, POLLOUT);
+        if (nfds > 0) {
+            if (poll(pfds, nfds, -1) < 0) {
+                err(1, "poll failed");
+            }
+        }
+        revents = sio_revents(a->Output, pfds);
+    } while (!(revents & POLLOUT));
+}
+
+static void
 writeFrames(Audio *a) {
 
 /* Writes DEFAULT_BUFSIZE worth of frames from Audio.Buffer.Mix to
@@ -93,6 +114,7 @@ writeFrames(Audio *a) {
     localFramesWritten += limit;
     b->FramesWritten += limit;
     if (b->FramesWritten == b->SizeFrames) {
+      waitReady(a);
       sio_write(a->Output, b->Output, b->SizeBytes);
       b->FramesWritten = 0;
       b->BytesWritten = 0;

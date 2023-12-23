@@ -48,7 +48,7 @@ openOutput(struct sio_hdl **o) {
 
 /* Opens a handle to the soundcard. */
 
-  *o = sio_open(SIO_DEVANY, SIO_PLAY, false);
+  *o = sio_open(SIO_DEVANY, SIO_PLAY, true);
   if (*o == NULL) {
     errx(ERROR_SIO, "Error opening handle to sndio");
   }
