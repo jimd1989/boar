@@ -12,6 +12,7 @@ typedef struct AudioSettings {
 
   unsigned int  Bits;
   unsigned int  BufSizeFrames;
+  unsigned int  BufBlocks;
   unsigned int  Rate;
   unsigned int  Polyphony;
 } AudioSettings;

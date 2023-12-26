@@ -24,6 +24,11 @@
  * ensuring a resolution of DEFAULT_RESOLUTION  */
 #define DEFAULT_BUFSIZE (DEFAULT_RATE / DEFAULT_RESOLUTION)
 
+/* An ideally-sized audio buffer would be responsive but performance intensive.
+ * The sndio `appbufsz` parameter will be the minimal audio buffer size
+ * multiplied by this constant (or overridden by command line flag). */
+#define DEFAULT_BUF_BLOCKS 1
+
 /* Number of channels. Hardcoded to stereo for now. */
 #define DEFAULT_CHAN 2
 

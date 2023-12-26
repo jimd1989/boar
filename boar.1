@@ -13,6 +13,10 @@ The Barely Operational Audio REPL (BOAR) is a small program that opens a handle 
 .Pp
 All startup options are paired with a single integer as their parameter unless otherwise indicated. boar already starts with sane defaults, so the user needn't dive through these too often. Some of these flags are not even implemented yet and have no effect.
 .Bl -tag -width Ds
+.It Fl blocks
+The number of blocks to use in audio buffering. More results in sluggish input.
+.El
+.Bl -tag -width Ds
 .It Fl rate
 The sample rate of audio output.
 .El

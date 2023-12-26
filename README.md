@@ -16,6 +16,7 @@ boar starts with sane defaults, but it has some command-line flags. Almost all o
 
 + `polyphony`: The number of notes possible to play at once. Users are advised to set a value high enough to avoid voice stealing, which could have unpleasant clicks.
 + `rate`: The sample rate of the audio output. Setting a very low sample rate can actually have a rather pleasant effect, but you will hear buzzing and pitch aberrations with non-blocking IO. Recompile the program to block IO by editing the final argument of `sio_open` in `audio_init.c` from `true` to `false`.
++ `blocks`: boar will attempt to be as responsive as possible, defaulting to the minimum buffer size allowed by your soundcard settings. This might be too difficult to keep up with though. If you encounter glitctching audio, run bloar with `- blocks n`, where `n` will be an integer multiple of the minimum buffer size. The larger this value, the less responsive boar will be to live input.
 
 sndio sends these flags to the hardware, which may disagree with some of your parameters. My soundcard won't accept a `bufsize` less than 960, for example. The program will adjust these settings accordingly.
 

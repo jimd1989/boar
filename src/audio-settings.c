@@ -52,6 +52,7 @@ makeAudioSettings(AudioSettings *aos, const int argc, char **argv) {
   char *arg = NULL;
 
   aos->Bits = DEFAULT_BITS;
+  aos->BufBlocks = DEFAULT_BUF_BLOCKS;
   aos->BufSizeFrames = DEFAULT_BUFSIZE;
   aos->Rate = DEFAULT_RATE;
   aos->Polyphony = DEFAULT_POLYPHONY;
@@ -61,6 +62,8 @@ makeAudioSettings(AudioSettings *aos, const int argc, char **argv) {
       parseFlag(arg, argv[++i], 1, MAX_RATE, &aos->Rate);
     } else if (isFlag(arg, "-polyphony") && i+1 < argc) {
       parseFlag(arg, argv[++i], 1, MAX_POLYPHONY, &aos->Polyphony);
+    } else if (isFlag(arg, "-blocks") && i+1 < argc) {
+      parseFlag(arg, argv[++i], 1, MAX_BUF_BLOCKS, &aos->BufBlocks);
     } else {
       errx(ERROR_ARG, "Malformed parameter: %s", arg);
     } 

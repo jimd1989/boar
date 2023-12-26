@@ -38,7 +38,7 @@ populateSettings(const AudioSettings *aos, struct sio_par *sp) {
 
   sio_initpar(sp);
   sp->bits = aos->Bits;
-  sp->appbufsz = aos->BufSizeFrames;
+  sp->appbufsz = aos->BufSizeFrames * aos->BufBlocks;
   sp->rate = aos->Rate;
   sp->pchan = DEFAULT_CHAN;
 }
@@ -100,7 +100,7 @@ setSettings(AudioSettings *aos, const struct sio_par *sp) {
 
   setSetting(aos->Bits, sp->bits, &aos->Bits, "bits");
   setSetting(aos->BufSizeFrames, roundBuffer(aos, sp), &aos->BufSizeFrames, 
-      "bufsize");
+      "block size");
   setSetting(aos->Rate, sp->rate, &aos->Rate, "rate");
 }
 
@@ -136,11 +136,19 @@ makeAudio(Audio *a, const int argc, char **argv) {
   struct sio_par sp = {0};
 
   makeAudioSettings(&a->Settings, argc, argv);
+  /* First suggestion */
   populateSettings(&a->Settings, &sp);
   openOutput(&a->Output);
   suggestSettings(a->Output, &sp);
   setSettings(&a->Settings, &sp);
   checkSettings(&sp);
+  /* Second suggestion: for accurate `appbufsz` with `round` */
+  populateSettings(&a->Settings, &sp);
+  openOutput(&a->Output);
+  suggestSettings(a->Output, &sp);
+  setSettings(&a->Settings, &sp);
+  checkSettings(&sp);
+  /* Should this be BufSizeFrames * BufBlocks too? */
   a->Buffer = makeBuffer(a->Settings.BufSizeFrames);
   makeVoices(&a->Voices, a->Buffer.Mix, &a->Settings);
   a->Amplitude = makeAmplitude();

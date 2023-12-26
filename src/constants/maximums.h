@@ -10,6 +10,9 @@
 /* The maximum polyphony allowed */
 #define MAX_POLYPHONY 128
 
+/* The maximum number of buffer blocks allowed */
+#define MAX_BUF_BLOCKS 128
+
 /* The maximum command line flag length (currently "polyphony") */
 #define MAX_FLAG_LEN 10
 
