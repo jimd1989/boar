@@ -1,5 +1,6 @@
 #include <err.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "cursor.h"
 
@@ -24,5 +25,7 @@ void eatWhitespace(Cursor *c) {
 }
 
 void printCursorErr(Cursor *c) {
-  warnx("Invalid input starting at %d: rest: %s", c->pos, &c->input[c->pos]);
+  char *end = strpbrk(&c->input[c->cmdPos], ";\n");
+  if (end != NULL) { *end = '\0'; }
+  warnx("Invalid input for: \"%s\"", &c->input[c->cmdPos]);
 }

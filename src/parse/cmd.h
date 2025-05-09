@@ -17,23 +17,28 @@ typedef int16_t Cmd;
 #define IS_CMD_PURE(X) (((X) >> 8) & 1)
 #define IS_CMD_DOT(X) (((X) >> 9) & 1)
 #define IS_CMD_COLON(X) (((X) >> 10) & 1)
+#define CMD_CHAR(X) ((X) & 127)
 
 /* Alphabets of valid commands are represent as set bits in 128 bit fields. 
  * These fields must be populated at start up time; don't forget to use
- * `enlistCmd` in the constructors in `cmd.c` */
+ * `enlistCmd` in the constructors in `cmd.c`. Technically a character can
+ * be enlisted directly without these enums, but they can ensure complete
+ * pattern matching at eval time. */
 typedef enum {
-  CMD_PURE_UNKNOWN = 0,
-  CMD_NOTE_ON      = 110, /* n */
-  CMD_NOTE_OFF     = 111  /* o */
-} CmdAlphabetPure;
+  CMD_COMMENT   = 35,  /* # */
+  CMD_ATTACK    = 97,  /* a */
+  CMD_NOTE_ON   = 110, /* n */
+  CMD_NOTE_OFF  = 111, /* o */
+  CMD_WAVE      = 119  /* w */
+} CmdPure;
 
 typedef enum {
   CMD_DOT_UNKNOWN = 0
-} CmdAlphabetDot;
+} CmdDot;
 
 typedef enum {
   CMD_COLON_UNKNOWN = 0
-} CmdAlphabetColon;
+} CmdColon;
 
 typedef struct CmdAlphabet {
   uint32_t  pure[4];

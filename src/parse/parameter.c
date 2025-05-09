@@ -32,10 +32,10 @@ void parseFloat(Cursor *c) {
   while ((strchr(BOUNDS_CHARS, CURSOR_HEAD(c)) == NULL) ) {
     ch = CURSOR_HEAD(c);
     if (ch == '-')        { sign = -1.0f; }
-    else if (ch == '.')   { beforeDecimal = false;}
+    else if (ch == '.')   { beforeDecimal = false; }
     else if (isdigit(ch)) {
       if (beforeDecimal) { f = f * 10.0f + (ch - '0'); }
-      else               { frac = frac * 10.0f + (ch = '0'); div = div * 10.f; }
+      else               { frac = frac * 10.0f + (ch - '0'); div = div * 10.f; }
     }
     else                  { break; }
     c->pos++;

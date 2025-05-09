@@ -17,12 +17,16 @@ typedef enum {
 
 typedef struct Cursor {
   int                 pos;
+  int                 cmdPos;
   char              * input;
   CursorBreakReason   breakReason;
   CursorValue         val;
 } Cursor;
 
 #define CURSOR_HEAD(X) (X->input[X->pos])
+#define CURSOR_PARSE(F, X) \
+  do { eatWhitespace((X)); F((X)); if((X)->breakReason == CURSOR_ERROR) \
+  { return; } } while (0)
 
 Cursor cursor(char *);
 CursorBreakReason breakReason(char);

@@ -10,20 +10,23 @@ static void pureCmdAlphabet(uint32_t *);
 static bool cmdExists(int, uint32_t[4]);
 
 static void enlistCmd(int cmd, uint32_t *alphabet) {
-  int quadrant = (cmd & 127) >> 5;
+  int quadrant = CMD_CHAR(cmd) >> 5;
   int bit      = cmd & 31;
   alphabet[quadrant] |= (1u << bit);
 }
 
 static bool cmdExists(int cmd, uint32_t alphabet[4]) {
-  int quadrant = (cmd & 127) >> 5;
+  int quadrant = CMD_CHAR(cmd) >> 5;
   int bit      = cmd & 31;
   return (alphabet[quadrant] & (1u << bit)) != 0;
 }
 
 static void pureCmdAlphabet(uint32_t *alphabet) {
+  enlistCmd(CMD_COMMENT, alphabet);
+  enlistCmd(CMD_ATTACK, alphabet);
   enlistCmd(CMD_NOTE_ON, alphabet);
   enlistCmd(CMD_NOTE_OFF, alphabet);
+  enlistCmd(CMD_WAVE, alphabet);
 }
 
 void cmdAlphabet(CmdAlphabet *ca) {
