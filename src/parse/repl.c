@@ -9,9 +9,9 @@
 
 static void initRepl(Repl *);
 
+/* pass in audio */
 static void initRepl(Repl *r) {
   cmdAlphabet(&r->cmdAlphabet);
-  /* audio init here */
 }
 
 void repl(void) {

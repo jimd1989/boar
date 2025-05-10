@@ -19,7 +19,7 @@ typedef int16_t Cmd;
 #define IS_CMD_COLON(X) (((X) >> 10) & 1)
 #define CMD_CHAR(X) ((X) & 127)
 
-/* Alphabets of valid commands are represent as set bits in 128 bit fields. 
+/* Alphabets of valid commands are represented as set bits in 128 bit fields. 
  * These fields must be populated at start up time; don't forget to use
  * `enlistCmd` in the constructors in `cmd.c`. Technically a character can
  * be enlisted directly without these enums, but they can ensure complete
