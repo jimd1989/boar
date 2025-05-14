@@ -26,6 +26,6 @@ typedef struct AudioBuffer {
 } AudioBuffer;
 
 void generateDsp(AudioBuffer *);
-void writeAudio(AudioBuffer *);
+void fillBuffer(AudioBuffer *);
 void audioBuffer(AudioBuffer *, int);
 void freeAudioBuffer(AudioBuffer *);

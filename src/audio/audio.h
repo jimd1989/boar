@@ -1,10 +1,13 @@
 #pragma once
 
 #include "buffer.h"
+#include "sndio.h"
 
 typedef struct Audio {
   AudioBuffer buffer;
-  /* Sndio device here */
+  Sio         sio;
 } Audio;
 
 void audio(Audio *);
+void writeAudio(Audio *);
+void stopAudio(Audio *);

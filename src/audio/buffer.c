@@ -6,6 +6,7 @@
 #include "sample.h"
 #include "settings.h"
 
+/* Will eventually have synth object injected */
 void generateDsp(AudioBuffer *b) {
   int i = 0;
   if ((b->framesGenerated - b->framesWritten) < b->bufferFillThreshold) {
@@ -17,7 +18,7 @@ void generateDsp(AudioBuffer *b) {
   }
 }
 
-void writeAudio(AudioBuffer *b) {
+void fillBuffer(AudioBuffer *b) {
   int i = 0;
   int16_t s = 0;
   AudioFrame a = {0};
@@ -30,8 +31,6 @@ void writeAudio(AudioBuffer *b) {
     b->output[i + 2] = s & 255;
     b->output[i + 3] = s >> 8;
   }
-  /* call to sndio with b->output here */
-  b->framesWritten += b->soundcardFramesToWrite;
 }
 
 void audioBuffer(AudioBuffer *b, int soundcardSizeFrames) {
@@ -46,7 +45,7 @@ void audioBuffer(AudioBuffer *b, int soundcardSizeFrames) {
   b->soundcardPosFrames     = 0;
   b->framesGenerated        = 0;
   b->framesWritten          = 0;
-  b->output                 = malloc(soundcardSizeFrames * 4);
+  b->output                 = malloc(b->soundcardBytesToWrite);
 }
 
 void freeAudioBuffer(AudioBuffer *b) {
