@@ -1,6 +1,6 @@
 #include "parse/args.h"
 #include "parse/cursor.h"
-#include "parse/repl.h"
+#include "repl/repl.h"
 
 int main(int argc, char **argv) {
   Args a   = {0};

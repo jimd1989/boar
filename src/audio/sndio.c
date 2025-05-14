@@ -1,4 +1,5 @@
 #include <err.h>
+#include <poll.h>
 #include <sndio.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -28,6 +29,11 @@ void sio(Sio *s) {
   s->bufSizeFrames = bufSize;
   s->bufSizeBytes  = s->bufSizeFrames * 4;
   s->nfds = sio_nfds(s->port);
+}
+
+int pollSio(Sio *s, struct pollfd *pollFds) {
+  struct pollfd *withoutStdin = pollFds++; /* Don't fill stdin fd */
+  return sio_pollfd(s->port, withoutStdin, POLLOUT);
 }
 
 int writeSio(Sio *s, uint8_t *data) {

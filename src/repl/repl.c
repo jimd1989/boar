@@ -1,28 +1,41 @@
 #include <poll.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
-#include "cmd.h"
-#include "cursor.h"
-#include "eval.h"
+#include "../audio/audio.h"
+#include "../parse/cmd.h"
+#include "../parse/cursor.h"
+#include "../parse/eval.h"
 #include "repl.h"
 
 static void initRepl(Repl *);
+static void stopRepl(Repl *);
 
-/* pass in audio */
 static void initRepl(Repl *r) {
   cmdAlphabet(&r->cmdAlphabet);
+  audio(&r->audio);
+  r->pollFds = malloc(r->audio.sio.nfds * sizeof(*r->pollFds));
+  r->pollFds[0].fd = STDIN_FILENO;
+  r->pollFds[0].events = POLLIN;
+}
+
+static void stopRepl(Repl *r) {
+  free(r->pollFds);
+  stopAudio(&r->audio);
 }
 
 void repl(void) {
-  Repl r                = {0};
-  Cursor c              = cursor(r.input);
-  struct pollfd pfds[1] = {{0}};
-  pfds[0].fd     = STDIN_FILENO;
-  pfds[0].events = POLLIN;
+  Repl r   = {0};
+  Cursor c = cursor(r.input);
   initRepl(&r);
-  while (poll(pfds, 1, 0) != -1) {
-    if (pfds[0].revents & POLLIN) {
+  /* TODO
+   * run pollSio()
+   * poll on all fds()
+   * check std and sio after poll
+   */
+  while (poll(r.pollFds, 1, 0) != -1) {
+    if (r.pollFds[0].revents & POLLIN) {
       if (fgets(r.input, REPL_LIMIT, stdin) != NULL) {
         c = cursor(r.input);
         while(c.breakReason != CURSOR_LINE_END) {
@@ -36,6 +49,7 @@ void repl(void) {
           if (c.breakReason == CURSOR_ERROR) { printCursorErr(&c); break; }
         }
       } else {
+        stopRepl(&r);
         return; /* EOF */
       }
     }
