@@ -22,6 +22,7 @@ typedef struct AudioBuffer {
   uint64_t      framesGenerated;
   uint64_t      framesWritten;
   AudioFrame    frames[AUDIO_BUFFER_SIZE];
+  AudioFrame    noise[AUDIO_BUFFER_SIZE];
   uint8_t     * output;
 } AudioBuffer;
 

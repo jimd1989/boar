@@ -32,6 +32,7 @@ void sio(Sio *s) {
   p.sig      = 1;
   p.le       = SIO_LE_NATIVE;
   p.appbufsz = bufSize;
+  p.xrun     = SIO_ERROR; /* Keep set for development; remove in prod */
   if (!(sio_setpar(s->port, &p))) { errx(1, "Error setting sndio parameters"); }
   if (!(sio_getpar(s->port, &p))) { errx(1, "Error getting sndio parameters"); }
   bufSize = (bufSize + p.round) - 1;
