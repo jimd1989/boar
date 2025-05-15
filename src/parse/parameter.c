@@ -22,6 +22,15 @@ void parseInt(Cursor *c) {
   c->pos++;
 }
 
+void parseBoundInt(Cursor *c, int min, int max) {
+  int n = 0;
+  parseInt(c);
+  n = c->val.n;
+  if (n < min || n > max) {
+    c->breakReason = CURSOR_ERROR;
+  }
+}
+
 void parseFloat(Cursor *c) {
   bool beforeDecimal = true;
   float f            = 0.0f;

@@ -27,6 +27,9 @@ typedef struct Cursor {
 #define CURSOR_PARSE(F, X) \
   do { eatWhitespace((X)); F((X)); if((X)->breakReason == CURSOR_ERROR) \
   { return; } } while (0)
+#define CURSOR_BOUND_PARSE(F, X, N, M) \
+  do { eatWhitespace((X)); F((X), (N), (M)); \
+  if((X)->breakReason == CURSOR_ERROR) { return; } } while (0)
 
 Cursor cursor(char *);
 CursorBreakReason breakReason(char);

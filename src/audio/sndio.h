@@ -1,6 +1,5 @@
 #pragma once
 
-#include <poll.h>
 #include <sndio.h>
 #include <stdint.h>
 
@@ -15,6 +14,5 @@ typedef struct Sio {
 
 void sio(Sio *);
 void startSio(Sio *);
-int pollSio(Sio *, struct pollfd *);
 int writeSio(Sio *, uint8_t *);
 void stopSio(Sio *);

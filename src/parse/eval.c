@@ -32,12 +32,12 @@ static void evalComment(Cursor *c) {
 static void evalNoteOff(Cursor *c) {
   int8_t note = 0;
   int8_t vel = 0;
-  CURSOR_PARSE(parseInt, c);
-  note = c->val.n & 127;
+  CURSOR_BOUND_PARSE(parseBoundInt, c, 0, 127);
+  note = c->val.n;
   if (c->breakReason == CURSOR_PARAMETER_END) {
     /* optional velocity argument */
-    CURSOR_PARSE(parseInt, c);
-    vel = c->val.n & 127;
+    CURSOR_BOUND_PARSE(parseBoundInt, c, 0, 127);
+    vel = c->val.n;
   }
   warnx("Note off %d %d", note, vel);
 }
@@ -45,12 +45,12 @@ static void evalNoteOff(Cursor *c) {
 static void evalNoteOn(Cursor *c) {
   int8_t note = 0;
   int8_t vel = 127;
-  CURSOR_PARSE(parseInt, c);
-  note = c->val.n & 127;
+  CURSOR_BOUND_PARSE(parseBoundInt, c, 0, 127);
+  note = c->val.n;
   if (c->breakReason == CURSOR_PARAMETER_END) {
     /* optional velocity argument */
-    CURSOR_PARSE(parseInt, c);
-    vel = c->val.n & 127;
+    CURSOR_BOUND_PARSE(parseBoundInt, c, 0, 127);
+    vel = c->val.n;
   }
   warnx("Note %s %d %d", vel == 0 ? "off" : "on", note, vel);
 }

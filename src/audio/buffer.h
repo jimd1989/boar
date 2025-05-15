@@ -6,7 +6,7 @@
 #include "settings.h"
 
 /* Ring buffer that juggles dynamically-sized soundcard output against 0.05 
- * seconds of internal DSP data. Manages when to write audio, when to perform
+ * seconds of internal DSP data. Manages when to write audio and when to perform
  * DSP based upon the discrepancy between `framesGenerated` and `framesWritten`.
  */
 typedef struct AudioBuffer {

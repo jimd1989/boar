@@ -1,3 +1,4 @@
+#include <err.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -9,7 +10,7 @@
 /* Will eventually have synth object injected */
 void generateDsp(AudioBuffer *b) {
   int i = 0;
-  if ((b->framesGenerated - b->framesWritten) < b->bufferFillThreshold) {
+  if ((b->framesGenerated - b->framesWritten) <= b->bufferFillThreshold) {
     for( ; i < b->chunksToFill ; i++) {
       /* dsp(b->frames[b->currentChunk * b->chunkSize]) */
       b->currentChunk = (b->currentChunk + 1) % b->sizeInChunks;
@@ -34,6 +35,13 @@ void fillBuffer(AudioBuffer *b) {
 }
 
 void audioBuffer(AudioBuffer *b, int soundcardSizeFrames) {
+  /* framesGenerated = Number of DSP frames created, stored in buffer.
+   * framesWritten   = Number of frames output to soundcard.
+   * When the difference between these values exceeds bufferThreshold, then
+   * more DSP is needed. chunksToFill chunks of buffer frames of additional DSP
+   * is written to keep ahead of the audio input. There's an interest in keeping
+   * chunksToFill on the smaller side to make DSP more responsive to user input.
+   */
   b->chunkSize              = AUDIO_CHUNK_SIZE;
   b->sizeInChunks           = AUDIO_CHUNKS;
   b->sizeInFrames           = AUDIO_BUFFER_SIZE;
@@ -45,7 +53,12 @@ void audioBuffer(AudioBuffer *b, int soundcardSizeFrames) {
   b->soundcardPosFrames     = 0;
   b->framesGenerated        = 0;
   b->framesWritten          = 0;
-  b->output                 = malloc(b->soundcardBytesToWrite);
+  if (b->soundcardFramesToWrite > (b->chunksToFill * b->chunkSize)) {
+    /* Indicates that the internal buffer is not large enough to write
+     * ahead of soundcard's buffer. Figure out how to handle this. */
+    warnx("Soundcard buffer size exceeds internal buffer.");
+  }
+  b->output                 = calloc(1, b->soundcardBytesToWrite);
 }
 
 void freeAudioBuffer(AudioBuffer *b) {
