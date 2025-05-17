@@ -8,9 +8,11 @@
 #include "sample.h"
 #include "settings.h"
 
-/* Will eventually have synth object injected */
-void generateDsp(AudioBuffer *b) {
+void generateDsp(void *arg, int delta) {
+  /* DSP updated in sio_write callback, hence the void *arg */
   int i = 0;
+  AudioBuffer *b = (AudioBuffer *)arg;
+  b->framesWritten += delta;
   if ((b->framesGenerated - b->framesWritten) <= b->bufferFillThreshold) {
     for( ; i < b->chunksToFill ; i++) {
       noise(&b->noise[b->currentChunk * b->chunkSize], b->chunkSize);

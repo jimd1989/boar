@@ -26,7 +26,7 @@ typedef struct AudioBuffer {
   uint8_t     * output;
 } AudioBuffer;
 
-void generateDsp(AudioBuffer *);
+void generateDsp(void *, int);
 void fillBuffer(AudioBuffer *);
 void audioBuffer(AudioBuffer *, int);
 void freeAudioBuffer(AudioBuffer *);

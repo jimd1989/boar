@@ -9,6 +9,9 @@
 #define RECIPROCAL (1.0f / (float)UINT_MAX)
 
 static uint32_t RAND = 1; /* No need for unique seed */
+static uint32_t PINK_NOISE_PHASE = 0;
+
+/* Make basic rand() function used by higher order noise fills */
 
 void noise(AudioFrame *buf, int n) {
   /* Blatant Park-Miller ripoff taken directly from Wikipedia. */

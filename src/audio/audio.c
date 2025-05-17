@@ -5,13 +5,13 @@
 void audio(Audio *a) {
   sio(&a->sio);
   audioBuffer(&a->buffer, a->sio.bufSizeFrames);
+  sio_onmove(a->sio.port, &generateDsp, (void *)(&a->buffer));
   startSio(&a->sio);
 }
 
 void writeAudio(Audio *a) {
-  generateDsp(&a->buffer);
   fillBuffer(&a->buffer);
-  a->buffer.framesWritten += writeSio(&a->sio, a->buffer.output);
+  writeSio(&a->sio, a->buffer.output);
 }
 
 void stopAudio(Audio *a) {
