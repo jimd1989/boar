@@ -1,4 +1,3 @@
-#include <err.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -26,14 +25,15 @@ void fillBuffer(AudioBuffer *b) {
   int i = 0;
   int16_t s = 0;
   AudioFrame a = {0};
-  for (; i < b->soundcardBytesToWrite ; i += 4, b->soundcardPosFrames++) {
-    a = b->frames[b->soundcardPosFrames % b->sizeInFrames];
+  for (; i < b->soundcardBytesToWrite ; i += 4) {
+    a = b->frames[b->soundcardPosFrames];
     s = a.l * SHRT_MAX; /* Need to dither */
     b->output[i    ] = s & 255;
     b->output[i + 1] = s >> 8;
     s = a.r * SHRT_MAX; /* Need to dither */
     b->output[i + 2] = s & 255;
     b->output[i + 3] = s >> 8;
+    b->soundcardPosFrames = (b->soundcardPosFrames + 1) % b->sizeInFrames;
   }
 }
 
@@ -45,25 +45,25 @@ void audioBuffer(AudioBuffer *b, int soundcardSizeFrames) {
    * is written to keep ahead of the audio input. There's an interest in keeping
    * chunksToFill on the smaller side to make DSP more responsive to user input.
    */
-  b->chunkSize              = AUDIO_CHUNK_SIZE;
-  b->sizeInChunks           = AUDIO_CHUNKS;
-  b->sizeInFrames           = AUDIO_BUFFER_SIZE;
-  b->bufferFillThreshold    = AUDIO_BUFFER_SIZE / 2;
-  b->chunksToFill           = AUDIO_CHUNKS / 2;
   b->currentChunk           = 0;
-  b->soundcardFramesToWrite = soundcardSizeFrames;
-  b->soundcardBytesToWrite  = soundcardSizeFrames * 4;
   b->soundcardPosFrames     = 0;
   b->framesGenerated        = 0;
   b->framesWritten          = 0;
-  if (b->soundcardFramesToWrite > (b->chunksToFill * b->chunkSize)) {
-    /* Indicates that the internal buffer is not large enough to write
-     * ahead of soundcard's buffer. Figure out how to handle this. */
-    warnx("Soundcard buffer size exceeds internal buffer.");
-  }
-  b->output                 = calloc(1, b->soundcardBytesToWrite);
+  b->soundcardFramesToWrite = soundcardSizeFrames;
+  b->soundcardBytesToWrite  = soundcardSizeFrames * 4;
+  b->sizeInFrames           = soundcardSizeFrames;
+  b->sizeInFrames          *= 4; /* Excessive? */
+  b->sizeInFrames          += (b->sizeInFrames % AUDIO_CHUNK_SIZE);
+  b->sizeInChunks           = (b->sizeInFrames / AUDIO_CHUNK_SIZE);
+  b->bufferFillThreshold    = b->sizeInFrames / 2;
+  b->chunksToFill           = b->sizeInChunks / 2;
+  b->frames                 = calloc(b->sizeInFrames, sizeof(AudioFrame));
+  b->noise                  = calloc(b->sizeInFrames, sizeof(AudioFrame));
+  b->output                 = calloc(b->soundcardBytesToWrite, 1);
 }
 
 void freeAudioBuffer(AudioBuffer *b) {
+  free(b->frames);
+  free(b->noise);
   free(b->output);
 }
