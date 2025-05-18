@@ -3,10 +3,9 @@
 
 #include <limits.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "noise.h"
-
-#define RECIPROCAL (1.0f / (float)UINT_MAX)
 
 static uint32_t RAND = 1; /* No need for unique seed */
 //static uint32_t PINK_NOISE_PHASE = 0;
@@ -22,10 +21,10 @@ void noise(AudioFrame *buf, int n) {
     product  = (uint64_t)RAND * 48271;
     x        = (product & 0x7fffffff) + (product >> 31);
     RAND     = x;
-    buf[i].l = (float)x * RECIPROCAL;
+    buf[i].l = (2.0f * (float)x / (float)RAND_MAX) - 1.0f;
     product  = (uint64_t)RAND * 48271;
     x        = (product & 0x7fffffff) + (product >> 31);
     RAND     = x;
-    buf[i].r = (float)x * RECIPROCAL;
+    buf[i].r = (2.0f * (float)x / (float)RAND_MAX) - 1.0f;
   }
 }

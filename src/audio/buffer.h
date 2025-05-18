@@ -12,13 +12,12 @@
 typedef struct AudioBuffer {
   int           currentChunk;
   int           chunkSize;
-  int           chunksToFill;
   int           sizeInChunks;
   int           sizeInFrames;
   int           soundcardBytesToWrite;
   int           soundcardFramesToWrite;
+  int           soundcardChunksToAvoid;
   int           soundcardPosFrames;
-  uint64_t      bufferFillThreshold;
   uint64_t      framesGenerated;
   uint64_t      framesWritten;
   AudioFrame  * frames;
