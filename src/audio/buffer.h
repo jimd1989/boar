@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include "output_buffer.h"
 #include "sample.h"
 #include "settings.h"
 
@@ -23,6 +24,7 @@ typedef struct AudioBuffer {
   AudioFrame  * frames;
   AudioFrame  * noise;
   uint8_t     * output;
+  OutputBuffer  outputBuffer;
 } AudioBuffer;
 
 void generateDsp(void *, int);

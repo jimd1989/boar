@@ -1,5 +1,6 @@
 #include "audio.h"
 #include "buffer.h"
+#include "output_buffer.h"
 #include "sndio.h"
 
 void audio(Audio *a) {
@@ -10,8 +11,9 @@ void audio(Audio *a) {
 }
 
 void writeAudio(Audio *a) {
-  fillBuffer(&a->buffer);
-  writeSio(&a->sio, a->buffer.output);
+  fillOutputBuffer(&a->buffer.outputBuffer);
+  //fillBuffer(&a->buffer);
+  writeSio(&a->sio, a->buffer.outputBuffer.output);
 }
 
 void stopAudio(Audio *a) {

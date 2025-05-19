@@ -4,6 +4,7 @@
 
 #include "buffer.h"
 #include "noise.h"
+#include "output_buffer.h"
 #include "sample.h"
 #include "settings.h"
 
@@ -13,12 +14,13 @@ void generateDsp(void *arg, int delta) {
   int diff = 0;
   int chunksToFill = 0;
   AudioBuffer *b = (AudioBuffer *)arg;
-  b->framesWritten += delta;
-  if (b->framesGenerated < b->framesWritten) {
+  b->outputBuffer.framesWritten += delta;
+  if (b->framesGenerated < b->outputBuffer.framesWritten) {
     /* Catching up to an underrun */
-    b->soundcardPosFrames = b->currentChunk * b->chunkSize;
+    b->outputBuffer.currentChunk = b->currentChunk; /* Need more math */
+    //b->soundcardPosFrames = b->currentChunk * b->chunkSize;
     /* Add an extra soundcard buffer of distance to get further ahead */
-    diff                  = b->framesWritten - b->framesGenerated;
+    diff                  = b->outputBuffer.framesWritten - b->framesGenerated;
     chunksToFill          = diff / b->chunkSize;
     chunksToFill         += (diff % b->chunkSize) == 0 ? 0 : 1;
     chunksToFill         += 1 + b->soundcardChunksToWrite;
@@ -28,7 +30,7 @@ void generateDsp(void *arg, int delta) {
   } else {
     /* Normal buffer write-ahead */
     chunksToFill  = b->soundcardChunksToWrite;
-    chunksToFill += (b->framesWritten % b->chunkSize) == 0 ? 0 : 1;
+    chunksToFill += (b->outputBuffer.framesWritten % b->chunkSize) == 0 ? 0 : 1;
     for( ; i < chunksToFill ; i++) {
       noise(&b->noise[b->currentChunk * b->chunkSize], b->chunkSize);
       b->currentChunk = (b->currentChunk + 1) % b->sizeInChunks;
@@ -76,10 +78,12 @@ void audioBuffer(AudioBuffer *b, int soundcardSizeFrames) {
   b->frames                 = calloc(b->sizeInFrames, sizeof(AudioFrame));
   b->noise                  = calloc(b->sizeInFrames, sizeof(AudioFrame));
   b->output                 = calloc(b->soundcardBytesToWrite, 1);
+  outputBuffer(&b->outputBuffer, b->noise, b->sizeInFrames, soundcardSizeFrames);
 }
 
 void freeAudioBuffer(AudioBuffer *b) {
   free(b->frames);
   free(b->noise);
   free(b->output);
+  freeOutputBuffer(&b->outputBuffer);
 }
