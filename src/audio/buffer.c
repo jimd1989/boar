@@ -1,4 +1,3 @@
-#include <err.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -15,13 +14,27 @@ void generateDsp(void *arg, int delta) {
   int chunksToFill = 0;
   AudioBuffer *b = (AudioBuffer *)arg;
   b->framesWritten += delta;
-  diff = b->framesGenerated - b->framesWritten;
-  chunksToFill = b->sizeInChunks - (1 + (diff / b->chunkSize) + b->soundcardChunksToAvoid);
-  for( ; i < chunksToFill ; i++) {
-    noise(&b->noise[b->currentChunk * b->chunkSize], b->chunkSize);
-    b->currentChunk = (b->currentChunk + 1) % b->sizeInChunks;
+  if (b->framesGenerated < b->framesWritten) {
+    /* Catching up to an underrun */
+    b->soundcardPosFrames = b->currentChunk * b->chunkSize;
+    /* Add an extra soundcard buffer of distance to get further ahead */
+    diff                  = b->framesWritten - b->framesGenerated;
+    chunksToFill          = diff / b->chunkSize;
+    chunksToFill         += (diff % b->chunkSize) == 0 ? 0 : 1;
+    chunksToFill         += 1 + b->soundcardChunksToWrite;
+    /* Don't actually write up. Accept the glitch. */
+    b->currentChunk       = (b->currentChunk + chunksToFill) % b->sizeInChunks;
+    b->framesGenerated   += chunksToFill * b->chunkSize;
+  } else {
+    /* Normal buffer write-ahead */
+    chunksToFill  = b->soundcardChunksToWrite;
+    chunksToFill += (b->framesWritten % b->chunkSize) == 0 ? 0 : 1;
+    for( ; i < chunksToFill ; i++) {
+      noise(&b->noise[b->currentChunk * b->chunkSize], b->chunkSize);
+      b->currentChunk = (b->currentChunk + 1) % b->sizeInChunks;
+    }
+    b->framesGenerated += chunksToFill * b->chunkSize;
   }
-  b->framesGenerated += chunksToFill * b->chunkSize;
 }
 
 void fillBuffer(AudioBuffer *b) {
@@ -33,7 +46,6 @@ void fillBuffer(AudioBuffer *b) {
     s = 0.01f * a.l * SHRT_MAX; /* Need to dither */
     b->output[i    ] = s & 255;
     b->output[i + 1] = s >> 8;
-    a.r = (2.0f * ((float)rand() / (float)RAND_MAX)) - 1.0f;
     s = 0.01f * a.r * SHRT_MAX; /* Need to dither */
     b->output[i + 2] = s & 255;
     b->output[i + 3] = s >> 8;
@@ -51,22 +63,19 @@ void audioBuffer(AudioBuffer *b, int soundcardSizeFrames) {
    */
   b->currentChunk           = 0;
   b->soundcardPosFrames     = 0;
+  b->framesGenerated        = 0;
   b->framesWritten          = 0;
   b->chunkSize              = AUDIO_CHUNK_SIZE;
   b->soundcardFramesToWrite = soundcardSizeFrames;
   b->soundcardBytesToWrite  = soundcardSizeFrames * 4;
-  b->soundcardChunksToAvoid = 1 + (soundcardSizeFrames / b->chunkSize);
+  b->soundcardChunksToWrite = soundcardSizeFrames / b->chunkSize;
   b->sizeInFrames           = soundcardSizeFrames;
   b->sizeInFrames          *= 4; /* Excessive? */
-  warnx("%d left over", b->sizeInFrames % b->chunkSize);
   b->sizeInFrames          += b->chunkSize - (b->sizeInFrames % b->chunkSize);
-  warnx("%d new size in frames", b->sizeInFrames);
   b->sizeInChunks           = (b->sizeInFrames / b->chunkSize);
-  warnx("%f %d %d perfect division?", (float)b->sizeInFrames / (float)b->chunkSize, b->sizeInFrames, b->chunkSize);
   b->frames                 = calloc(b->sizeInFrames, sizeof(AudioFrame));
   b->noise                  = calloc(b->sizeInFrames, sizeof(AudioFrame));
   b->output                 = calloc(b->soundcardBytesToWrite, 1);
-  b->framesGenerated        = b->sizeInFrames; 
 }
 
 void freeAudioBuffer(AudioBuffer *b) {

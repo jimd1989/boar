@@ -16,7 +16,7 @@ typedef struct AudioBuffer {
   int           sizeInFrames;
   int           soundcardBytesToWrite;
   int           soundcardFramesToWrite;
-  int           soundcardChunksToAvoid;
+  int           soundcardChunksToWrite;
   int           soundcardPosFrames;
   uint64_t      framesGenerated;
   uint64_t      framesWritten;
