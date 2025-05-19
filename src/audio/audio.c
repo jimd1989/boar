@@ -11,9 +11,8 @@ void audio(Audio *a) {
 }
 
 void writeAudio(Audio *a) {
-  fillOutputBuffer(&a->buffer.outputBuffer);
-  //fillBuffer(&a->buffer);
-  writeSio(&a->sio, a->buffer.outputBuffer.output);
+  fillOutputBuffer(&a->buffer.o);
+  writeSio(&a->sio, a->buffer.o.output);
 }
 
 void stopAudio(Audio *a) {

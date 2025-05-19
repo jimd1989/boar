@@ -1,15 +1,12 @@
 #pragma once
 
-#include <stdint.h>
-
 #include "sample.h"
 
 typedef struct OutputBuffer {
+  int           pos;
   int           chunkSize;
-  int           currentChunk;
   int           readChunks;
   int           writeChunks;
-  uint64_t      framesWritten;
   AudioFrame  * noise;
   uint8_t     * output;
 } OutputBuffer;

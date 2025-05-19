@@ -15,13 +15,12 @@ void outputBuffer(OutputBuffer *o, AudioFrame *noise,
     if (chunkSize < 1) { errx(1, "Error setting output chunk size."); }
   }
   warnx("Using %d frame output chunks", chunkSize);
-  o->chunkSize     = chunkSize;
-  o->readChunks    = rFrames / chunkSize;
-  o->writeChunks   = wFrames / chunkSize;
-  o->currentChunk  = 0;
-  o->framesWritten = 0;
-  o->noise         = noise;
-  o->output        = calloc(wFrames * 4, 1);
+  o->chunkSize   = chunkSize;
+  o->readChunks  = rFrames / chunkSize;
+  o->writeChunks = wFrames / chunkSize;
+  o->pos         = 0;
+  o->noise       = noise;
+  o->output      = calloc(wFrames * 4, 1);
 }
 
 void fillOutputBuffer(OutputBuffer *o) {
@@ -31,7 +30,7 @@ void fillOutputBuffer(OutputBuffer *o) {
   AudioFrame *a = NULL;
   uint8_t *out  = o->output;
   for (; i < o->writeChunks ; i++) {
-    a = &o->noise[o->currentChunk * o->chunkSize];
+    a = &o->noise[o->pos * o->chunkSize];
     for (j = 0 ; j < o->chunkSize ; j++) {
       s      = 0.01f * a[j].l * SHRT_MAX; /* Need to dither */
       *out++ = s & 255;
@@ -40,7 +39,7 @@ void fillOutputBuffer(OutputBuffer *o) {
       *out++ = s & 255;
       *out++ = s >> 8;
     }
-    o->currentChunk = (o->currentChunk + 1) % o->readChunks;
+    o->pos = (o->pos + 1) % o->readChunks;
   }
 }
 
