@@ -1,19 +1,14 @@
 #pragma once
 
-#include <stdint.h>
-
 #include "internal_buffer.h"
 #include "output_buffer.h"
 
 /* Overlapping ring buffers of internal DSP and soundcard output.
- * - InternalBuffer size is an multiple of OutputBuffer size.
  * - Both buffers are split into perfect chunks for faster processing.
- * - InternalBuffer's chunk size is an multiple of Outputbuffer's chunk size.
- * - The program can safely convert between chunk sizes. */
+ * - InternalBuffer size is an multiple of OutputBuffer size + 1 chunk. */
 typedef struct AudioBuffer {
-  int             soundcardChunks;
-  uint64_t        gens;   /* DSP frames generated */
-  uint64_t        writes; /* Audio frames written to soundcard */
+  int             mult;   /* InternalBuffer is at least mult times Output */
+  int             fractionalPhase; /* Track i/o mismatch */
   InternalBuffer  i;
   OutputBuffer    o;
 } AudioBuffer;

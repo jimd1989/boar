@@ -1,11 +1,33 @@
-#include "sample.h"
-#include "noise.h"
-
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "sample.h"
 #include "noise.h"
+
+static void pinkNoise(PinkNoise *);
+
+static void pinkNoise(PinkNoise *p) {
+  p->phase  = 0;
+  p->sample = 0;
+  memset(p->bands, 0, NOISE_PINK_BANDS * sizeof(uint32_t));
+}
+
+void initNoise(Noise *n, int size) {
+  n->rand  = 1; /* No need for unique seed */
+  pinkNoise(&n->lPink);
+  pinkNoise(&n->rPink);
+  n->white = calloc(size, sizeof(AudioFrame));
+  n->pink  = calloc(size, sizeof(AudioFrame));
+}
+
+void freeNoise(Noise *n) {
+  free(n->white);
+  free(n->pink);
+}
+
+
 
 static uint32_t RAND = 1; /* No need for unique seed */
 //static uint32_t PINK_NOISE_PHASE = 0;

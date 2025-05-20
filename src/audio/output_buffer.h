@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "sample.h"
 
 typedef struct OutputBuffer {

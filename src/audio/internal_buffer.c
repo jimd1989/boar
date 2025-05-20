@@ -1,3 +1,4 @@
+#include <err.h>
 #include <stdlib.h>
 
 #include "internal_buffer.h"
@@ -12,6 +13,7 @@ void internalBuffer(InternalBuffer *i, int frames) {
   i->chunks    = i->frames / i->chunkSize;
   i->audio     = calloc(i->frames, sizeof(AudioFrame));
   i->noise     = calloc(i->frames, sizeof(AudioFrame));
+  warnx("INTERNAL %d frames %d chunks", i->frames, i->chunks);
 }
 
 void fillAudio(InternalBuffer *in, int chunks) {

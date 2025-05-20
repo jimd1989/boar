@@ -21,6 +21,7 @@ void outputBuffer(OutputBuffer *o, AudioFrame *noise,
   o->pos         = 0;
   o->noise       = noise;
   o->output      = calloc(wFrames * 4, 1);
+  warnx("OUTPUT %d frames %d chunks", wFrames, o->writeChunks);
 }
 
 void fillOutputBuffer(OutputBuffer *o) {
