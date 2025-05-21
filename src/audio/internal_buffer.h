@@ -4,7 +4,7 @@
 
 typedef struct InternalBuffer {
   int           pos;
-  int           chunkSize;
+  unsigned int  chunkSize;
   int           chunks;
   int           frames;
   AudioFrame  * audio;

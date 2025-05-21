@@ -18,6 +18,7 @@ void outputBuffer(OutputBuffer *o, AudioFrame *noise,
   o->chunkSize   = chunkSize;
   o->readChunks  = rFrames / chunkSize;
   o->writeChunks = wFrames / chunkSize;
+  o->writeFrames = wFrames;
   o->pos         = 0;
   o->noise       = noise;
   o->output      = calloc(wFrames * 4, 1);

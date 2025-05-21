@@ -9,8 +9,9 @@ typedef struct OutputBuffer {
   int           chunkSize;
   int           readChunks;
   int           writeChunks;
+  int           writeFrames;
   AudioFrame  * noise;
-  uint8_t     * output;
+  uint8_t     * output; /* Eventually do write in place */
 } OutputBuffer;
 
 void outputBuffer(OutputBuffer *, AudioFrame *, int, int);
