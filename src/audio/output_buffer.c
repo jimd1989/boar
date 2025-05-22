@@ -3,9 +3,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "chunk.h"
 #include "output_buffer.h"
 #include "sample.h"
-#include "settings.h"
 
 void outputBuffer(OutputBuffer *o, AudioFrame *noise,
                   int rFrames, int wFrames) {
@@ -34,10 +34,10 @@ void fillOutputBuffer(OutputBuffer *o) {
   for (; i < o->writeChunks ; i++) {
     a = &o->noise[o->pos * o->chunkSize];
     for (j = 0 ; j < o->chunkSize ; j++) {
-      s      = 0.01f * a[j].l * SHRT_MAX; /* Need to dither */
+      s      = 0.005f * a[j].l * SHRT_MAX; /* Need to dither */
       *out++ = s & 255;
       *out++ = s >> 8;
-      s      = 0.01f * a[j].r * SHRT_MAX; /* Need to dither */
+      s      = 0.005f * a[j].r * SHRT_MAX; /* Need to dither */
       *out++ = s & 255;
       *out++ = s >> 8;
     }

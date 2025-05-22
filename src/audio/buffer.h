@@ -8,7 +8,7 @@
  * - InternalBuffer size is an multiple of OutputBuffer size + 1 chunk. */
 typedef struct AudioBuffer {
   int             mult; /* InternalBuffer is at least mult times Output */
-  int             delta;
+  int             maxChunks;
   unsigned int    fractionalPhase; /* Track i/o mismatch */
   InternalBuffer  i;
   OutputBuffer    o;
