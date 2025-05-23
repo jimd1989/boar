@@ -24,7 +24,7 @@ void audioBuffer(AudioBuffer *b, int soundcardSizeFrames) {
   /* Prefill the entire buffer. 
    * Once this is something other than white noise, b->mult could be a cause
    * of any distortion. Double-check. */
-  outputBuffer(&b->o, b->i.noise.white, internalFrames, soundcardSizeFrames);
+  outputBuffer(&b->o, b->i.noise.pink, internalFrames, soundcardSizeFrames);
   chunks       = (b->mult) * (b->o.writeChunks * b->o.chunkSize);
   chunks       = snapToMultiple(chunks, b->i.chunkSize) / b->i.chunkSize;
   b->maxChunks = chunks;

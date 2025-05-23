@@ -5,10 +5,11 @@
 #include "../audio/sample.h"
 
 #define NOISE_PINK_BANDS 8
+#define NOISE_PINK_BITS 2
 
 typedef struct PinkNoise {
   uint32_t  bands[NOISE_PINK_BANDS];
-  uint64_t  sample;
+  uint32_t  sample;
 } PinkNoise;
 
 typedef struct Noise {
