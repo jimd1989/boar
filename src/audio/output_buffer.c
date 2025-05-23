@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "../noise/noise.h"
 #include "chunk.h"
 #include "output_buffer.h"
 #include "sample.h"
@@ -34,10 +35,10 @@ void fillOutputBuffer(OutputBuffer *o) {
   for (; i < o->writeChunks ; i++) {
     a = &o->whiteNoise[o->pos * o->chunkSize];
     for (j = 0 ; j < o->chunkSize ; j++) {
-      s      = 0.005f * a[j].l * SHRT_MAX; /* Need to dither */
+      s      = 0.005f * NOISE_SCALE_32(a[j].l.n) * SHRT_MAX; /* dither pls */
       *out++ = s & 255;
       *out++ = s >> 8;
-      s      = 0.005f * a[j].r * SHRT_MAX; /* Need to dither */
+      s      = 0.005f * NOISE_SCALE_32(a[j].r.n) * SHRT_MAX; /* dither pls */
       *out++ = s & 255;
       *out++ = s >> 8;
     }
