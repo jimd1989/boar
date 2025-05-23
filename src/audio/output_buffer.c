@@ -8,6 +8,8 @@
 #include "output_buffer.h"
 #include "sample.h"
 
+static int16_t dither(float, int32_t);
+
 void outputBuffer(OutputBuffer *o, AudioFrame *whiteNoise,
                   int rFrames, int wFrames) {
   int chunkSize = AUDIO_CHUNK_SIZE;
@@ -15,7 +17,6 @@ void outputBuffer(OutputBuffer *o, AudioFrame *whiteNoise,
     chunkSize--;
     if (chunkSize < 1) { errx(1, "Error setting output chunk size."); }
   }
-  warnx("Using %d frame output chunks", chunkSize);
   o->chunkSize   = chunkSize;
   o->readChunks  = rFrames / chunkSize;
   o->writeChunks = wFrames / chunkSize;
@@ -23,7 +24,13 @@ void outputBuffer(OutputBuffer *o, AudioFrame *whiteNoise,
   o->pos         = 0;
   o->whiteNoise  = whiteNoise;
   o->output      = calloc(wFrames * 4, 1);
-  warnx("OUTPUT %d frames %d chunks", wFrames, o->writeChunks);
+  warnx("out →\tframes: %d\tchunk size: %d", wFrames, o->chunkSize);
+}
+
+static int16_t dither(float s, int32_t noise) {
+  int32_t n = (int32_t)(s * (1 << 15) * (1 << 16)); /* Scale up to Q15.16 int */
+  n        += noise & USHRT_MAX; /* Add int noise to Q15.16 frac space */
+  return (int16_t)(n >> 16); /* Shift down */
 }
 
 void fillOutputBuffer(OutputBuffer *o) {
@@ -35,10 +42,12 @@ void fillOutputBuffer(OutputBuffer *o) {
   for (; i < o->writeChunks ; i++) {
     a = &o->whiteNoise[o->pos * o->chunkSize];
     for (j = 0 ; j < o->chunkSize ; j++) {
-      s      = 0.005f * NOISE_SCALE_32(a[j].l.n) * SHRT_MAX; /* dither pls */
+      /* Hello world: dithering white noise with itself.
+       * Use opposite channel noise for dither for less self-reference. */
+      s      = dither(0.005f * NOISE_SCALE_32(a[j].l.n), a[j].r.n);
       *out++ = s & 255;
       *out++ = s >> 8;
-      s      = 0.005f * NOISE_SCALE_32(a[j].r.n) * SHRT_MAX; /* dither pls */
+      s      = dither(0.005f * NOISE_SCALE_32(a[j].r.n), a[j].l.n);
       *out++ = s & 255;
       *out++ = s >> 8;
     }

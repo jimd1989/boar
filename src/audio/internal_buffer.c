@@ -13,7 +13,7 @@ void internalBuffer(InternalBuffer *i, int frames) {
   i->chunks    = AUDIO_CHUNK_DIV(i->frames);
   i->audio     = calloc(i->frames, sizeof(AudioFrame));
   noise(&i->noise, i->frames);
-  warnx("INTERNAL %d frames %d chunks", i->frames, i->chunks);
+  warnx("dsp →\tframes: %d\tchunk size: %d", i->frames, i->chunkSize);
 }
 
 void fillAudio(InternalBuffer *in, int chunks) {
