@@ -7,7 +7,7 @@
 #include "output_buffer.h"
 #include "sample.h"
 
-void outputBuffer(OutputBuffer *o, AudioFrame *noise,
+void outputBuffer(OutputBuffer *o, AudioFrame *whiteNoise,
                   int rFrames, int wFrames) {
   int chunkSize = AUDIO_CHUNK_SIZE;
   while ((rFrames % chunkSize) != 0 || (wFrames % chunkSize) != 0) {
@@ -20,7 +20,7 @@ void outputBuffer(OutputBuffer *o, AudioFrame *noise,
   o->writeChunks = wFrames / chunkSize;
   o->writeFrames = wFrames;
   o->pos         = 0;
-  o->noise       = noise;
+  o->whiteNoise  = whiteNoise;
   o->output      = calloc(wFrames * 4, 1);
   warnx("OUTPUT %d frames %d chunks", wFrames, o->writeChunks);
 }
@@ -32,7 +32,7 @@ void fillOutputBuffer(OutputBuffer *o) {
   AudioFrame *a = NULL;
   uint8_t *out  = o->output;
   for (; i < o->writeChunks ; i++) {
-    a = &o->noise[o->pos * o->chunkSize];
+    a = &o->whiteNoise[o->pos * o->chunkSize];
     for (j = 0 ; j < o->chunkSize ; j++) {
       s      = 0.005f * a[j].l * SHRT_MAX; /* Need to dither */
       *out++ = s & 255;

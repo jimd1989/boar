@@ -10,7 +10,7 @@ typedef struct OutputBuffer {
   int           readChunks;
   int           writeChunks;
   int           writeFrames;
-  AudioFrame  * noise;
+  AudioFrame  * whiteNoise;
   uint8_t     * output; /* Eventually do write in place */
 } OutputBuffer;
 

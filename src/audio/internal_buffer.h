@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../noise/noise.h"
 #include "sample.h"
 
 typedef struct InternalBuffer {
@@ -7,8 +8,8 @@ typedef struct InternalBuffer {
   unsigned int  chunkSize;
   int           chunks;
   int           frames;
+  Noise         noise;
   AudioFrame  * audio;
-  AudioFrame  * noise;
 } InternalBuffer;
 
 void internalBuffer(InternalBuffer *, int);
