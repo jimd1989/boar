@@ -25,11 +25,14 @@ typedef int16_t Cmd;
  * be enlisted directly without these enums, but they can ensure complete
  * pattern matching at eval time. */
 typedef enum {
-  CMD_COMMENT   = 35,  /* # */
-  CMD_ATTACK    = 97,  /* a */
-  CMD_NOTE_ON   = 110, /* n */
-  CMD_NOTE_OFF  = 111, /* o */
-  CMD_WAVE      = 119  /* w */
+  CMD_COMMENT    = 35,  /* # */
+  CMD_ATTACK     = 97,  /* a */
+  CMD_BEND       = 98,  /* b */
+  CMD_NOTE_ON    = 110, /* n */
+  CMD_NOTE_OFF   = 111, /* o */
+  CMD_AFTERTOUCH = 116, /* t */
+  CMD_VOL        = 118, /* v */
+  CMD_WAVE       = 119  /* w */
 } CmdPure;
 
 typedef enum {

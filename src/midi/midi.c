@@ -17,6 +17,8 @@ static void repl(Repl *);
 static void parseArgs(Repl *, int, char **);
 static void waitForIO(Repl *);
 static void readMidi(Repl *);
+static void parseCc(Repl *, Cc, uint8_t);
+static void parseBend(uint8_t, uint8_t);
 static void parseMidi(Repl *, int);
 static void readStdin(Repl *);
 static void freeRepl(Repl *);
@@ -74,11 +76,30 @@ static void readMidi(Repl *r) {
   fflush(stdout);
 }
 
+static void parseCc(Repl *r, Cc b2, uint8_t b3) {
+  char *s = r->ccs[b2 & (CC_LIMIT - 1)];
+  if ((strcmp(s, "") == 0)) { return; }
+  switch (b2) {
+    case CC_VOL:
+      printf("%s%.3f\n", s, (float)b3/(float)(CC_LIMIT - 1));
+      break;
+    default:
+      printf("%s%d\n", s, b3);
+  }
+}
+
+static void parseBend(uint8_t b2, uint8_t b3) {
+  uint16_t x = (b3 << 7) | b2;
+  float f    = (float)x / (float)((1 << 14) - 1);
+  f         *= 2.0f;
+  f         -= 1.0f;
+  printf("b%.3f\n", f);
+}
+
 static void parseMidi(Repl *r, int bytesRead) {
   uint8_t b  = 0;
   uint8_t b2 = 0;
   uint8_t b3 = 0;
-  char *cc   = NULL;
   int i      = 0;
   for (; i < bytesRead ; i++) {
     b = r->midi[i];
@@ -103,14 +124,13 @@ static void parseMidi(Repl *r, int bytesRead) {
         if (GET_CHAN(b) != r->chan) { i += 2; break; }
         b2 = r->midi[++i];
         b3 = r->midi[++i];
-        cc = r->ccs[b2 & (CC_LIMIT - 1)];
-        if (!(strcmp(cc, "") == 0)) { printf("%s%d\n", cc, b3); }
+        parseCc(r, b2, b3);
         break;
       case PITCH_BEND:
         if (GET_CHAN(b) != r->chan) { i += 2; break; }
         b2 = r->midi[++i];
         b3 = r->midi[++i];
-        printf("b%d\n", (b3 << 7) | b2);
+        parseBend(b2, b3);
         break;
       case CHAN_AFTERTOUCH:
         if (GET_CHAN(b) != r->chan) { i += 1; break; }
@@ -152,7 +172,7 @@ static void readStdin(Repl *r) {
     r->isRunning = false;
     return;
   }
-  warnx("%s", r->input);
+  warnx("Received %s", r->input);
 }
 
 static void freeRepl(Repl *r) {

@@ -16,7 +16,9 @@
 #define MIDI_IDX 1
 
 /* default CC */
-#define CC_VOL 7
+typedef enum Cc {
+  CC_VOL = 7
+} Cc;
 
 /* MIDI events (top 4 bits) */
 #define GET_EVENT(X) ((X) & (15 << 4))
@@ -49,7 +51,7 @@ typedef struct Repl {
   int       nfds;
   Mio       mio;
   PollFd  * pollFds;
-  char      ccs[CC_LIMIT][3];
+  char      ccs[CC_LIMIT][3]; /* 3 might be too small */
   uint8_t   midi[MIDI_LIMIT];
   char      input[REPL_LIMIT];
 } Repl;
