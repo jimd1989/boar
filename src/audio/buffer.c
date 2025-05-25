@@ -21,11 +21,11 @@ void audioBuffer(AudioBuffer *b, Control *c, int oFrames) {
   iFrames           += AUDIO_CHUNK_SIZE; /* Extra chunk of headroom */
   b->fractionalPhase = 0;
   b->control         = c;
-  internalBuffer(&b->i, iFrames);  
+  internalBuffer(&b->i, iFrames, c);  
   /* Prefill the entire buffer. 
    * Once this is something other than white noise, b->mult could be a cause
    * of any distortion. Double-check. */
-  outputBuffer(&b->o, b->i.noise.white, iFrames, oFrames, &c->vol);
+  outputBuffer(&b->o, b->i.audio, b->i.noise.white, iFrames, oFrames);
   chunks       = (b->mult) * (b->o.writeChunks * b->o.chunkSize);
   chunks       = snapToMultiple(chunks, b->i.chunkSize) / b->i.chunkSize;
   b->maxChunks = chunks;

@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../curves/curves.h"
+#include "volume.h"
 
 typedef struct Control {
-  float   vol;
+  Volume  vol;
   Curves  curves;
 } Control;
 
 void control(Control *);
-void setVol(Control *, float);

@@ -10,11 +10,11 @@ typedef struct OutputBuffer {
   int           readChunks;
   int           writeChunks;
   int           writeFrames;
-  float       * vol;
+  AudioFrame  * audio;
   AudioFrame  * whiteNoise;
   uint8_t     * output; /* Eventually do write in place */
 } OutputBuffer;
 
-void outputBuffer(OutputBuffer *, AudioFrame *, int, int, float *);
+void outputBuffer(OutputBuffer *, AudioFrame *, AudioFrame *, int, int);
 void fillOutputBuffer(OutputBuffer *);
 void freeOutputBuffer(OutputBuffer *);

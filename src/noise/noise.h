@@ -5,7 +5,7 @@
 #include "../audio/sample.h"
 
 #define NOISE_PINK_BANDS 8
-#define NOISE_PINK_BITS 2
+#define NOISE_PINK_BITS 3
 
 typedef struct PinkNoise {
   uint32_t  bands[NOISE_PINK_BANDS];
@@ -25,4 +25,4 @@ void noise(Noise *, int);
 void fillNoise(Noise *, int, int);
 void freeNoise(Noise *);
 
-#define NOISE_SCALE_32(X) ((2.0f * (float)(X) / (float)RAND_MAX) - 1.0f)
+#define NOISE_FLOAT(X) ((2.0f * (float)(X) / (float)RAND_MAX) - 1.0f)

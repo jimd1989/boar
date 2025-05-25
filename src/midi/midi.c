@@ -172,7 +172,8 @@ static void readStdin(Repl *r) {
     r->isRunning = false;
     return;
   }
-  warnx("Received %s", r->input);
+  printf("%s", r->input);
+  fflush(stdout);
 }
 
 static void freeRepl(Repl *r) {

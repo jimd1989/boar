@@ -4,6 +4,7 @@
 #include <err.h> /* temp */
 
 #include "../control/control.h"
+#include "../control/volume.h"
 #include "cmd.h"
 #include "cursor.h"
 #include "eval.h"
@@ -19,7 +20,7 @@ static void evalWave(Cursor *);
 
 static void evalVol(Cursor *c, Control *co) {
   CURSOR_BOUND_PARSE(parseBoundFloat, c, 0.0f, 1.0f);
-  setVol(co, c->val.f);
+  setVol(&co->vol, c->val.f);
 }
 
 static void evalAttack(Cursor *c) {
