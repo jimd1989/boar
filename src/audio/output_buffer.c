@@ -11,7 +11,7 @@
 static int16_t dither(float, int32_t);
 
 void outputBuffer(OutputBuffer *o, AudioFrame *whiteNoise,
-                  int rFrames, int wFrames) {
+                  int rFrames, int wFrames, float *vol) {
   int chunkSize = AUDIO_CHUNK_SIZE;
   while ((rFrames % chunkSize) != 0 || (wFrames % chunkSize) != 0) {
     chunkSize--;
@@ -22,6 +22,7 @@ void outputBuffer(OutputBuffer *o, AudioFrame *whiteNoise,
   o->writeChunks = wFrames / chunkSize;
   o->writeFrames = wFrames;
   o->pos         = 0;
+  o->vol         = vol;
   o->whiteNoise  = whiteNoise;
   o->output      = calloc(wFrames * 4, 1);
   warnx("out →\tframes: %d\tchunk size: %d", wFrames, o->chunkSize);
@@ -44,10 +45,10 @@ void fillOutputBuffer(OutputBuffer *o) {
     for (j = 0 ; j < o->chunkSize ; j++) {
       /* Hello world: dithering white noise with itself.
        * Use opposite channel noise for dither for less self-reference. */
-      s      = dither(0.005f * NOISE_SCALE_32(a[j].l.n), a[j].r.n);
+      s      = dither(*o->vol * NOISE_SCALE_32(a[j].l.n), a[j].r.n);
       *out++ = s & 255;
       *out++ = s >> 8;
-      s      = dither(0.005f * NOISE_SCALE_32(a[j].r.n), a[j].l.n);
+      s      = dither(*o->vol * NOISE_SCALE_32(a[j].r.n), a[j].l.n);
       *out++ = s & 255;
       *out++ = s >> 8;
     }

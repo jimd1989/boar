@@ -54,6 +54,15 @@ void parseFloat(Cursor *c) {
   c->pos++;
 }
 
+void parseBoundFloat(Cursor *c, float min, float max) {
+  float f = 0.0f;
+  parseFloat(c);
+  f = c->val.f;
+  if (f < min || f > max) {
+    c->breakReason = CURSOR_ERROR;
+  }
+}
+
 void parseString(Cursor *c) {
   int start = c->pos;
   while (strchr(BOUNDS_CHARS, CURSOR_HEAD(c)) == NULL) { c->pos++; }

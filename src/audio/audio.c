@@ -1,11 +1,12 @@
+#include "../control/control.h"
 #include "audio.h"
 #include "buffer.h"
 #include "output_buffer.h"
 #include "sndio.h"
 
-void audio(Audio *a) {
+void audio(Audio *a, Control *c) {
   sio(&a->sio);
-  audioBuffer(&a->buffer, a->sio.bufSizeFrames);
+  audioBuffer(&a->buffer, c, a->sio.bufSizeFrames);
   sio_onmove(a->sio.port, &generateDsp, (void *)(&a->buffer));
   startSio(&a->sio);
 }

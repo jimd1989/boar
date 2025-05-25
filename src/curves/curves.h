@@ -4,6 +4,7 @@
 
 typedef struct Curves {
   float log10[CURVES_LEN];
+  float cubic[CURVES_LEN];
 } Curves;
 
 void curves(Curves *);

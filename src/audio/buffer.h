@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../control/control.h"
 #include "internal_buffer.h"
 #include "output_buffer.h"
 
@@ -7,13 +8,14 @@
  * - Both buffers are split into perfect chunks for faster processing.
  * - InternalBuffer size is an multiple of OutputBuffer size + 1 chunk. */
 typedef struct AudioBuffer {
-  int             mult; /* InternalBuffer is at least mult times Output */
-  int             maxChunks;
-  unsigned int    fractionalPhase; /* Track i/o mismatch */
-  InternalBuffer  i;
-  OutputBuffer    o;
+  int               mult; /* InternalBuffer is at least mult times Output */
+  int               maxChunks;
+  unsigned int      fractionalPhase; /* Track i/o mismatch */
+  InternalBuffer    i;
+  OutputBuffer      o;
+  Control         * control;
 } AudioBuffer;
 
-void audioBuffer(AudioBuffer *, int);
+void audioBuffer(AudioBuffer *, Control *, int);
 void generateDsp(void *, int);
 void freeAudioBuffer(AudioBuffer *);

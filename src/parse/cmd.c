@@ -22,10 +22,11 @@ static bool cmdExists(int cmd, uint32_t alphabet[4]) {
 }
 
 static void pureCmdAlphabet(uint32_t *alphabet) {
-  enlistCmd(CMD_COMMENT, alphabet);
   enlistCmd(CMD_ATTACK, alphabet);
+  enlistCmd(CMD_COMMENT, alphabet);
   enlistCmd(CMD_NOTE_ON, alphabet);
   enlistCmd(CMD_NOTE_OFF, alphabet);
+  enlistCmd(CMD_VOL, alphabet);
   enlistCmd(CMD_WAVE, alphabet);
 }
 

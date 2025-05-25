@@ -1,9 +1,10 @@
+#include "../control/control.h"
 #include "cmd.h"
 #include "cursor.h"
 #include "eval.h"
 #include "line.h"
 
-void parseLine(CmdAlphabet a, char *s) {
+void parseLine(CmdAlphabet a, Control *co, char *s) {
   Cursor c = cursor(s);
   while (c.breakReason != CURSOR_LINE_END) {
     c.cmdPos = c.pos;
@@ -12,7 +13,7 @@ void parseLine(CmdAlphabet a, char *s) {
     parseCmd(&c, a);
     if (c.breakReason != CURSOR_WAITING_PARAMS) { return; }
     eatWhitespace(&c);
-    eval(&c);
+    eval(&c, co);
     if (c.breakReason == CURSOR_ERROR) { printCursorErr(&c); }
   }
 }

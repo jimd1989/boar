@@ -6,6 +6,7 @@
 
 #include "../audio/audio.h"
 #include "../audio/sndio.h"
+#include "../control/control.h"
 #include "../parse/line.h"
 #include "repl.h"
 
@@ -20,7 +21,8 @@ static void stopRepl(Repl *);
 
 static void startRepl(Repl *r) {
   cmdAlphabet(&r->cmdAlphabet);
-  audio(&r->audio);
+  control(&r->control);
+  audio(&r->audio, &r->control);
   r->nfds = r->audio.sio.nfds + 1;
   r->pollFds = malloc(r->nfds * sizeof(*r->pollFds));
   r->pollFds[STDIN_IDX].fd = STDIN_FILENO;
@@ -48,7 +50,7 @@ static void readInput(Repl *r) {
     r->isRunning = false;
     return;
   }
-  parseLine(r->cmdAlphabet, r->input);
+  parseLine(r->cmdAlphabet, &r->control, r->input);
 }
 
 static void playAudio(Repl *r) {
