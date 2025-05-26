@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
+#include "../chunk/chunk.h"
 #include "buffer.h"
-#include "chunk.h"
 #include "internal_buffer.h"
 #include "output_buffer.h"
 
@@ -27,7 +27,7 @@ void audioBuffer(AudioBuffer *b, Control *c, int oFrames) {
    * of any distortion. Double-check. */
   outputBuffer(&b->o, b->i.audio, b->i.noise.white, iFrames, oFrames);
   chunks       = (b->mult) * (b->o.writeChunks * b->o.chunkSize);
-  chunks       = snapToMultiple(chunks, b->i.chunkSize) / b->i.chunkSize;
+  chunks       = snapToMultiple(chunks, AUDIO_CHUNK_SIZE) / AUDIO_CHUNK_SIZE;
   b->maxChunks = chunks;
   fillAudio(&b->i, chunks);
 }

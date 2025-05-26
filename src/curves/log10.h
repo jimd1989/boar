@@ -1,3 +1,3 @@
 #pragma once
 
-void fillLog10(float *, int);
+void fillLog10(float *);

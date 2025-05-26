@@ -1,11 +1,11 @@
+#include "../chunk/chunk.h"
+#include "../curves/curve_settings.h"
 #include "volume.h"
 
-void volume(Volume *v, float *curve, int len, int chunkSize) {
+void volume(Volume *v, float *curve) {
   v->chunks    = 0;
-  v->chunkSize = chunkSize;
   v->idx       = 0;
   v->inc       = 0;
-  v->curveLen  = len;
   v->val       = 0.0f;
   v->curve     = curve;
 }
@@ -17,24 +17,24 @@ void setVol(Volume *v, float f) {
    * v->inc is truncated and won't actually fill the gap between oldIdx and
    * newIdx over the span of v->chunkSize, so there will still be a slight jump
    * to v->val. This should not be audible. */
-  int oldIdx = v->val * (v->curveLen - 1);
-  int newIdx = f * (v->curveLen - 1);
+  int oldIdx = v->val * CURVE_DIV;
+  int newIdx = f * CURVE_DIV;
   v->idx     = oldIdx;
-  v->inc     = (newIdx - oldIdx) / v->chunkSize;
+  v->inc     = (newIdx - oldIdx) / AUDIO_CHUNK_SIZE;
   v->val     = v->curve[newIdx];
   v->chunks  = 1; /* Size this based on delta? */
 }
 
-void fillVol(Volume *v, float *buf) {
+void fillVolChunk(Volume *v, float *buf) {
   int i = 0;
   if (v->chunks > 0) {
-    for (; i < v->chunkSize ; i++) {
+    for (; i < AUDIO_CHUNK_SIZE ; i++) {
       buf[i]  = v->curve[v->idx];
       v->idx += v->inc;
     }
     v->chunks--;
   } else {
-    for (; i < v->chunkSize ; i++) {
+    for (; i < AUDIO_CHUNK_SIZE ; i++) {
       buf[i] = v->val;
     }
   }

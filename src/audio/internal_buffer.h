@@ -6,7 +6,6 @@
 
 typedef struct InternalBuffer {
   int           pos;
-  unsigned int  chunkSize;
   int           chunks;
   int           frames;
   Noise         noise;

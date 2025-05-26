@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "chunk.h"
+#include "../chunk/chunk.h"
 #include "output_buffer.h"
 #include "sample.h"
 
@@ -44,8 +44,7 @@ void fillOutputBuffer(OutputBuffer *o) {
     a = &o->audio[o->pos * o->chunkSize];
     n = &o->whiteNoise[o->pos * o->chunkSize];
     for (j = 0 ; j < o->chunkSize ; j++) {
-      /* Hello world: dithering white noise with itself.
-       * Use opposite channel noise for dither for less self-reference. */
+      /* Use opposite channel noise for dither for less self-reference. */
       s      = dither(a[j].l.f, n[j].r.n);
       *out++ = s & 255;
       *out++ = s >> 8;

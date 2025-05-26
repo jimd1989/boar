@@ -2,14 +2,12 @@
 
 typedef struct Volume {
   int     chunks;
-  int     chunkSize;
   int     idx;
   int     inc;
-  int     curveLen;
   float   val;
   float * curve;
 } Volume;
 
-void volume(Volume *, float *, int, int);
+void volume(Volume *, float *);
 void setVol(Volume *, float);
-void fillVol(Volume *, float *);
+void fillVolChunk(Volume *, float *);

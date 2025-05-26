@@ -1,11 +1,10 @@
-#include <err.h>
-
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "../audio/sample.h"
+#include "../chunk/chunk.h"
 #include "noise.h"
 
 static void pinkNoise(PinkNoise *);
@@ -32,12 +31,12 @@ static uint32_t pinkSample(PinkNoise *p, int i, uint32_t s) {
   return p->sample;
 }
 
-void fillNoise(Noise *n, int offset, int len) {
+void fillNoiseChunk(Noise *n, int offset) {
   int i = 0;
   int band = 0;
   uint32_t x = 0;
   uint64_t product = 0;
-  for (; i < len ; i++, n->phase++) {
+  for (; i < AUDIO_CHUNK_SIZE ; i++, n->phase++) {
     /* Pink noise uses recycled white noise in Voss-McCartney. */
     band                     = __builtin_ctz(n->phase);
     x                        = n->white[offset + i].l.n;

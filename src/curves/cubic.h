@@ -1,3 +1,3 @@
 #pragma once
 
-void fillCubic(float *, int);
+void fillCubic(float *);
