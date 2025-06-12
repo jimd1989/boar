@@ -11,7 +11,6 @@
 static void pinkNoise(PinkNoise *);
 static uint32_t pinkSample(PinkNoise *, int, uint32_t);
 static void bandIdxs(uint8_t[NOISE_PINK_IDXS]);
-static int bandIdx(uint8_t, uint8_t[NOISE_PINK_IDXS]);
 
 static void pinkNoise(PinkNoise *p) {
   p->sample = 0;
@@ -31,15 +30,8 @@ static void bandIdxs(uint8_t idxs[NOISE_PINK_IDXS]) {
     count2 = 0;
     n = i + 1;
     while ((n & 1) == 0 && n != 0) { count2++; n >>= 1; }
-    idxs[i / 2] = (count2 << 4) | count1;
+    idxs[i >> 1] = (count2 << 4) | count1;
   }
-}
-
-static int bandIdx(uint8_t phase, uint8_t idxs[NOISE_PINK_IDXS]) {
-  int i     = phase >> 1;
-  bool odd  = phase & 1;
-  uint8_t n = idxs[i];
-  return (odd * (n & 240)) + ((!odd) * (n & 15));
 }
 
 void noise(Noise *n, int size) {
@@ -61,25 +53,45 @@ static uint32_t pinkSample(PinkNoise *p, int i, uint32_t s) {
 
 void fillNoiseChunk(Noise *n, int offset) {
   int i = 0;
-  int band = 0;
+  int next2Bands = 0;
+  int band1 = 0;
+  int band2 = 0;
   uint32_t x = 0;
   uint64_t product = 0;
-  for (; i < AUDIO_CHUNK_SIZE ; i++, n->phase++) {
-    /* Pink noise uses recycled white noise in Voss-McCartney. */
-    band                     = bandIdx(n->phase, n->bandIdxs);
-    x                        = n->white[offset + i].l.n;
-    n->pink[offset + i].l.n  = pinkSample(&n->lPink, band, x);
-    x                        = n->white[offset + i].r.n;
-    n->pink[offset + i].r.n  = pinkSample(&n->lPink, band, x);
-    /* White noise is Park-Miller directly ripped from Wikipedia. */
-    product                  = n->rand * 48271;
-    x                        = (product & 0x7fffffff) + (product >> 31);
-    n->rand                  = x;
-    n->white[offset + i].l.n = x;
-    product                  = n->rand * 48271;
-    x                        = (product & 0x7fffffff) + (product >> 31);
-    n->rand                  = x;
-    n->white[offset + i].r.n = x;
+  for (; i < AUDIO_CHUNK_SIZE ; i += 2, n->phase += 2) {
+    /* Each step fills two audio frames with both white and pink noise. This is
+     * because the lookup index of pink noise bands can store two consecutive
+     * values in the same address. It's safe to advance two frames at once
+     * because audio chunks are a power of two. 
+     * Pink noise uses recycled white noise in Voss-McCartney.
+     * White noise is Park-Miller directly ripped from Wikipedia. */
+    next2Bands                   = n->bandIdxs[n->phase >> 1];
+    band1                        = next2Bands & 15;
+    band2                        = next2Bands & 240;
+    x                            = n->white[offset + i].l.n;
+    n->pink[offset + i].l.n      = pinkSample(&n->lPink, band1, x);
+    x                            = n->white[offset + i].r.n;
+    n->pink[offset + i].r.n      = pinkSample(&n->lPink, band1, x);
+    product                      = n->rand * 48271;
+    x                            = (product & 0x7fffffff) + (product >> 31);
+    n->rand                      = x;
+    n->white[offset + i].l.n     = x;
+    product                      = n->rand * 48271;
+    x                            = (product & 0x7fffffff) + (product >> 31);
+    n->rand                      = x;
+    n->white[offset + i].r.n     = x;
+    x                            = n->white[offset + i + 1].l.n;
+    n->pink[offset + i + 1].l.n  = pinkSample(&n->lPink, band2, x);
+    x                            = n->white[offset + i + 1].r.n;
+    n->pink[offset + i + 1].r.n  = pinkSample(&n->lPink, band2, x);
+    product                      = n->rand * 48271;
+    x                            = (product & 0x7fffffff) + (product >> 31);
+    n->rand                      = x;
+    n->white[offset + i + 1].l.n = x;
+    product                      = n->rand * 48271;
+    x                            = (product & 0x7fffffff) + (product >> 31);
+    n->rand                      = x;
+    n->white[offset + i + 1].r.n = x;
   }
 }
 
