@@ -1,0 +1,18 @@
+#pragma once
+
+#include "../audio/sample.h"
+#include "../chunk/chunk.h"
+
+typedef enum VoiceStatus {
+  VOICE_FREE = 0,
+  VOICE_PLAYING,
+  VOICE_RELEASED,
+  VOICE_STOLEN
+} VoiceStatus;
+
+typedef struct Voice {
+  VoiceStatus status;
+  AudioFrame  audio[AUDIO_CHUNK_SIZE];
+} Voice;
+
+void voice(Voice *);
