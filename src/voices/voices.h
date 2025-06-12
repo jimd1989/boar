@@ -1,27 +1,16 @@
 #pragma once
 
 #include "voice.h"
-
-#define VOICES_SIZE 8
-
-typedef struct VoiceStack {
-  int     count;
-  Voice * voices[VOICES_SIZE];
-} VoiceStack;
-
-typedef struct VoiceQueue {
-  int     count;
-  int     readPos;
-  int     writePos;
-  Voice * voices[VOICES_SIZE];
-} VoiceQueue;
+#include "voice_list.h"
+#include "voice_stack.h"
 
 typedef struct Voices {
-  VoiceQueue  playing;
-  VoiceQueue  released;
+  VoiceList   playing;
+  VoiceList   released;
   VoiceStack  free;
   VoiceStack  stolen;
   Voice       voices[VOICES_SIZE];
 } Voices;
 
+Voice * getVoice(Voices *);
 void voices(Voices *);
