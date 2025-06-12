@@ -6,6 +6,7 @@
 
 #define NOISE_PINK_BANDS 8
 #define NOISE_PINK_BITS 3
+#define NOISE_PINK_IDXS 128
 
 typedef struct PinkNoise {
   uint32_t  bands[NOISE_PINK_BANDS];
@@ -17,6 +18,7 @@ typedef struct Noise {
   uint64_t      rand;
   PinkNoise     lPink;
   PinkNoise     rPink;
+  uint8_t       bandIdxs[NOISE_PINK_IDXS];
   AudioFrame  * white;
   AudioFrame  * pink;
 } Noise;

@@ -3,7 +3,7 @@ PREFIX = /usr/local
 
 .SUFFIXES:
 all:
-	cc -O3 -Wall -Wextra -Wno-missing-field-initializers -pedantic -lm -lsndio src/parse/*.c src/noise/*.c src/audio/*.c src/repl/*.c src/curves/*.c src/*.c -o "boar"
+	cc -O3 -Wall -Wextra -Wno-missing-field-initializers -pedantic -lm -lsndio src/parse/*.c src/noise/*.c src/audio/*.c src/repl/*.c src/curves/*.c src/control/*.c src/*.c -o "boar"
 	cc -O3 -Wall -Wextra -Wno-missing-field-initializers -pedantic -lsndio src/midi/*.c -o "midi-boar"
 install:
 	mkdir -p $(PREFIX)/bin
