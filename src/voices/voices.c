@@ -12,6 +12,7 @@ Voice * getVoice(Voices *vs) {
     return v;
   } else {
     /* Stealing either oldest released voice or oldest playing voice */
+    /* Need some way to indicate stolen? */
     v = carVoiceList(&vs->released);
     if (v == NULL) { v = carVoiceList(&vs->playing); }
     return v;
