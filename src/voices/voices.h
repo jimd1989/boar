@@ -13,4 +13,7 @@ typedef struct Voices {
 } Voices;
 
 Voice * getVoice(Voices *);
+void playVoice(Voices *, Voice *);
+void releaseVoice(Voices *, Voice *);
 void voices(Voices *);
+void printVoices(Voices *);

@@ -11,3 +11,4 @@ void appendVoiceList(VoiceList *, Voice *);
 void removeVoiceList(VoiceList *, Voice *);
 Voice * carVoiceList(VoiceList *);
 void voiceList(VoiceList *);
+void printVoiceList(VoiceList *);

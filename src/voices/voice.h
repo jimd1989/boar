@@ -6,12 +6,14 @@
 #define VOICES_SIZE 8
 
 typedef struct Voice {
+  /* Need some kind of "prev inc" to interpolate voice stealing */
+  float             inc;
+  float             vel;
   /* Every voice is doubly-linked to allow O(1) removal during note-off */
-  int             note; /* Should eventually be complex pitch struct */
-  /* Need some kind of "prev pitch" to interpolate voice stealing */
-  struct Voice  * next;
-  struct Voice  * prev;
-  AudioFrame      audio[AUDIO_CHUNK_SIZE];
+  struct Voice  *   next;
+  struct Voice  *   prev;
+  struct Voice  **  key; /* Associated keyboard position (stealing) */
+  AudioFrame        audio[AUDIO_CHUNK_SIZE];
 } Voice;
 
 void voice(Voice *);

@@ -10,3 +10,4 @@ typedef struct VoiceStack {
 Voice * popVoiceStack(VoiceStack *);
 void pushVoiceStack(VoiceStack *, Voice *);
 void voiceStack(VoiceStack *);
+void printVoiceStack(VoiceStack *);

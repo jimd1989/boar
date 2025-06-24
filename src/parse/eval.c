@@ -14,8 +14,8 @@ static void evalPure(CmdPure, Cursor *, Control *);
 static void evalVol(Cursor *, Control *);
 static void evalAttack(Cursor *);
 static void evalComment(Cursor *);
-static void evalNoteOff(Cursor *);
-static void evalNoteOn(Cursor *);
+static void evalNoteOff(Cursor *, Control *);
+static void evalNoteOn(Cursor *, Control *);
 static void evalWave(Cursor *);
 
 static void evalVol(Cursor *c, Control *co) {
@@ -37,7 +37,7 @@ static void evalComment(Cursor *c) {
   c->breakReason = CURSOR_LINE_END;
 }
 
-static void evalNoteOff(Cursor *c) {
+static void evalNoteOff(Cursor *c, Control *co) {
   int8_t note = 0;
   int8_t vel  = 0;
   CURSOR_BOUND_PARSE(parseBoundInt, c, 0, 127);
@@ -47,10 +47,10 @@ static void evalNoteOff(Cursor *c) {
     CURSOR_BOUND_PARSE(parseBoundInt, c, 0, 127);
     vel = c->val.n;
   }
-  warnx("Note off %d %d", note, vel);
+  noteOff(co, note, vel);
 }
 
-static void evalNoteOn(Cursor *c) {
+static void evalNoteOn(Cursor *c, Control *co) {
   int8_t note = 0;
   int8_t vel  = 127;
   CURSOR_BOUND_PARSE(parseBoundInt, c, 0, 127);
@@ -60,7 +60,7 @@ static void evalNoteOn(Cursor *c) {
     CURSOR_BOUND_PARSE(parseBoundInt, c, 0, 127);
     vel = c->val.n;
   }
-  warnx("Note %s %d %d", vel == 0 ? "off" : "on", note, vel);
+  vel == 0 ? noteOff(co, note, vel) : noteOn(co, note, vel);
 }
 
 static void evalWave(Cursor *c) {
@@ -77,10 +77,10 @@ static void evalWave(Cursor *c) {
 static void evalPure(CmdPure cmd, Cursor *c, Control *co) {
   switch (cmd) {
     case CMD_NOTE_ON:
-      evalNoteOn(c);
+      evalNoteOn(c, co);
       break;
     case CMD_NOTE_OFF:
-      evalNoteOff(c);
+      evalNoteOff(c, co);
       break;
     case CMD_BEND:
       break;
