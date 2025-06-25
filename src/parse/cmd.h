@@ -52,7 +52,7 @@ typedef enum {
 } CmdColon;
 
 typedef enum {
-  CMD_PLUS_UNKNOWN = 0
+  CMD_PLUS_ZONE    = 122 /* z+ */
 } CmdPlus;
 
 typedef struct CmdAlphabet {

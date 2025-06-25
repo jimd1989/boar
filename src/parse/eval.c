@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -5,18 +6,21 @@
 
 #include "../control/control.h"
 #include "../control/volume.h"
+#include "../voices/voice.h"
 #include "cmd.h"
 #include "cursor.h"
 #include "eval.h"
 #include "parameter.h"
 
 static void evalPure(CmdPure, Cursor *, Control *);
+static void evalPlus(CmdPlus, Cursor *, Control *);
 static void evalVol(Cursor *, Control *);
 static void evalAttack(Cursor *);
 static void evalComment(Cursor *);
 static void evalNoteOff(Cursor *, Control *);
 static void evalNoteOn(Cursor *, Control *);
 static void evalWave(Cursor *);
+static void evalZone(Cursor *, Control *);
 
 static void evalVol(Cursor *c, Control *co) {
   CURSOR_BOUND_PARSE(parseBoundFloat, c, 0.0f, 1.0f);
@@ -73,6 +77,14 @@ static void evalWave(Cursor *c) {
   warnx("Osc %d set to wave %s", osc, wave);
 }
 
+static void evalZone(Cursor *c, Control *co) {
+  CURSOR_BOUND_PARSE(parseNullableBoundFloat, c, 1.0f, (float)VOICES_SIZE);
+  if (isnan(c->val.f)) {
+    warnx("Bottom-end zoning %p", (void *)co);
+  } else {
+    warnx("Even-split zoning %p", (void *)co);
+  }
+}
 
 static void evalPure(CmdPure cmd, Cursor *c, Control *co) {
   switch (cmd) {
@@ -101,9 +113,18 @@ static void evalPure(CmdPure cmd, Cursor *c, Control *co) {
   }
 }
 
+static void evalPlus(CmdPlus cmd, Cursor *c, Control *co) {
+  switch (cmd) {
+    case CMD_PLUS_ZONE:
+      evalZone(c, co);
+      break;
+  }
+}
+
 void eval(Cursor *c, Control *co) {
   Cmd cmd = c->val.n;
   if      (IS_CMD_DOT(cmd))   { return; }
   else if (IS_CMD_COLON(cmd)) { return; }
+  else if (IS_CMD_PLUS(cmd))  { evalPlus(CMD_CHAR(cmd), c, co); }
   else                        { evalPure(CMD_CHAR(cmd), c, co); }
 }

@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,6 +57,21 @@ void parseFloat(Cursor *c) {
 
 void parseBoundFloat(Cursor *c, float min, float max) {
   float f = 0.0f;
+  parseFloat(c);
+  f = c->val.f;
+  if (f < min || f > max) {
+    c->breakReason = CURSOR_ERROR;
+  }
+}
+
+void parseNullableBoundFloat(Cursor *c, float min, float max) {
+  float f = 0.0f;
+  if (CURSOR_HEAD(c) == '_') { 
+    c->pos++;
+    c->breakReason = CURSOR_PARAMETER_END;
+    c->val.f       = NAN;
+    return;
+  }
   parseFloat(c);
   f = c->val.f;
   if (f < min || f > max) {
