@@ -64,21 +64,6 @@ void parseBoundFloat(Cursor *c, float min, float max) {
   }
 }
 
-void parseNullableBoundFloat(Cursor *c, float min, float max) {
-  float f = 0.0f;
-  if (CURSOR_HEAD(c) == '_') { 
-    c->pos++;
-    c->breakReason = CURSOR_PARAMETER_END;
-    c->val.f       = NAN;
-    return;
-  }
-  parseFloat(c);
-  f = c->val.f;
-  if (f < min || f > max) {
-    c->breakReason = CURSOR_ERROR;
-  }
-}
-
 void parseString(Cursor *c) {
   int start = c->pos;
   while (strchr(BOUNDS_CHARS, CURSOR_HEAD(c)) == NULL) { c->pos++; }
@@ -86,4 +71,18 @@ void parseString(Cursor *c) {
   c->input[c->pos] = '\0';
   c->val.s = &c->input[start];
   c->pos++;
+}
+
+void parseNullableBoundFloat(Cursor *c, float min, float max) {
+  float f = 0.0f;
+  if (CURSOR_HEAD(c) == '_') {
+    parseString(c);
+    c->val.f = NAN;
+    return;
+  }
+  parseFloat(c);
+  f = c->val.f;
+  if (f < min || f > max) {
+    c->breakReason = CURSOR_ERROR;
+  }
 }
