@@ -46,8 +46,8 @@ void removeVoiceList(VoiceList *vl, Voice *v) {
 Voice * carVoiceList(VoiceList *vl) {
   Voice *v = vl->head;
   if (v != NULL) {
-    vl->head       = v->next;
-    vl->head->prev = NULL;
+    vl->head = v->next;
+    if (vl->head != NULL) { vl->head->prev = NULL; }
     v->prev  = NULL;
     v->next  = NULL;
   }
