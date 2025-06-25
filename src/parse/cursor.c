@@ -15,6 +15,8 @@ CursorBreakReason breakReason(char c) {
   CursorBreakReason r = c == ' '  ? CURSOR_PARAMETER_END :
                         c == '\t' ? CURSOR_PARAMETER_END :
                         c == ';'  ? CURSOR_CMD_END       :
+                        c == '['  ? CURSOR_CMD_END       :
+                        c == ']'  ? CURSOR_CMD_END       :
                         c == '\n' ? CURSOR_LINE_END      :
                         c == '\0' ? CURSOR_LINE_END      : CURSOR_ERROR;
   return r;
