@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdio.h>
 #include <unistd.h>
 
 #include "keyboard.h"
@@ -12,4 +13,13 @@ void keyboard(Keyboard *kb) {
     kb->keys[i].voice = NULL;
     freq              = KEYBOARD_LOWEST_FREQ * powf(2.0f, (float)++i / 12);
   }
+}
+
+void printKeyboard(Keyboard *kb) {
+  int i = 0;
+  printf("[ ");
+  for (; i < KEYBOARD_SIZE ; i++) {
+    if (kb->keys[i].voice != NULL) { printf("%d ", i); }
+  }
+  printf("]\n");
 }

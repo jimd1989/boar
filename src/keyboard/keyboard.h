@@ -19,3 +19,4 @@ typedef struct Keyboard {
 } Keyboard;
 
 void keyboard(Keyboard *);
+void printKeyboard(Keyboard *);

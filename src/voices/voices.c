@@ -1,3 +1,5 @@
+#include <err.h>
+
 #include <stdio.h>
 #include <unistd.h>
 
@@ -12,9 +14,12 @@ Voice * getVoice(Voices *vs) {
     v = popVoiceStack(&vs->free);
     return v;
   } else {
+    warnx("STEALING VOICE");
     /* Stealing either oldest released voice or oldest playing voice */
     v = carVoiceList(&vs->released);
-    if (v == NULL) { v = carVoiceList(&vs->playing); }
+    if (v == NULL) { 
+      v = carVoiceList(&vs->playing);
+    }
     /* How to communicate back to keyboard? */
     *v->key = NULL;
     return v;
@@ -23,11 +28,22 @@ Voice * getVoice(Voices *vs) {
 
 void playVoice(Voices *vs, Voice *v) {
   appendVoiceList(&vs->playing, v);
+  v->status = VOICE_PLAYING;
 }
 
 void releaseVoice(Voices *vs, Voice *v) {
   removeVoiceList(&vs->playing, v);
   appendVoiceList(&vs->released, v);
+  v->status = VOICE_RELEASED;
+}
+
+void retriggerVoice(Voices *vs, Voice *v) {
+  if (v->status == VOICE_RELEASED) {
+    removeVoiceList(&vs->released, v);
+    appendVoiceList(&vs->playing, v);
+    v->status = VOICE_PLAYING;
+  }
+  /* Restart envelope when it exists */
 }
 
 void voices(Voices *vs) {

@@ -21,7 +21,7 @@ void voiceStack(VoiceStack *vs) {
 void printVoiceStack(VoiceStack *vs) {
   int i = vs->count - 1;
   while (i >= 0) {
-    printf("%p → ", (void *)vs->voices[i--]);
+    printf("%p:∅ → ", (void *)vs->voices[i--]);
   }
   printf("∅\n");
 }

@@ -5,8 +5,17 @@
 
 #define VOICES_SIZE 8
 
+typedef enum VoiceStatus {
+  VOICE_FREE = 0,
+  VOICE_PLAYING,
+  VOICE_RELEASED,
+  VOICE_STOLEN
+} VoiceStatus;
+
 typedef struct Voice {
+  VoiceStatus       status;
   /* Need some kind of "prev inc" to interpolate voice stealing */
+  int               note;
   float             inc;
   float             vel;
   /* Every voice is doubly-linked to allow O(1) removal during note-off */

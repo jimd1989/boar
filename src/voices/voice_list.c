@@ -1,3 +1,5 @@
+#include <err.h>
+
 #include <stdio.h>
 #include <unistd.h>
 
@@ -6,8 +8,11 @@
 
 void appendVoiceList(VoiceList *vl, Voice *v) {
   if (vl->head == NULL) {
+    /* empty list */
     vl->head = v;
     vl->last = v;
+    /* vl->head->prev = NULL; */
+    /* vl->last->next = NULL; */
   } else {
     v->prev        = vl->last;
     vl->last->next = v;
@@ -17,17 +22,20 @@ void appendVoiceList(VoiceList *vl, Voice *v) {
 
 void removeVoiceList(VoiceList *vl, Voice *v) {
   if (v->prev == NULL && v->next == NULL) {
-    /* One item list; clear it */
+    /* Single-item list: blank it */
     voiceList(vl);
   } else if (v->prev == NULL) {
-    /* Remove head of list */
+    /* Head of list */
+    warnx("--HEAD--");
     vl->head       = v->next;
     vl->head->prev = NULL;
   } else if (v->next == NULL) {
-    /* Remove last item of list */
+    warnx("--LAST--");
+    /* End of list */
     vl->last       = v->prev;
     vl->last->next = NULL;
   } else {
+    warnx("--MIDDLE--");
     v->prev->next = v->next;
     v->next->prev = v->prev;
   }
@@ -38,7 +46,8 @@ void removeVoiceList(VoiceList *vl, Voice *v) {
 Voice * carVoiceList(VoiceList *vl) {
   Voice *v = vl->head;
   if (v != NULL) {
-    vl->head = vl->head->next;
+    vl->head       = v->next;
+    vl->head->prev = NULL;
     v->prev  = NULL;
     v->next  = NULL;
   }
@@ -54,7 +63,7 @@ void printVoiceList(VoiceList *vl) {
   int i = 0;
   Voice *v = vl->head;
   while (v != NULL) {
-    printf("%p → ", (void *)v);
+    printf("%p:%d → ", (void*)v, v->note);
     v = v->next;
     i++;
     if (i > 8) {
