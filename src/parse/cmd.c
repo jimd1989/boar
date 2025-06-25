@@ -56,6 +56,14 @@ void parseCmd(Cursor *c, CmdAlphabet a) {
       warnx("cmd not found %c:", head);
       c->breakReason = CURSOR_ERROR;
     }
+  } else if (decorator == '+') {
+    if (cmdExists(head, a.plus)) {
+      c->val.n = CMD_PLUS(head); 
+      c->pos++; 
+    } else {
+      warnx("cmd not found %c:", head);
+      c->breakReason = CURSOR_ERROR;
+    }
   } else { 
     if (cmdExists(head, a.pure)) {
       c->val.n = CMD_PURE(head); 
