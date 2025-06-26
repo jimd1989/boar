@@ -18,6 +18,7 @@ Voice * getVoice(Voices *vs) {
     /* Deactivate the keyboard key associated with the stolen voice.
      * It will be reassigned outside of this function. */
     *v->key = NULL;
+    v->key  = NULL;
     return v;
   }
 }
@@ -40,6 +41,13 @@ void retriggerVoice(Voices *vs, Voice *v) {
     v->status = VOICE_PLAYING;
   }
   /* Restart envelope when it exists */
+}
+
+void drainVoices(Voices *vs) {
+  drainVoiceList(&vs->playing);
+  drainVoiceList(&vs->released);
+  drainVoiceStack(&vs->stolen);
+  drainVoiceStack(&vs->free);
 }
 
 void voices(Voices *vs) {

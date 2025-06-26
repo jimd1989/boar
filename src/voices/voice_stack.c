@@ -12,11 +12,21 @@ void pushVoiceStack(VoiceStack *vs, Voice *v) {
   vs->voices[vs->count++] = v;
 }
 
+void drainVoiceStack(VoiceStack *vs) {
+  Voice *v = NULL;
+  while (vs->count > 0) {
+    v = popVoiceStack(vs);
+    freeVoice(v);
+  }
+}
+
+
 void voiceStack(VoiceStack *vs) {
   int i = 0;
   vs->count = 0;
   for (; i < VOICES_SIZE; i++) { vs->voices[i] = NULL; }
 }
+
 
 void printVoiceStack(VoiceStack *vs) {
   int i = vs->count - 1;

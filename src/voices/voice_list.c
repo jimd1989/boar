@@ -1,5 +1,3 @@
-#include <err.h>
-
 #include <stdio.h>
 #include <unistd.h>
 
@@ -11,8 +9,6 @@ void appendVoiceList(VoiceList *vl, Voice *v) {
     /* empty list */
     vl->head = v;
     vl->last = v;
-    /* vl->head->prev = NULL; */
-    /* vl->last->next = NULL; */
   } else {
     v->prev        = vl->last;
     vl->last->next = v;
@@ -26,16 +22,13 @@ void removeVoiceList(VoiceList *vl, Voice *v) {
     voiceList(vl);
   } else if (v->prev == NULL) {
     /* Head of list */
-    warnx("--HEAD--");
     vl->head       = v->next;
     vl->head->prev = NULL;
   } else if (v->next == NULL) {
-    warnx("--LAST--");
     /* End of list */
     vl->last       = v->prev;
     vl->last->next = NULL;
   } else {
-    warnx("--MIDDLE--");
     v->prev->next = v->next;
     v->next->prev = v->prev;
   }
@@ -52,6 +45,17 @@ Voice * carVoiceList(VoiceList *vl) {
     v->next  = NULL;
   }
   return v;
+}
+
+void drainVoiceList(VoiceList *vl) {
+  Voice *v = NULL;
+  while (vl->head != NULL) {
+    v = vl->head;
+    vl->head = v->next;
+    freeVoice(v);
+  }
+  vl->head = NULL;
+  vl->last = NULL;
 }
 
 void voiceList(VoiceList *vl) {

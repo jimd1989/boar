@@ -1,5 +1,3 @@
-#include <err.h>
-
 #include <stdint.h>
 #include <unistd.h>
 
@@ -21,9 +19,8 @@ void noteOn(Control *c, uint8_t note, uint8_t vel) {
   Key *k     = &c->keyboard.keys[note];
   Voices *vs = &c->voiceZones.zones[k->zone]; 
   Voice *v   = NULL;
-  /* Retrigger active voice */
   if (k->voice != NULL) {
-    warnx("RETRIGGER %d %p", note, (void *)k->voice->prev);
+    /* Retrigger an active voice */
     v      = k->voice;
     v->vel = (float)vel * CONTROL_127_DIV;
     retriggerVoice(vs, v);
@@ -31,7 +28,6 @@ void noteOn(Control *c, uint8_t note, uint8_t vel) {
     printKeyboard(&c->keyboard);
     return;
   }
-  warnx("NOTE ON %d", note);
   v        = getVoice(vs);
   v->note  = note;
   v->inc   = k->inc;
@@ -48,8 +44,7 @@ void noteOff(Control *c, uint8_t note, uint8_t vel) {
   Key *k     = &c->keyboard.keys[note];
   Voices *vs = &c->voiceZones.zones[k->zone]; 
   Voice *v   = k->voice;
-  warnx("NOTE OFF %d", note);
-  if (v == NULL) { return; /* Voice was stolen and held key is silent */ }
+  if (v == NULL) { return; /* Voice was already stolen. */ }
   v->vel   = (float)vel * CONTROL_127_DIV;
   releaseVoice(vs, v);
   printVoices(vs);

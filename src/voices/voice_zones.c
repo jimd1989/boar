@@ -1,9 +1,20 @@
 #include <unistd.h>
 
+#include <err.h>
+
 #include "../keyboard/keyboard.h"
 #include "voice.h"
 #include "voice_stack.h"
 #include "voice_zones.h"
+
+static void resetAllVoices(VoiceZones *);
+
+static void resetAllVoices(VoiceZones *vz) {
+  int i = 0;
+  for (; i < VOICES_SIZE ; i++) { 
+    drainVoices(&vz->zones[i]);
+  }
+}
 
 void splitZonesEvenly(VoiceZones *vz, Keyboard *kb, int n) {
   /* Splits keyboard into independent polyphonic zones. Intended for traditional
@@ -14,6 +25,8 @@ void splitZonesEvenly(VoiceZones *vz, Keyboard *kb, int n) {
   int keysPerZone   = KEYBOARD_SIZE / n;
   int voicesPerZone = VOICES_SIZE / n;
   VoiceStack *vs    = NULL;
+  resetAllVoices(vz);
+  printKeyboard(kb);
   for (; i < KEYBOARD_SIZE ; z++) {
     for (j = 0 ; j < keysPerZone ; i++, j++) {
       kb->keys[i].zone = z;
@@ -34,6 +47,7 @@ void splitZonesWithLeftovers(VoiceZones *vz, Keyboard *kb, int min, int n) {
    * dedicated timbre. */
   int i = 0;
   int z = 0;
+  resetAllVoices(vz);
   for (; i < min ; i ++) {
     kb->keys[i].zone = z;
   }

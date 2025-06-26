@@ -15,7 +15,6 @@ typedef struct VoiceZones {
   Voice   voices[VOICES_SIZE];
 } VoiceZones;
 
-
 void splitZonesEvenly(VoiceZones *, Keyboard *, int);
 void splitZonesWithLeftovers(VoiceZones *, Keyboard *, int, int);
 void voiceZones(VoiceZones *, Keyboard *);

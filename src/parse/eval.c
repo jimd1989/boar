@@ -7,10 +7,13 @@
 #include "../control/control.h"
 #include "../control/volume.h"
 #include "../voices/voice.h"
+#include "../voices/voice_zones.h"
 #include "cmd.h"
 #include "cursor.h"
 #include "eval.h"
 #include "parameter.h"
+
+#define IS_FLOAT_NULL isnan
 
 static void evalPure(CmdPure, Cursor *, Control *);
 static void evalPlus(CmdPlus, Cursor *, Control *);
@@ -42,6 +45,8 @@ static void evalComment(Cursor *c) {
 }
 
 static void evalNoteOff(Cursor *c, Control *co) {
+  /* o n   → Note off, 0 velocity
+   * o n v → Note off, v velocity */
   int8_t note = 0;
   int8_t vel  = 0;
   CURSOR_BOUND_PARSE(parseBoundInt, c, 0, 127);
@@ -55,6 +60,9 @@ static void evalNoteOff(Cursor *c, Control *co) {
 }
 
 static void evalNoteOn(Cursor *c, Control *co) {
+  /* n m   → Note on, full velocity
+   * n m v → Note on, v velocity
+   * n m 0 → Note off (Some MIDI devices signal off this way) */
   int8_t note = 0;
   int8_t vel  = 127;
   CURSOR_BOUND_PARSE(parseBoundInt, c, 0, 127);
@@ -78,11 +86,20 @@ static void evalWave(Cursor *c) {
 }
 
 static void evalZone(Cursor *c, Control *co) {
+  /* z+ n     → split zones evenly 
+   * z+ _ n m → split zones with leftovers
+   * Will instantly mute all voices. Might be a click. */
+  int n     = 0;
   CURSOR_BOUND_PARSE(parseNullableBoundFloat, c, 1.0f, (float)VOICES_SIZE);
-  if (isnan(c->val.f)) {
+  if (IS_FLOAT_NULL(c->val.f)) {
     warnx("Bottom-end zoning %p", (void *)co);
   } else {
-    warnx("Even-split zoning %p", (void *)co);
+    n  = (int)c->val.f;
+    /* Truncate [1, 8] to power of 2 for even zoning. */
+    n |= n >> 1;
+    n |= n >> 2;
+    n  = n - (n >> 1);
+    splitZonesEvenly(&co->voiceZones, &co->keyboard, n);
   }
 }
 

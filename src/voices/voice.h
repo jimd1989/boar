@@ -5,6 +5,9 @@
 
 #define VOICES_SIZE 8
 
+/* Not the same thing as an envelope, but related. Mostly used to prioritize
+ * voice stealing. Some of these statuses may not actually be needed at
+ * runtime. */
 typedef enum VoiceStatus {
   VOICE_FREE = 0,
   VOICE_PLAYING,
@@ -14,7 +17,7 @@ typedef enum VoiceStatus {
 
 typedef struct Voice {
   VoiceStatus       status;
-  /* Need some kind of "prev inc" to interpolate voice stealing */
+  /* These key-derived values may be factored out into their own struct. */
   int               note;
   float             inc;
   float             vel;
@@ -25,4 +28,5 @@ typedef struct Voice {
   AudioFrame        audio[AUDIO_CHUNK_SIZE];
 } Voice;
 
+void freeVoice(Voice *);
 void voice(Voice *);

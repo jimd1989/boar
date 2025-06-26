@@ -26,5 +26,6 @@ Voice * getVoice(Voices *);
 void playVoice(Voices *, Voice *);
 void releaseVoice(Voices *, Voice *);
 void retriggerVoice(Voices *, Voice *);
+void drainVoices(Voices *);
 void voices(Voices *);
 void printVoices(Voices *);

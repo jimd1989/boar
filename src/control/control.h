@@ -10,6 +10,7 @@
 
 #define CONTROL_127_DIV 0.0078740157480315f
 
+/* Governs "low-res" parameter changes: those outside of the core DSP loop. */
 typedef struct Control {
   Curves      curves;
   Keyboard    keyboard;
