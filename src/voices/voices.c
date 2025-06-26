@@ -1,5 +1,3 @@
-#include <err.h>
-
 #include <stdio.h>
 #include <unistd.h>
 
@@ -14,13 +12,11 @@ Voice * getVoice(Voices *vs) {
     v = popVoiceStack(&vs->free);
     return v;
   } else {
-    warnx("STEALING VOICE");
     /* Stealing either oldest released voice or oldest playing voice */
     v = carVoiceList(&vs->released);
-    if (v == NULL) { 
-      v = carVoiceList(&vs->playing);
-    }
-    /* How to communicate back to keyboard? */
+    if (v == NULL) { v = carVoiceList(&vs->playing); }
+    /* Deactivate the keyboard key associated with the stolen voice.
+     * It will be reassigned outside of this function. */
     *v->key = NULL;
     return v;
   }
@@ -47,15 +43,12 @@ void retriggerVoice(Voices *vs, Voice *v) {
 }
 
 void voices(Voices *vs) {
-  int i = 0;
+  /* Once initiated, no actual Voice structs are assigned to these data
+   * structures. These will be allocated by the VoiceZones object instead. */
   voiceList(&vs->playing);
   voiceList(&vs->released);
   voiceStack(&vs->free);
   voiceStack(&vs->stolen);
-  for (; i < VOICES_SIZE ; i++) {
-    voice(&vs->voices[i]);
-    pushVoiceStack(&vs->free, &vs->voices[i]);
-  }
 }
 
 void printVoices(Voices *vs) {
