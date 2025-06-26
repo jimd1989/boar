@@ -9,6 +9,7 @@
 #define KEYBOARD_FREQ_INC ((float)CURVE_LEN / (float)AUDIO_SAMPLE_RATE)
 
 typedef struct Key {
+  int     zone;
   float   freq;
   float   inc;
   Voice * voice;
