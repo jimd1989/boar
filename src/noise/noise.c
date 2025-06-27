@@ -30,6 +30,9 @@ static void bandIdxs(uint8_t idxs[NOISE_PINK_IDXS]) {
     count2 = 0;
     n = i + 1;
     while ((n & 1) == 0 && n != 0) { count2++; n >>= 1; }
+    /* This is stupid because it's always zero. Leaving it for now. Dunno
+     * if the storage can be halved because of this, or if it's conceptually
+     * simpler to just keep everything as is. */
     idxs[i >> 1] = (count2 << 4) | count1;
   }
 }
