@@ -40,10 +40,9 @@ static void bandIdxs(uint8_t idxs[NOISE_PINK_IDXS]) {
 void noise(Noise *n, int size) {
   n->phase = 0;
   n->rand  = 1; /* No need for unique seed */
-  pinkNoise(&n->lPink);
-  pinkNoise(&n->rPink);
-  n->white = calloc(size, sizeof(AudioFrame));
-  n->pink  = calloc(size, sizeof(AudioFrame));
+  pinkNoise(&n->pinkGenerator);
+  n->white = calloc(size, sizeof(AudioSample));
+  n->pink  = calloc(size, sizeof(AudioSample));
   bandIdxs(n->bandIdxs);
 }
 
@@ -68,33 +67,21 @@ void fillNoiseChunk(Noise *n, int offset) {
      * because audio chunks are a power of two. 
      * Pink noise uses recycled white noise in Voss-McCartney.
      * White noise is Park-Miller directly ripped from Wikipedia. */
-    next2Bands                   = n->bandIdxs[n->phase >> 1];
-    band1                        = next2Bands & 15;
-    band2                        = next2Bands & 240;
-    x                            = n->white[offset + i].l.n;
-    n->pink[offset + i].l.n      = pinkSample(&n->lPink, band1, x);
-    x                            = n->white[offset + i].r.n;
-    n->pink[offset + i].r.n      = pinkSample(&n->lPink, band1, x);
-    product                      = n->rand * 48271;
-    x                            = (product & 0x7fffffff) + (product >> 31);
-    n->rand                      = x;
-    n->white[offset + i].l.n     = x;
-    product                      = n->rand * 48271;
-    x                            = (product & 0x7fffffff) + (product >> 31);
-    n->rand                      = x;
-    n->white[offset + i].r.n     = x;
-    x                            = n->white[offset + i + 1].l.n;
-    n->pink[offset + i + 1].l.n  = pinkSample(&n->lPink, band2, x);
-    x                            = n->white[offset + i + 1].r.n;
-    n->pink[offset + i + 1].r.n  = pinkSample(&n->lPink, band2, x);
-    product                      = n->rand * 48271;
-    x                            = (product & 0x7fffffff) + (product >> 31);
-    n->rand                      = x;
-    n->white[offset + i + 1].l.n = x;
-    product                      = n->rand * 48271;
-    x                            = (product & 0x7fffffff) + (product >> 31);
-    n->rand                      = x;
-    n->white[offset + i + 1].r.n = x;
+    next2Bands                 = n->bandIdxs[n->phase >> 1];
+    band1                      = next2Bands & 15;
+    band2                      = next2Bands & 240;
+    x                          = n->white[offset + i].n;
+    n->pink[offset + i].n      = pinkSample(&n->pinkGenerator, band1, x);
+    product                    = n->rand * 48271;
+    x                          = (product & 0x7fffffff) + (product >> 31);
+    n->rand                    = x;
+    n->white[offset + i].n     = x;
+    x                          = n->white[offset + i + 1].n;
+    n->pink[offset + i + 1].n  = pinkSample(&n->pinkGenerator, band2, x);
+    product                    = n->rand * 48271;
+    x                          = (product & 0x7fffffff) + (product >> 31);
+    n->rand                    = x;
+    n->white[offset + i + 1].n = x;
   }
 }
 

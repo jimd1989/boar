@@ -10,7 +10,7 @@ typedef struct InternalBuffer {
   int           frames;
   Noise         noise;
   Control     * control;
-  AudioFrame  * audio;
+  AudioSample * audio;
 } InternalBuffer;
 
 void internalBuffer(InternalBuffer *, int, Control *);

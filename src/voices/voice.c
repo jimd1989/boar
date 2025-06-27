@@ -1,5 +1,8 @@
+#include <string.h>
 #include <unistd.h>
 
+#include "../audio/sample.h"
+#include "../chunk/chunk.h"
 #include "voice.h"
 
 void freeVoice(Voice *v) {
@@ -15,4 +18,5 @@ void voice(Voice *v) {
   v->key    = NULL;
   v->prev   = NULL;
   v->next   = NULL;
+  memset(v->audio, 0, AUDIO_CHUNK_SIZE * sizeof(AudioSample));
 }

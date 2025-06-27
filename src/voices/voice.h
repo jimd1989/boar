@@ -25,7 +25,7 @@ typedef struct Voice {
   struct Voice  *   next;
   struct Voice  *   prev;
   struct Voice  **  key; /* Associated keyboard position (stealing) */
-  AudioFrame        audio[AUDIO_CHUNK_SIZE];
+  AudioSample       audio[AUDIO_CHUNK_SIZE];
 } Voice;
 
 void freeVoice(Voice *);

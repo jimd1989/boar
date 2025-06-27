@@ -16,11 +16,10 @@ typedef struct PinkNoise {
 typedef struct Noise {
   uint8_t       phase;
   uint64_t      rand;
-  PinkNoise     lPink;
-  PinkNoise     rPink;
+  PinkNoise     pinkGenerator;
   uint8_t       bandIdxs[NOISE_PINK_IDXS];
-  AudioFrame  * white;
-  AudioFrame  * pink;
+  AudioSample * white;
+  AudioSample * pink;
 } Noise;
 
 void noise(Noise *, int);

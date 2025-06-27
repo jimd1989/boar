@@ -12,7 +12,7 @@ void internalBuffer(InternalBuffer *i, int frames, Control *c) {
   i->pos       = 0;
   i->frames    = frames;
   i->chunks    = AUDIO_CHUNK_DIV(i->frames);
-  i->audio     = calloc(i->frames, sizeof(AudioFrame));
+  i->audio     = calloc(i->frames, sizeof(AudioSample));
   i->control   = c;
   noise(&i->noise, i->frames);
   warnx("dsp →\tframes: %d\tchunk size: %d", i->frames, AUDIO_CHUNK_SIZE);
@@ -29,13 +29,10 @@ void fillAudio(InternalBuffer *in, int chunks) {
     /* Need actual DSP matrix here */
     for (j = 0; j < AUDIO_CHUNK_SIZE ; j++) {
       fillVolChunk(&in->control->vol, v);
-      k                = j + (in->pos * AUDIO_CHUNK_SIZE);
-      f                = NOISE_FLOAT(in->noise.pink[k].l.n);
-      f               *= in->control->vol.val;
-      in->audio[k].l.f = f;
-      f                = NOISE_FLOAT(in->noise.pink[k].r.n);
-      f               *= in->control->vol.val;
-      in->audio[k].r.f = f;
+      k              = j + (in->pos * AUDIO_CHUNK_SIZE);
+      f              = NOISE_FLOAT(in->noise.pink[k].n);
+      f             *= in->control->vol.val;
+      in->audio[k].f = f;
     }
     in->pos = (in->pos + 1) % in->chunks;
   }

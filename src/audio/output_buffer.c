@@ -9,7 +9,7 @@
 
 static int16_t dither(float, int32_t);
 
-void outputBuffer(OutputBuffer *o, AudioFrame *audio, AudioFrame *whiteNoise,
+void outputBuffer(OutputBuffer *o, AudioSample *audio, AudioSample *whiteNoise,
                   int rFrames, int wFrames) {
   int chunkSize = AUDIO_CHUNK_SIZE;
   while ((rFrames % chunkSize) != 0 || (wFrames % chunkSize) != 0) {
@@ -34,21 +34,21 @@ static int16_t dither(float s, int32_t noise) {
 }
 
 void fillOutputBuffer(OutputBuffer *o) {
-  int i         = 0;
-  int j         = 0;
-  int16_t s     = 0;
-  AudioFrame *a = NULL;
-  AudioFrame *n = NULL;
+  int i          = 0;
+  int j          = 0;
+  int16_t s      = 0;
+  AudioSample *a = NULL;
+  AudioSample *n = NULL;
   uint8_t *out  = o->output;
   for (; i < o->writeChunks ; i++) {
     a = &o->audio[o->pos * o->chunkSize];
     n = &o->whiteNoise[o->pos * o->chunkSize];
     for (j = 0 ; j < o->chunkSize ; j++) {
       /* Use opposite channel noise for dither for less self-reference. */
-      s      = dither(a[j].l.f, n[j].r.n);
+      s      = dither(a[j].f, n[j].n);
       *out++ = s & 255;
       *out++ = s >> 8;
-      s      = dither(a[j].r.f, n[j].l.n);
+      /* Writing same signal to stereo; this will eventually b n-channel mix */
       *out++ = s & 255;
       *out++ = s >> 8;
     }
