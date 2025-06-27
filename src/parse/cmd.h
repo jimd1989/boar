@@ -40,7 +40,8 @@ typedef enum {
   CMD_NOTE_OFF   = 111, /* o */
   CMD_AFTERTOUCH = 116, /* t */
   CMD_VOL        = 118, /* v */
-  CMD_WAVE       = 119  /* w */
+  CMD_WAVE       = 119, /* w */
+  CMD_ZONE       = 122  /* z */
 } CmdPure;
 
 typedef enum {

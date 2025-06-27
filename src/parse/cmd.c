@@ -29,6 +29,7 @@ static void pureCmdAlphabet(uint32_t *alphabet) {
   enlistCmd(CMD_NOTE_OFF, alphabet);
   enlistCmd(CMD_VOL, alphabet);
   enlistCmd(CMD_WAVE, alphabet);
+  enlistCmd(CMD_ZONE, alphabet);
 }
 
 static void plusCmdAlphabet(uint32_t *alphabet) {

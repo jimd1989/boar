@@ -20,11 +20,12 @@ static void evalPure(CmdPure, Cursor *, Control *);
 static void evalPlus(CmdPlus, Cursor *, Control *);
 static void evalVol(Cursor *, Control *);
 static void evalAttack(Cursor *);
+static void evalToggleZone(Cursor *, Control *);
 static void evalComment(Cursor *);
 static void evalNoteOff(Cursor *, Control *);
 static void evalNoteOn(Cursor *, Control *);
 static void evalWave(Cursor *);
-static void evalZone(Cursor *, Control *);
+static void evalSplitZone(Cursor *, Control *);
 
 static void evalVol(Cursor *c, Control *co) {
   CURSOR_BOUND_PARSE(parseBoundFloat, c, 0.0f, 1.0f);
@@ -86,7 +87,12 @@ static void evalWave(Cursor *c) {
   warnx("Osc %d set to wave %s", osc, wave);
 }
 
-static void evalZone(Cursor *c, Control *co) {
+static void evalToggleZone(Cursor *c, Control *co) {
+  CURSOR_BOUND_PARSE(parseBoundInt, c, 1, VOICES_SIZE);
+  co->voiceZones.currentZone = c->val.n - 1; 
+}
+
+static void evalSplitZone(Cursor *c, Control *co) {
   /* z+ n     → split zones evenly 
    * z+ _ n m → split zones with leftovers
    * Will instantly mute all voices. Might be a click. */
@@ -124,6 +130,9 @@ static void evalPure(CmdPure cmd, Cursor *c, Control *co) {
     case CMD_VOL:
       evalVol(c, co);
       break;
+    case CMD_ZONE:
+      evalToggleZone(c, co);
+      break;
     case CMD_ATTACK:
       evalAttack(c);
       break;
@@ -139,7 +148,7 @@ static void evalPure(CmdPure cmd, Cursor *c, Control *co) {
 static void evalPlus(CmdPlus cmd, Cursor *c, Control *co) {
   switch (cmd) {
     case CMD_PLUS_ZONE:
-      evalZone(c, co);
+      evalSplitZone(c, co);
       break;
   }
 }
