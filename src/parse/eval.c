@@ -12,12 +12,12 @@
 #include "cmd.h"
 #include "cursor.h"
 #include "eval.h"
+#include "eval_dot.h"
 #include "parameter.h"
 
 #define IS_FLOAT_NULL isnan
 
 static void evalPure(CmdPure, Cursor *, Control *);
-static void evalDot(CmdDot, Cursor *, Control *);
 static void evalPlus(CmdPlus, Cursor *, Control *);
 static void evalVol(Cursor *, Control *);
 static void evalAttack(Cursor *);
@@ -26,7 +26,6 @@ static void evalComment(Cursor *);
 static void evalNoteOff(Cursor *, Control *);
 static void evalNoteOn(Cursor *, Control *);
 static void evalWave(Cursor *);
-static void evalMixBalance(Cursor *, Control *);
 static void evalSplitZone(Cursor *, Control *);
 
 static void evalVol(Cursor *c, Control *co) {
@@ -94,16 +93,6 @@ static void evalToggleZone(Cursor *c, Control *co) {
   co->voiceZones.currentZone = c->val.n - 1; 
 }
 
-static void evalMixBalance(Cursor *c, Control *co) {
-  /* v. n … → set zone mixer vol for channels n … */
-  int i   = 0;
-  for (; i < co->args.chan ; i++) {
-    if (c->breakReason & (CURSOR_WAITING_PARAMS | CURSOR_PARAMETER_END)) {
-      CURSOR_BOUND_PARSE(parseBoundFloat, c, 0.0f, 1.0f);
-    }
-  }
-}
-
 static void evalSplitZone(Cursor *c, Control *co) {
   /* z+ n     → split zones evenly 
    * z+ _ n m → split zones with leftovers
@@ -153,14 +142,6 @@ static void evalPure(CmdPure cmd, Cursor *c, Control *co) {
       break;
     case CMD_COMMENT:
       evalComment(c);
-      break;
-  }
-}
-
-static void evalDot(CmdDot cmd, Cursor *c, Control *co) {
-  switch (cmd) {
-    case CMD_DOT_VOL:
-      evalMixBalance(c, co);
       break;
   }
 }

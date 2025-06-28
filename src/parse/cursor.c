@@ -27,7 +27,10 @@ void eatWhitespace(Cursor *c) {
 }
 
 void printCursorErr(Cursor *c) {
-  char *end = strpbrk(&c->input[c->cmdPos], ";\n");
-  if (end != NULL) { *end = '\0'; }
-  warnx("Invalid input for: \"%s\"", &c->input[c->cmdPos]);
+  char *input    = &c->input[c->cmdPos];
+  int n          = strcspn(input, ";\n");
+  c->pos         = n + 1;
+  c->breakReason = input[n] == ';' ? CURSOR_CMD_END : CURSOR_LINE_END;
+  input[n]       = '\0';
+  warnx("Invalid input for: \"%s\"", input);
 }
