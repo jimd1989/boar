@@ -16,6 +16,6 @@ typedef struct AudioBuffer {
   Control         * control;
 } AudioBuffer;
 
-void audioBuffer(AudioBuffer *, Control *, int);
+void audioBuffer(AudioBuffer *, Control *, int, int);
 void generateDsp(void *, int);
 void freeAudioBuffer(AudioBuffer *);

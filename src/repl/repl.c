@@ -7,22 +7,23 @@
 #include "../audio/audio.h"
 #include "../audio/sndio.h"
 #include "../control/control.h"
+#include "../parse/args.h"
 #include "../parse/line.h"
 #include "repl.h"
 
 #define STDIN_IDX 0
 #define SNDIO_IDX 1
 
-static void startRepl(Repl *);
+static void startRepl(Repl *, Args *);
 static void waitForIO(Repl *);
 static void readInput(Repl *);
 static void playAudio(Repl *);
 static void stopRepl(Repl *);
 
-static void startRepl(Repl *r) {
+static void startRepl(Repl *r, Args *a) {
   cmdAlphabet(&r->cmdAlphabet);
   control(&r->control);
-  audio(&r->audio, &r->control);
+  audio(&r->audio, &r->control, a);
   r->nfds = r->audio.sio.nfds + 1;
   r->pollFds = malloc(r->nfds * sizeof(*r->pollFds));
   r->pollFds[STDIN_IDX].fd = STDIN_FILENO;
@@ -61,9 +62,9 @@ static void playAudio(Repl *r) {
   writeAudio(&r->audio);
 }
 
-void repl(void) {
+void repl(Args *a) {
   Repl r = {0};
-  startRepl(&r);
+  startRepl(&r, a);
   while (r.isRunning) {
     waitForIO(&r);
     readInput(&r);

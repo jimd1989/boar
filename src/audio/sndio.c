@@ -1,3 +1,4 @@
+#include "../parse/args.h"
 #include <err.h>
 #include <sndio.h>
 #include <stdbool.h>
@@ -9,7 +10,7 @@
 
 typedef struct sio_par SioPar;
 
-void sio(Sio *s) {
+void sio(Sio *s, Args *a) {
   /* On buffers (all sizes are in frames, not bytes):
    * sndio holds a buffer governed by soundcard settings that is only known at 
    * runtime. It may not perfectly align with the internal DSP buffer described 
@@ -24,7 +25,7 @@ void sio(Sio *s) {
   s->port = sio_open(SIO_DEVANY, SIO_PLAY, true);
   if (s == NULL) { errx(1, "Error opening sndio device %s", SIO_DEVANY); }
   sio_initpar(&p);
-  p.pchan    = AUDIO_CHANNELS;
+  p.pchan    = a->chan;
   p.rate     = AUDIO_SAMPLE_RATE;
   p.bits     = AUDIO_SAMPLE_SIZE_BYTES * 8;
   p.sig      = 1;
@@ -33,6 +34,7 @@ void sio(Sio *s) {
   p.xrun     = SIO_IGNORE;
   if (!(sio_setpar(s->port, &p))) { errx(1, "Error setting sndio parameters"); }
   if (!(sio_getpar(s->port, &p))) { errx(1, "Error getting sndio parameters"); }
+  s->chan          = p.pchan;
   s->bufSizeFrames = p.appbufsz;
   s->bufSizeBytes  = s->bufSizeFrames * 4;
   s->nfds = sio_nfds(s->port);

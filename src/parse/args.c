@@ -7,6 +7,7 @@
 #include "parameter.h"
 
 void args(Args *a) {
+  a->chan            = 2;
   a->maxEnvTime      = 10.0;
   a->audioOutputFile = NULL;
   a->infoOutputFile  = NULL;
@@ -29,6 +30,20 @@ Cursor parseArgs(int argc, char **argv, Args *a) {
         return c;
       }
       a->maxEnvTime = c.val.f;
+    }
+    else if (strcmp("-chan", argv[i]) == 0) {
+      if (i + 1 >= argc) {
+        warnx("Expected argument for %s", argv[i]);
+        c.breakReason = CURSOR_ERROR;
+        return c;
+      }
+      c = cursor(argv[++i]);
+      parseInt(&c);
+      if (c.breakReason == CURSOR_ERROR) {
+        warnx("Could not parse arg %s", argv[i]);
+        return c;
+      }
+      a->chan = c.val.n;
     }
     else if (strcmp("-audioOutputFile", argv[i]) == 0) {
       if (i + 1 >= argc) {

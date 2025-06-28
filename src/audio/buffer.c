@@ -11,7 +11,7 @@ static int snapToMultiple(int n, int m) {
   return m * ((n + (m - 1)) / m);
 }
 
-void audioBuffer(AudioBuffer *b, Control *c, int oFrames) {
+void audioBuffer(AudioBuffer *b, Control *c, int oFrames, int chan) {
   /* Round total buffer to chunk size */
   int chunks         = 0;
   int iFrames        = oFrames;
@@ -25,7 +25,7 @@ void audioBuffer(AudioBuffer *b, Control *c, int oFrames) {
   /* Prefill the entire buffer. 
    * Once this is something other than white noise, b->mult could be a cause
    * of any distortion. Double-check. */
-  outputBuffer(&b->o, b->i.audio, b->i.noise.white, iFrames, oFrames);
+  outputBuffer(&b->o, b->i.audio, b->i.noise.white, iFrames, oFrames, chan);
   chunks       = (b->mult) * (b->o.writeChunks * b->o.chunkSize);
   chunks       = snapToMultiple(chunks, AUDIO_CHUNK_SIZE) / AUDIO_CHUNK_SIZE;
   b->maxChunks = chunks;

@@ -10,12 +10,13 @@
 static int16_t dither(float, int32_t);
 
 void outputBuffer(OutputBuffer *o, AudioSample *audio, AudioSample *whiteNoise,
-                  int rFrames, int wFrames) {
+                  int rFrames, int wFrames, int chan) {
   int chunkSize = AUDIO_CHUNK_SIZE;
   while ((rFrames % chunkSize) != 0 || (wFrames % chunkSize) != 0) {
     chunkSize--;
     if (chunkSize < 1) { errx(1, "Error setting output chunk size."); }
   }
+  o->chan        = chan;
   o->chunkSize   = chunkSize;
   o->readChunks  = rFrames / chunkSize;
   o->writeChunks = wFrames / chunkSize;
@@ -23,7 +24,7 @@ void outputBuffer(OutputBuffer *o, AudioSample *audio, AudioSample *whiteNoise,
   o->pos         = 0;
   o->audio       = audio;
   o->whiteNoise  = whiteNoise;
-  o->output      = calloc(wFrames * 4, 1);
+  o->output      = calloc(wFrames * sizeof(int16_t) * chan, 1);
   warnx("out →\tframes: %d\tchunk size: %d", wFrames, o->chunkSize);
 }
 
@@ -36,6 +37,7 @@ static int16_t dither(float s, int32_t noise) {
 void fillOutputBuffer(OutputBuffer *o) {
   int i          = 0;
   int j          = 0;
+  int ch         = 0;
   int16_t s      = 0;
   AudioSample *a = NULL;
   AudioSample *n = NULL;
@@ -45,12 +47,11 @@ void fillOutputBuffer(OutputBuffer *o) {
     n = &o->whiteNoise[o->pos * o->chunkSize];
     for (j = 0 ; j < o->chunkSize ; j++) {
       /* Use opposite channel noise for dither for less self-reference. */
-      s      = dither(a[j].f, n[j].n);
-      *out++ = s & 255;
-      *out++ = s >> 8;
-      /* Writing same signal to stereo; this will eventually b n-channel mix */
-      *out++ = s & 255;
-      *out++ = s >> 8;
+      s = dither(a[j].f, n[j].n);
+      for (ch = 0 ; ch < o->chan ; ch++) {
+        *out++ = s & 255;
+        *out++ = s >> 8;
+      }
     }
     o->pos = (o->pos + 1) % o->readChunks;
   }

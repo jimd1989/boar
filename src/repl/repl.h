@@ -5,6 +5,7 @@
 
 #include "../audio/audio.h"
 #include "../control/control.h"
+#include "../parse/args.h"
 #include "../parse/cmd.h"
 
 #define REPL_LIMIT 4096
@@ -19,4 +20,4 @@ typedef struct Repl {
   struct pollfd * pollFds;
 } Repl;
 
-void repl(void);
+void repl(Args *);
