@@ -20,4 +20,4 @@ typedef struct Repl {
   struct pollfd * pollFds;
 } Repl;
 
-void repl(Args *);
+void repl(Args);

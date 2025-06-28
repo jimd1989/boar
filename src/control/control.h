@@ -4,6 +4,7 @@
 
 #include "../curves/curves.h"
 #include "../keyboard/keyboard.h"
+#include "../parse/args.h"
 #include "../voices/voice_zones.h"
 #include "../voices/voices.h"
 #include "volume.h"
@@ -12,6 +13,7 @@
 
 /* Governs "low-res" parameter changes: those outside of the core DSP loop. */
 typedef struct Control {
+  Args        args;
   Curves      curves;
   Keyboard    keyboard;
   VoiceZones  voiceZones;
@@ -20,4 +22,4 @@ typedef struct Control {
 
 void noteOn(Control *, uint8_t, uint8_t);
 void noteOff(Control *, uint8_t, uint8_t);
-void control(Control *);
+void control(Control *, Args);

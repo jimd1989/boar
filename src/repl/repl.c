@@ -14,16 +14,16 @@
 #define STDIN_IDX 0
 #define SNDIO_IDX 1
 
-static void startRepl(Repl *, Args *);
+static void startRepl(Repl *, Args);
 static void waitForIO(Repl *);
 static void readInput(Repl *);
 static void playAudio(Repl *);
 static void stopRepl(Repl *);
 
-static void startRepl(Repl *r, Args *a) {
+static void startRepl(Repl *r, Args a) {
   cmdAlphabet(&r->cmdAlphabet);
-  control(&r->control);
-  audio(&r->audio, &r->control, a);
+  control(&r->control, a);
+  audio(&r->audio, &r->control, &a);
   r->nfds = r->audio.sio.nfds + 1;
   r->pollFds = malloc(r->nfds * sizeof(*r->pollFds));
   r->pollFds[STDIN_IDX].fd = STDIN_FILENO;
@@ -62,7 +62,7 @@ static void playAudio(Repl *r) {
   writeAudio(&r->audio);
 }
 
-void repl(Args *a) {
+void repl(Args a) {
   Repl r = {0};
   startRepl(&r, a);
   while (r.isRunning) {

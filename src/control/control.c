@@ -3,17 +3,11 @@
 
 #include "../keyboard/keyboard.h" 
 #include "../voices/voice_zones.h"
+#include "../parse/args.h"
 #include "../voices/voices.h"
 #include "../voices/voice.h"
 #include "control.h"
 #include "volume.h"
-
-void control(Control *c) {
-  volume(&c->vol, c->curves.cubic); 
-  curves(&c->curves);
-  voiceZones(&c->voiceZones, &c->keyboard);
-  keyboard(&c->keyboard);
-}
 
 void noteOn(Control *c, uint8_t note, uint8_t vel) {
   Key *k     = &c->keyboard.keys[note];
@@ -49,4 +43,12 @@ void noteOff(Control *c, uint8_t note, uint8_t vel) {
   releaseVoice(vs, v);
   printVoices(vs);
   printKeyboard(&c->keyboard);
+}
+
+void control(Control *c, Args a) {
+  c->args = a;
+  volume(&c->vol, c->curves.cubic); 
+  curves(&c->curves);
+  voiceZones(&c->voiceZones, &c->keyboard, a.chan);
+  keyboard(&c->keyboard);
 }

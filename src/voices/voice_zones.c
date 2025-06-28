@@ -1,6 +1,7 @@
 #include <unistd.h>
 
 #include "../keyboard/keyboard.h"
+#include "../mixer/mixer.h"
 #include "voice.h"
 #include "voice_stack.h"
 #include "voice_zones.h"
@@ -64,9 +65,10 @@ void splitZonesWithLeftovers(VoiceZones *vz, Keyboard *kb, int min, int n) {
   }
 }
 
-void voiceZones(VoiceZones *vz, Keyboard *kb) {
+void voiceZones(VoiceZones *vz, Keyboard *kb, int chan) {
   int i = 0;
   for (; i < VOICES_SIZE ; i++) { voice(&vz->voices[i]); }
   vz->currentZone = 0;
   splitZonesEvenly(vz, kb, 1);
+  mixer(&vz->mixer, chan);
 }
