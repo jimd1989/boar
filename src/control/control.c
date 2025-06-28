@@ -45,6 +45,10 @@ void noteOff(Control *c, uint8_t note, uint8_t vel) {
   printKeyboard(&c->keyboard);
 }
 
+void setMixerVol(Control *c, int ch, float v) {
+  c->voiceZones.zones[c->voiceZones.currentZone].mixer.volumes[ch] = v;
+}
+
 void control(Control *c, Args a) {
   c->args = a;
   volume(&c->vol, c->curves.cubic); 

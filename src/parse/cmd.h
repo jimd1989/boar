@@ -45,7 +45,7 @@ typedef enum {
 } CmdPure;
 
 typedef enum {
-  CMD_DOT_UNKNOWN = 0
+  CMD_DOT_VOL = 118, /* v. */
 } CmdDot;
 
 typedef enum {
@@ -53,7 +53,7 @@ typedef enum {
 } CmdColon;
 
 typedef enum {
-  CMD_PLUS_ZONE    = 122 /* z+ */
+  CMD_PLUS_ZONE = 122 /* z+ */
 } CmdPlus;
 
 typedef struct CmdAlphabet {

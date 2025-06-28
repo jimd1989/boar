@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../keyboard/keyboard.h"
-#include "../mixer/mixer.h"
 
 #include "voice.h"
 #include "voices.h"
@@ -12,7 +11,6 @@
  * hacks can make this more transparent. */
 typedef struct VoiceZones {
   int     currentZone;
-  Mixer   mixer;
   Voices  zones[VOICES_SIZE];
   Voice   voices[VOICES_SIZE];
 } VoiceZones;

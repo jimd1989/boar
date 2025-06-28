@@ -7,6 +7,7 @@
 
 static void enlistCmd(int, uint32_t *);
 static void pureCmdAlphabet(uint32_t *);
+static void dotCmdAlphabet(uint32_t *);
 static void plusCmdAlphabet(uint32_t *);
 static bool cmdExists(int, uint32_t[4]);
 
@@ -32,12 +33,17 @@ static void pureCmdAlphabet(uint32_t *alphabet) {
   enlistCmd(CMD_ZONE, alphabet);
 }
 
+static void dotCmdAlphabet(uint32_t *alphabet) {
+  enlistCmd(CMD_DOT_VOL, alphabet);
+}
+
 static void plusCmdAlphabet(uint32_t *alphabet) {
   enlistCmd(CMD_PLUS_ZONE, alphabet);
 }
 
 void cmdAlphabet(CmdAlphabet *ca) {
   pureCmdAlphabet(ca->pure);
+  dotCmdAlphabet(ca->dot);
   plusCmdAlphabet(ca->plus);
 }
 

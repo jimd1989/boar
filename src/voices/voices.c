@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "../mixer/mixer.h"
 #include "voice.h"
 #include "voice_list.h"
 #include "voice_stack.h"
@@ -50,9 +51,10 @@ void drainVoices(Voices *vs) {
   drainVoiceStack(&vs->free);
 }
 
-void voices(Voices *vs) {
+void voices(Voices *vs, int ch) {
   /* Once initiated, no actual Voice structs are assigned to these data
    * structures. These will be allocated by the VoiceZones object instead. */
+  mixer(&vs->mixer, ch);
   voiceList(&vs->playing);
   voiceList(&vs->released);
   voiceStack(&vs->free);

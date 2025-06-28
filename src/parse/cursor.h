@@ -8,11 +8,11 @@ typedef union {
 } CursorValue;
 
 typedef enum {
-  CURSOR_ERROR          = 0,
-  CURSOR_PARAMETER_END  = 1,
-  CURSOR_CMD_END        = 2,
-  CURSOR_LINE_END       = 3,
-  CURSOR_WAITING_PARAMS = 4
+  CURSOR_ERROR          = (1 << 0),
+  CURSOR_PARAMETER_END  = (1 << 1),
+  CURSOR_CMD_END        = (1 << 2),
+  CURSOR_LINE_END       = (1 << 3),
+  CURSOR_WAITING_PARAMS = (1 << 4)
 } CursorBreakReason;
 
 typedef struct Cursor {

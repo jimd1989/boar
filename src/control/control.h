@@ -22,4 +22,5 @@ typedef struct Control {
 
 void noteOn(Control *, uint8_t, uint8_t);
 void noteOff(Control *, uint8_t, uint8_t);
+void setMixerVol(Control *, int, float);
 void control(Control *, Args);

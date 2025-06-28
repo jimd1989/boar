@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../mixer/mixer.h"
 #include "voice.h"
 #include "voice_list.h"
 #include "voice_stack.h"
@@ -16,6 +17,7 @@
  * - Retriggering a released (but not yet free) note should reuse its voice in
  *   the released queue. This resets its age. */
 typedef struct Voices {
+  Mixer       mixer;
   VoiceList   playing;
   VoiceList   released;
   VoiceStack  free;
@@ -27,5 +29,5 @@ void playVoice(Voices *, Voice *);
 void releaseVoice(Voices *, Voice *);
 void retriggerVoice(Voices *, Voice *);
 void drainVoices(Voices *);
-void voices(Voices *);
+void voices(Voices *, int);
 void printVoices(Voices *);
