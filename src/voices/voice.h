@@ -22,10 +22,12 @@ typedef struct Voice {
   float             inc;
   float             vel;
   /* Every voice is doubly-linked to allow O(1) removal during note-off */
-  struct Voice  *   next;
-  struct Voice  *   prev;
+  struct Voice   *  next;
+  struct Voice   *  prev;
   struct Voice  **  key; /* Associated keyboard position (stealing) */
-  AudioSample       audio[AUDIO_CHUNK_SIZE];
+  /* Pointer to zone-local buffer. If every sample is 1 ÷ VOICE_SIZES then
+   * the zoning should not matter and the sample shouldn't clip. */
+  AudioSample    *  audio[AUDIO_CHUNK_SIZE];
 } Voice;
 
 void freeVoice(Voice *);
