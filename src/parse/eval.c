@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -13,12 +12,10 @@
 #include "cursor.h"
 #include "eval.h"
 #include "eval_dot.h"
+#include "eval_plus.h"
 #include "parameter.h"
 
-#define IS_FLOAT_NULL isnan
-
 static void evalPure(CmdPure, Cursor *, Control *);
-static void evalPlus(CmdPlus, Cursor *, Control *);
 static void evalVol(Cursor *, Control *);
 static void evalAttack(Cursor *);
 static void evalToggleZone(Cursor *, Control *);
@@ -26,7 +23,6 @@ static void evalComment(Cursor *);
 static void evalNoteOff(Cursor *, Control *);
 static void evalNoteOn(Cursor *, Control *);
 static void evalWave(Cursor *);
-static void evalSplitZone(Cursor *, Control *);
 
 static void evalVol(Cursor *c, Control *co) {
   CURSOR_BOUND_PARSE(parseBoundFloat, c, 0.0f, 1.0f);
@@ -93,29 +89,6 @@ static void evalToggleZone(Cursor *c, Control *co) {
   co->voiceZones.currentZone = c->val.n - 1; 
 }
 
-static void evalSplitZone(Cursor *c, Control *co) {
-  /* z+ n     → split zones evenly 
-   * z+ _ n m → split zones with leftovers
-   * Will instantly mute all voices. Might be a click. */
-  int n = 0;
-  int m = 0;
-  CURSOR_BOUND_PARSE(parseNullableBoundFloat, c, 1.0f, (float)VOICES_SIZE);
-  if (IS_FLOAT_NULL(c->val.f)) {
-    CURSOR_BOUND_PARSE(parseBoundInt, c, 0, KEYBOARD_SIZE - VOICES_SIZE);
-    n = c->val.n;
-    CURSOR_BOUND_PARSE(parseBoundInt, c, 1, VOICES_SIZE - 1);
-    m = c->val.n;
-    splitZonesWithLeftovers(&co->voiceZones, &co->keyboard, n, m);
-  } else {
-    n  = (int)c->val.f;
-    /* Truncate [1, 8] to power of 2 for even zoning. */
-    n |= n >> 1;
-    n |= n >> 2;
-    n  = n - (n >> 1);
-    splitZonesEvenly(&co->voiceZones, &co->keyboard, n);
-  }
-}
-
 static void evalPure(CmdPure cmd, Cursor *c, Control *co) {
   switch (cmd) {
     case CMD_NOTE_ON:
@@ -142,14 +115,6 @@ static void evalPure(CmdPure cmd, Cursor *c, Control *co) {
       break;
     case CMD_COMMENT:
       evalComment(c);
-      break;
-  }
-}
-
-static void evalPlus(CmdPlus cmd, Cursor *c, Control *co) {
-  switch (cmd) {
-    case CMD_PLUS_ZONE:
-      evalSplitZone(c, co);
       break;
   }
 }

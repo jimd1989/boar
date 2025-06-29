@@ -76,7 +76,7 @@ void parseString(Cursor *c) {
 void parseNullableBoundFloat(Cursor *c, float min, float max) {
   float f = 0.0f;
   if (CURSOR_HEAD(c) == '_') {
-    parseString(c);
+    c->pos++;
     c->val.f = NAN;
     return;
   }
