@@ -42,6 +42,7 @@ void init_audio_out(void(*signal)(void *), char *name) {
   SIGNALS[FD_POPULATION] = signal;
   HDLS[FD_POPULATION]    = (void *)s;
   FD_POPULATION++;
+  sio_start(s);
 }
 
 void poll_io() {
@@ -58,34 +59,42 @@ void poll_io() {
 
 ;(define-foreign-type sio (c-pointer (struct "sio_hdl")))
 (define STDIN-COND (make-condition-variable))
-(define-external (stdin_signal (c-pointer x)) void (condition-variable-broadcast! STDIN-COND))
+(define AUDIO-OUT-COND (make-condition-variable))
+(define-external (stdin_signal (c-pointer x)) void 
+  (condition-variable-broadcast! STDIN-COND))
+(define-external (audio_out_signal (c-pointer x)) void
+  (condition-variable-broadcast! AUDIO-OUT-COND))
 (define init-stdin
   (foreign-safe-lambda void "init_stdin" (function void (c-pointer))))
+(define init-audio-out
+  (foreign-safe-lambda void "init_audio_out"
+    (function void (c-pointer)) c-string))
 (define poll-io (foreign-safe-lambda void "poll_io"))
+
 (define (io)
-  ;(print 'awaiting-io)
   (poll-io) 
   (io))
-(define (stdin mutex condition)
-  (mutex-lock! mutex)
-  (print 'stdin-awakened)
-  (print (eval (read)))
-  (mutex-unlock! mutex condition)
-  (stdin mutex condition))
-(define (clock)
-  (print 'tick)
-  (thread-sleep! 1)
-  (clock))
-(define (new-io)
-  (thread-wait-for-i/o! fileno/stdin #:input)
-  (print (eval (read)))
-  (new-io))
-;(init-stdin (location stdin_signal))
-(define clock-thread (make-thread (lambda () (clock))))
-(define stdin-thread (make-thread (lambda () (new-io))))
-;(define stdin-thread (make-thread (lambda () (stdin (make-mutex) STDIN-COND))))
-;(define main-thread (make-thread (lambda () (io))))
-(thread-start! clock-thread)
-;(thread-start! main-thread)
+
+(define (stdin mutex condition first?)
+  (if (not first?)
+    (begin (mutex-lock! mutex)
+           (print (eval (read)))
+           (mutex-unlock! mutex condition))
+    (begin (mutex-lock! mutex)
+           (mutex-unlock! mutex condition)))
+  (stdin mutex condition #f))
+
+;(define (new-io)
+;  (thread-wait-for-i/o! fileno/stdin #:input)
+;  (print (eval (read)))
+;  (new-io))
+
+(init-stdin (location stdin_signal))
+(init-audio-out (location audio_out_signal) "default")
+(define io-thread (make-thread (lambda () (io))))
+(define stdin-thread 
+  (make-thread (lambda () (stdin (make-mutex) STDIN-COND #t))))
+; still need to drain audio
+(thread-start! io-thread)
 (thread-start! stdin-thread)
 (thread-join! stdin-thread)
