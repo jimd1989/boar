@@ -32,13 +32,14 @@ typedef struct OutputBuffer {
   uint8_t         * writeData;
 } OutputBuffer;
 
-static struct pollfd POLLFDS[FD_LIMIT]                     = {0};
-static uint8_t STDIN_BUFFER[STDIN_BUFFER_SIZE]             = {0};
-static OutputBuffer OUTPUT_BUFFER = {0};
+static struct pollfd POLLFDS[FD_LIMIT]         = {0};
+static uint8_t STDIN_BUFFER[STDIN_BUFFER_SIZE] = {0};
+static OutputBuffer OUTPUT_BUFFER              = {0};
+static void (*SCHEME_AUDIO_OUT_CALLBACK)(int)  = NULL;
 
 static void init_stdin(void);
 static void audio_out_callback(void *, int);
-static void fillSilence(OutputBuffer *);
+static void fill_silence(OutputBuffer *);
 static void init_audio_out(char *);
 static void write_audio(OutputBuffer *);
 
@@ -50,12 +51,13 @@ static void init_stdin(void) {
 }
 
 static void audio_out_callback(void *arg, int delta) {
-  OutputBuffer *ob = (OutputBuffer *)arg;
-  ob->dspPos = (ob->dspPos + delta) % ob->dspSizeBytes;
-  warnx("dsp Δ %d → %d", delta, ob->dspPos);
+  //OutputBuffer *ob = (OutputBuffer *)arg;
+  // ob->dspPos       = (ob->dspPos + delta) % ob->dspSizeBytes;
+  /* callback */
+  SCHEME_AUDIO_OUT_CALLBACK(delta);
 }
 
-static void fillSilence(OutputBuffer *ob) {
+static void fill_silence(OutputBuffer *ob) {
   /* Meant for pre-filling the buffer. For whatever reason it does not
      seem to trigger callbacks, so init ob->writePos at 0 for maximum
      distance from ob->dspPos. */
@@ -101,7 +103,14 @@ static void init_audio_out(char *name) {
   OUTPUT_BUFFER.writeData      = malloc(OUTPUT_BUFFER.writeSizeBytes);
   sio_onmove(sio, &audio_out_callback, (void *)&OUTPUT_BUFFER);
   sio_start(sio);
-  fillSilence(&OUTPUT_BUFFER);
+  fill_silence(&OUTPUT_BUFFER);
+}
+
+void fill_dsp(uint8_t *data, int sizeBytes) {
+  OutputBuffer *ob = &OUTPUT_BUFFER;
+  memcpy(&ob->dspData[ob->dspPos], data, sizeBytes);
+  ob->dspPos = (ob->dspPos + sizeBytes) % ob->dspSizeBytes;
+  warnx("Δ %d → %d", sizeBytes, ob->dspPos);
 }
 
 static void write_audio(OutputBuffer *ob) {
@@ -117,7 +126,6 @@ static void write_audio(OutputBuffer *ob) {
      writeSize is not a factor of dspSize. So the true writePos depends
      on bytesWritten. */
   ob->writePos = (ob->writePos + bytesWritten) % ob->dspSizeBytes;
-  warnx("out Δ %d → %d", bytesWritten, ob->writePos);
 }
 
 void poll_io(void (*eval)(char *)) {
@@ -141,18 +149,23 @@ void poll_io(void (*eval)(char *)) {
   }
 }
 
-void init(void) {
+void init(void (*schemeAudioOutCallback)(int)) {
   struct sio_hdl *sio = NULL;
   init_stdin();
+  SCHEME_AUDIO_OUT_CALLBACK = schemeAudioOutCallback;
   init_audio_out("default");
 }
 <#
 
 (define-external (stdin_eval (c-string x)) void
   (print (eval (with-input-from-string x read))))
-(define init (foreign-lambda void "init"))
+(define init (foreign-safe-lambda void "init" (function void (int))))
+(define fill-dsp (foreign-safe-lambda void "fill_dsp" u8vector int))
+; (make-u8vector) can be anything! Scheme has full DSP control!
+(define-external (scheme_audio_out_callback (int x)) void
+  (fill-dsp (make-u8vector 2084 0) x))
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
-(init)
+(init (location scheme_audio_out_callback))
 (define (io-loop)
   ; needs error handling
   (poll-io (location stdin_eval))
