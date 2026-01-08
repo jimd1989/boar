@@ -1,5 +1,5 @@
 (import (chicken file posix) (chicken foreign) (chicken io) 
-        (chicken port) srfi-4 srfi-18)
+        (chicken port) srfi-4 srfi-18 typed-records)
 
 #>
 #include <err.h>
@@ -51,9 +51,6 @@ static void init_stdin(void) {
 }
 
 static void audio_out_callback(void *arg, int delta) {
-  //OutputBuffer *ob = (OutputBuffer *)arg;
-  // ob->dspPos       = (ob->dspPos + delta) % ob->dspSizeBytes;
-  /* callback */
   SCHEME_AUDIO_OUT_CALLBACK(delta);
 }
 
@@ -110,7 +107,7 @@ void fill_dsp(uint8_t *data, int sizeBytes) {
   OutputBuffer *ob = &OUTPUT_BUFFER;
   memcpy(&ob->dspData[ob->dspPos], data, sizeBytes);
   ob->dspPos = (ob->dspPos + sizeBytes) % ob->dspSizeBytes;
-  warnx("Δ %d → %d", sizeBytes, ob->dspPos);
+  //warnx("Δ %d → %d", sizeBytes, ob->dspPos);
 }
 
 static void write_audio(OutputBuffer *ob) {
@@ -162,12 +159,51 @@ void init(void (*schemeAudioOutCallback)(int)) {
 (define init (foreign-safe-lambda void "init" (function void (int))))
 (define fill-dsp (foreign-safe-lambda void "fill_dsp" u8vector int))
 ; (make-u8vector) can be anything! Scheme has full DSP control!
-(define-external (scheme_audio_out_callback (int x)) void
-  (fill-dsp (make-u8vector 2084 0) x))
+;(define-external (scheme_audio_out_callback (int x)) void
+;  (fill-dsp (make-u8vector 2084 0) x))
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
-(init (location scheme_audio_out_callback))
+;(init (location scheme_audio_out_callback))
+
+(: io-loop (-> noreturn))
 (define (io-loop)
   ; needs error handling
   (poll-io (location stdin_eval))
   (io-loop))
+
+(define-record dsp-buffer
+  (bytes : u8vector)
+  (data : any)
+  (f : (u8vector any fixnum -> noreturn)))
+
+(: adjust-buffer (u8vector fixnum --> u8vector))
+(define (adjust-buffer buffer size)
+  (if (< (u8vector-length buffer) size)
+    (begin (release-number-vector buffer)
+           (make-u8vector size 0 #t #f))
+    buffer))
+
+(: ignore-buffer (u8vector any fixnum -> noreturn))
+(define (ignore-buffer bytes data bytes-to-fill) bytes)
+
+(: make-audio-out-condition-variable (--> (struct condition-variable)))
+(define (make-audio-out-condition-variable)
+  (let* ((cvar (make-condition-variable))
+         (u8 (make-u8vector 128 0 #t #f))
+         (buffer (make-dsp-buffer u8 '() ignore-buffer)))
+    (condition-variable-specific-set! cvar buffer)
+    cvar))
+
+(define-syntax make-audio-out-hdl
+  (syntax-rules ()
+    ((_ c-func-name cvar)
+     (define-external (c-func-name (int bytes-to-fill)) void
+       (let* ((buf (condition-variable-specific cvar))
+              (nu8 (adjust-buffer (dsp-buffer-bytes buf) bytes-to-fill)))
+         (dsp-buffer-bytes-set! buf nu8)
+         (fill-dsp nu8 bytes-to-fill)
+         (condition-variable-broadcast! cvar))))))
+
+(define AUDIO-OUT-COND (make-audio-out-condition-variable))
+(make-audio-out-hdl sndio_0 AUDIO-OUT-COND)
+(init (location sndio_0))
 (io-loop)
