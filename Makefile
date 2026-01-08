@@ -3,7 +3,7 @@ PREFIX = /usr/local
 
 .SUFFIXES:
 all:
-	cc -O3 -Wall -Wextra -Wno-missing-field-initializers -pedantic -lsndio -lm src/*.c -o "boar"
+	chicken-csc -o main -L -lsndio -lfa2 -strict-types -O3 snd.scm -o boar-scm
 install:
 	mkdir -p $(PREFIX)/bin
 	mkdir -p $(PREFIX)/share/man/man1
