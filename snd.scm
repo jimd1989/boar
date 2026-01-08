@@ -100,6 +100,7 @@ static void init_audio_out(char *name) {
   OUTPUT_BUFFER.writeData      = malloc(OUTPUT_BUFFER.writeSizeBytes);
   sio_onmove(sio, &audio_out_callback, (void *)&OUTPUT_BUFFER);
   sio_start(sio);
+  warnx("%dch %dHz %d byte buffer", par.pchan, par.rate, par.round);
   fill_silence(&OUTPUT_BUFFER);
 }
 
@@ -156,13 +157,12 @@ void init(void (*schemeAudioOutCallback)(int)) {
 
 (define-external (stdin_eval (c-string x)) void
   (print (eval (with-input-from-string x read))))
+
 (define init (foreign-safe-lambda void "init" (function void (int))))
-(define fill-dsp (foreign-safe-lambda void "fill_dsp" u8vector int))
-; (make-u8vector) can be anything! Scheme has full DSP control!
-;(define-external (scheme_audio_out_callback (int x)) void
-;  (fill-dsp (make-u8vector 2084 0) x))
+
+(define fill-dsp! (foreign-safe-lambda void "fill_dsp" u8vector int))
+
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
-;(init (location scheme_audio_out_callback))
 
 (: io-loop (-> noreturn))
 (define (io-loop)
@@ -193,6 +193,9 @@ void init(void (*schemeAudioOutCallback)(int)) {
     (condition-variable-specific-set! cvar buffer)
     cvar))
 
+; (set-audio-out-data!)
+; (set-audio-out-f!)
+
 (define-syntax make-audio-out-hdl
   (syntax-rules ()
     ((_ c-func-name cvar)
@@ -200,7 +203,7 @@ void init(void (*schemeAudioOutCallback)(int)) {
        (let* ((buf (condition-variable-specific cvar))
               (nu8 (adjust-buffer (dsp-buffer-bytes buf) bytes-to-fill)))
          (dsp-buffer-bytes-set! buf nu8)
-         (fill-dsp nu8 bytes-to-fill)
+         (fill-dsp! nu8 bytes-to-fill)
          (condition-variable-broadcast! cvar))))))
 
 (define AUDIO-OUT-COND (make-audio-out-condition-variable))
