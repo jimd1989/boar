@@ -3,7 +3,7 @@ PREFIX = /usr/local
 
 .SUFFIXES:
 all:
-	chicken-csc -o main -L -lsndio -lfa2 -strict-types -O3 snd.scm -o boar-scm
+	chicken-csc -L -lsndio -lfa2 -strict-types -O3 -specialize snd.scm -o boar-scm
 install:
 	mkdir -p $(PREFIX)/bin
 	mkdir -p $(PREFIX)/share/man/man1

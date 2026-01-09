@@ -1,5 +1,5 @@
 (import (chicken file posix) (chicken foreign) (chicken io) 
-        (chicken port) srfi-4 srfi-18 typed-records)
+        (chicken random) (chicken port) srfi-4 srfi-18 typed-records)
 
 #>
 #include <err.h>
@@ -37,12 +37,6 @@ static uint8_t STDIN_BUFFER[STDIN_BUFFER_SIZE] = {0};
 static OutputBuffer OUTPUT_BUFFER              = {0};
 static void (*SCHEME_AUDIO_OUT_CALLBACK)(int)  = NULL;
 
-static void init_stdin(void);
-static void audio_out_callback(void *, int);
-static void fill_silence(OutputBuffer *);
-static void init_audio_out(char *);
-static void write_audio(OutputBuffer *);
-
 static void init_stdin(void) {
   int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
   fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
@@ -50,8 +44,12 @@ static void init_stdin(void) {
   POLLFDS[STDIN_IDX].events = POLLIN;
 }
 
-static void audio_out_callback(void *arg, int delta) {
-  SCHEME_AUDIO_OUT_CALLBACK(delta);
+static void audio_out_callback(void *arg, int deltaFrames) {
+  OutputBuffer *ob = &OUTPUT_BUFFER;
+  int chans        = ob->parameters.pchan;
+  int byteDepth    = ob->parameters.bits >> 3;
+  int deltaBytes   = deltaFrames * chans * byteDepth;
+  SCHEME_AUDIO_OUT_CALLBACK(deltaBytes);
 }
 
 static void fill_silence(OutputBuffer *ob) {
@@ -100,7 +98,7 @@ static void init_audio_out(char *name) {
   OUTPUT_BUFFER.writeData      = malloc(OUTPUT_BUFFER.writeSizeBytes);
   sio_onmove(sio, &audio_out_callback, (void *)&OUTPUT_BUFFER);
   sio_start(sio);
-  warnx("%dch %dHz %d byte buffer", par.pchan, par.rate, par.round);
+  warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.round);
   fill_silence(&OUTPUT_BUFFER);
 }
 
@@ -175,7 +173,7 @@ void init(void (*schemeAudioOutCallback)(int)) {
   (data : any)
   (f : (u8vector any fixnum -> noreturn)))
 
-(: adjust-buffer (u8vector fixnum --> u8vector))
+(: adjust-buffer (u8vector fixnum -> u8vector))
 (define (adjust-buffer buffer size)
   (if (< (u8vector-length buffer) size)
     (begin (release-number-vector buffer)
@@ -183,9 +181,12 @@ void init(void (*schemeAudioOutCallback)(int)) {
     buffer))
 
 (: ignore-buffer (u8vector any fixnum -> noreturn))
-(define (ignore-buffer bytes data bytes-to-fill) bytes)
+(define (ignore-buffer bytes data bytes-to-fill) (void))
 
-(: make-audio-out-condition-variable (--> (struct condition-variable)))
+(: fill-noise! (u8vector any fixnum -> noreturn))
+(define (fill-noise! u8 x n) (random-bytes (u8vector->blob/shared u8)) (void))
+
+(: make-audio-out-condition-variable (-> (struct condition-variable)))
 (define (make-audio-out-condition-variable)
   (let* ((cvar (make-condition-variable))
          (u8 (make-u8vector 128 0 #t #f))
@@ -193,8 +194,14 @@ void init(void (*schemeAudioOutCallback)(int)) {
     (condition-variable-specific-set! cvar buffer)
     cvar))
 
-; (set-audio-out-data!)
-; (set-audio-out-f!)
+(: set-audio-out-data! ((struct condition-variable) any -> noreturn))
+(define (set-audio-out-data! cvar x)
+  (dsp-buffer-data-set! (condition-variable-specific cvar) x))
+
+(: set-audio-out-f! ((struct condition-variable)
+                     (u8vector any fixnum -> noreturn) -> noreturn))
+(define (set-audio-out-f! cvar f)
+  (dsp-buffer-f-set! (condition-variable-specific cvar) f))
 
 (define-syntax make-audio-out-hdl
   (syntax-rules ()
@@ -203,10 +210,14 @@ void init(void (*schemeAudioOutCallback)(int)) {
        (let* ((buf (condition-variable-specific cvar))
               (nu8 (adjust-buffer (dsp-buffer-bytes buf) bytes-to-fill)))
          (dsp-buffer-bytes-set! buf nu8)
+         ((dsp-buffer-f buf) nu8 (dsp-buffer-data buf) bytes-to-fill)
          (fill-dsp! nu8 bytes-to-fill)
          (condition-variable-broadcast! cvar))))))
 
+; runtime
+(: AUDIO-OUT-COND (struct condition-variable))
 (define AUDIO-OUT-COND (make-audio-out-condition-variable))
+
 (make-audio-out-hdl sndio_0 AUDIO-OUT-COND)
 (init (location sndio_0))
 (io-loop)
