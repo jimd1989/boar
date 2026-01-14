@@ -75,7 +75,7 @@ static void init_audio_out(char *name) {
   int bytes           = 0;
   struct sio_hdl *sio = NULL;
   struct sio_par par  = {0};
-  sio = sio_open(name, SIO_PLAY, true);
+  sio = sio_open(name, SIO_REC | SIO_PLAY, true);
   if (sio == NULL) { 
     warnx("could not open audio output %s", name); 
     return;
@@ -96,6 +96,45 @@ static void init_audio_out(char *name) {
   OUTPUT_BUFFER.writeSizeBytes = par.pchan * par.appbufsz * bytes;
   OUTPUT_BUFFER.dspData        = malloc(OUTPUT_BUFFER.dspSizeBytes);
   OUTPUT_BUFFER.writeData      = malloc(OUTPUT_BUFFER.writeSizeBytes);
+  sio_onmove(sio, &audio_out_callback, (void *)&OUTPUT_BUFFER);
+  sio_start(sio);
+  warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.round);
+  fill_silence(&OUTPUT_BUFFER);
+}
+
+static void init_audio_out_2(void (*schemeAudioOutCallback)(int),
+                             char *name, int rate, int outCh, int inCh, 
+                             int bits, bool readWrite) {
+  int bytes           = 0;
+  struct sio_hdl *sio = NULL;
+  struct sio_par par  = {0};
+  if (readWrite) {
+    sio = sio_open(name, SIO_REC | SIO_PLAY, true);
+  } else {
+    sio = sio_open(name, SIO_PLAY, true);
+  }
+  if (sio == NULL) { 
+    warnx("could not open audio output %s", name); 
+    return;
+  }
+  sio_initpar(&par);
+  par.bits     = bits;
+  par.appbufsz = 1; /* soundcard will overwrite with min size */
+  par.rate     = rate;
+  par.pchan    = outCh;
+  par.rchan    = inCh;
+  par.le       = 1;
+  par.sig      = 1;
+  sio_setpar(sio, &par);
+  sio_getpar(sio, &par);
+  bytes = par.bits >> 3;
+  OUTPUT_BUFFER.sio            = sio;
+  OUTPUT_BUFFER.parameters     = par;
+  OUTPUT_BUFFER.dspSizeBytes   = par.pchan * par.bufsz * bytes;
+  OUTPUT_BUFFER.writeSizeBytes = par.pchan * par.appbufsz * bytes;
+  OUTPUT_BUFFER.dspData        = malloc(OUTPUT_BUFFER.dspSizeBytes);
+  OUTPUT_BUFFER.writeData      = malloc(OUTPUT_BUFFER.writeSizeBytes);
+  SCHEME_AUDIO_OUT_CALLBACK    = schemeAudioOutCallback;
   sio_onmove(sio, &audio_out_callback, (void *)&OUTPUT_BUFFER);
   sio_start(sio);
   warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.round);
@@ -130,7 +169,7 @@ void poll_io(void (*eval)(char *)) {
   int bytesRead    = 0;
   OutputBuffer *ob = &OUTPUT_BUFFER;
   /* Seemingly has to run each time */
-  sio_pollfd(ob->sio, &POLLFDS[SNDIO_OUT_IDX], POLLOUT);
+  sio_pollfd(ob->sio, &POLLFDS[SNDIO_OUT_IDX], POLLIN | POLLOUT);
   poll(POLLFDS, FD_LIMIT, -1);
   if (POLLFDS[STDIN_IDX].revents & POLLIN) {
     bytesRead = read(STDIN_FILENO, STDIN_BUFFER, STDIN_BUFFER_SIZE - 1);
@@ -140,6 +179,9 @@ void poll_io(void (*eval)(char *)) {
   }
   /* MIO HDL loop eventually */
   mask = sio_revents(ob->sio, &POLLFDS[SNDIO_OUT_IDX]);
+  if (mask & POLLIN) {
+    sio_read(ob->sio, ob->writeData, ob->writeSizeBytes);
+  }
   if (mask & POLLOUT) {
     write_audio(ob);
   }
@@ -156,17 +198,47 @@ void init(void (*schemeAudioOutCallback)(int)) {
 (define-external (stdin_eval (c-string x)) void
   (print (eval (with-input-from-string x read))))
 
+(define init-stdin (foreign-safe-lambda void "init_stdin"))
+
 (define init (foreign-safe-lambda void "init" (function void (int))))
 
 (define fill-dsp! (foreign-safe-lambda void "fill_dsp" u8vector int))
 
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
 
+(define init-audio-out (foreign-safe-lambda void "init_audio_out_2"
+  (function void (int)) c-string int int int int bool))
+
 (: io-loop (-> noreturn))
 (define (io-loop)
   ; needs error handling
   (poll-io (location stdin_eval))
   (io-loop))
+
+(: DEFAULT-AUDIO-SETTINGS (list-of (list-of any)))
+(define DEFAULT-AUDIO-SETTINGS
+  '((name "default")
+    (rate 48000)
+    (out-ch 2)
+    (in-ch 2)
+    (bits 16)
+    (read-write? #f)))
+
+(: get-setting (any (list-of (list-of any)) --> any))
+(define (get-setting x xs)
+  (let ((setting (assoc x xs)))
+    (if setting (cadr setting) (cadr (assoc x DEFAULT-AUDIO-SETTINGS)))))
+
+;(: start-audio ((list-of (list-of any)) -> void))
+(define (start-audio callback xs)
+    (print callback)
+  (let ((name (get-setting 'name xs))
+        (rate (get-setting 'rate xs))
+        (out-ch (get-setting 'out-ch xs))
+        (in-ch (get-setting 'in-ch xs))
+        (bits (get-setting 'bits xs))
+        (read-write? (if (get-setting 'read-write? xs) 1 0)))
+    (init-audio-out callback name rate out-ch in-ch bits read-write?)))
 
 (define-record dsp-buffer
   (bytes : u8vector)
@@ -213,11 +285,12 @@ void init(void (*schemeAudioOutCallback)(int)) {
          ((dsp-buffer-f buf) nu8 (dsp-buffer-data buf) bytes-to-fill)
          (fill-dsp! nu8 bytes-to-fill)
          (condition-variable-broadcast! cvar))))))
-
 ; runtime
 (: AUDIO-OUT-COND (struct condition-variable))
 (define AUDIO-OUT-COND (make-audio-out-condition-variable))
 
 (make-audio-out-hdl sndio_0 AUDIO-OUT-COND)
-(init (location sndio_0))
+(define SNDIO-0 (location sndio_0))
+(start-audio SNDIO-0 '())
+(init-stdin)
 (io-loop)
