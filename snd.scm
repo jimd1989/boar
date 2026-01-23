@@ -1,5 +1,5 @@
-(import (chicken file posix) (chicken foreign) (chicken io) (chicken port) 
-        (chicken random) srfi-4 srfi-18 typed-records)
+(import (chicken condition) (chicken file posix) (chicken foreign) (chicken io) 
+        (chicken port) (chicken random) srfi-4 srfi-18 typed-records)
 
 #>
 #include <err.h>
@@ -156,7 +156,9 @@ void poll_io(void (*eval)(char *)) {
 <#
 
 (define-external (stdin_eval (c-string x)) void
-  (print (eval (with-input-from-string x read))))
+  (condition-case (print (eval (with-input-from-string x read)))
+   (e (exn) (print (get-condition-property e 'exn 'message)))
+   (exn () (print 'unknown-input-error))))
 
 (define init-stdin (foreign-safe-lambda void "init_stdin"))
 
@@ -169,7 +171,6 @@ void poll_io(void (*eval)(char *)) {
 
 (: io-loop (-> noreturn))
 (define (io-loop)
-  ; needs error handling
   (poll-io (location stdin_eval))
   (io-loop))
 
