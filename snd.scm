@@ -1,5 +1,5 @@
-(import (chicken file posix) (chicken foreign) (chicken io) 
-        (chicken random) (chicken port) srfi-4 srfi-18 typed-records)
+(import (chicken file posix) (chicken foreign) (chicken io) (chicken port) 
+        (chicken random) srfi-4 srfi-18 typed-records)
 
 #>
 #include <err.h>
@@ -71,40 +71,10 @@ static void fill_silence(OutputBuffer *ob) {
   ob->writePos += (ob->writePos + bytesWritten) % ob->dspSizeBytes;
 }
 
-static void init_audio_out(char *name) {
-  int bytes           = 0;
-  struct sio_hdl *sio = NULL;
-  struct sio_par par  = {0};
-  sio = sio_open(name, SIO_REC | SIO_PLAY, true);
-  if (sio == NULL) { 
-    warnx("could not open audio output %s", name); 
-    return;
-  }
-  sio_initpar(&par);
-  par.bits     = AUDIO_BITS;
-  par.appbufsz = 1; /* soundcard will overwrite with min size */
-  par.rate     = AUDIO_RATE;
-  par.pchan    = AUDIO_CHANS;
-  par.le       = 1;
-  par.sig      = 1;
-  sio_setpar(sio, &par);
-  sio_getpar(sio, &par);
-  bytes = par.bits >> 3;
-  OUTPUT_BUFFER.sio            = sio;
-  OUTPUT_BUFFER.parameters     = par;
-  OUTPUT_BUFFER.dspSizeBytes   = par.pchan * par.bufsz * bytes;
-  OUTPUT_BUFFER.writeSizeBytes = par.pchan * par.appbufsz * bytes;
-  OUTPUT_BUFFER.dspData        = malloc(OUTPUT_BUFFER.dspSizeBytes);
-  OUTPUT_BUFFER.writeData      = malloc(OUTPUT_BUFFER.writeSizeBytes);
-  sio_onmove(sio, &audio_out_callback, (void *)&OUTPUT_BUFFER);
-  sio_start(sio);
-  warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.round);
-  fill_silence(&OUTPUT_BUFFER);
-}
-
-static void init_audio_out_2(void (*schemeAudioOutCallback)(int),
-                             char *name, int rate, int outCh, int inCh, 
-                             int bits, bool readWrite) {
+// introduce an index here
+static void init_audio_out(void (*schemeAudioOutCallback)(int),
+                           char *name, int rate, int outCh, int inCh, 
+                           int bits, bool readWrite) {
   int bytes           = 0;
   struct sio_hdl *sio = NULL;
   struct sio_par par  = {0};
@@ -157,9 +127,6 @@ static void write_audio(OutputBuffer *ob) {
     write_ix = (write_ix + 1) % ob->dspSizeBytes;
   }
   bytesWritten = sio_write(ob->sio, ob->writeData, ob->writeSizeBytes);
-  /* It's possible not to write a full buffer's worth, especially if the
-     writeSize is not a factor of dspSize. So the true writePos depends
-     on bytesWritten. */
   ob->writePos = (ob->writePos + bytesWritten) % ob->dspSizeBytes;
 }
 
@@ -186,13 +153,6 @@ void poll_io(void (*eval)(char *)) {
     write_audio(ob);
   }
 }
-
-void init(void (*schemeAudioOutCallback)(int)) {
-  struct sio_hdl *sio = NULL;
-  init_stdin();
-  SCHEME_AUDIO_OUT_CALLBACK = schemeAudioOutCallback;
-  init_audio_out("default");
-}
 <#
 
 (define-external (stdin_eval (c-string x)) void
@@ -200,13 +160,11 @@ void init(void (*schemeAudioOutCallback)(int)) {
 
 (define init-stdin (foreign-safe-lambda void "init_stdin"))
 
-(define init (foreign-safe-lambda void "init" (function void (int))))
-
 (define fill-dsp! (foreign-safe-lambda void "fill_dsp" u8vector int))
 
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
 
-(define init-audio-out (foreign-safe-lambda void "init_audio_out_2"
+(define init-audio-out (foreign-safe-lambda void "init_audio_out"
   (function void (int)) c-string int int int int bool))
 
 (: io-loop (-> noreturn))
@@ -229,9 +187,8 @@ void init(void (*schemeAudioOutCallback)(int)) {
   (let ((setting (assoc x xs)))
     (if setting (cadr setting) (cadr (assoc x DEFAULT-AUDIO-SETTINGS)))))
 
-;(: start-audio ((list-of (list-of any)) -> void))
+(: start-audio (pointer (list-of (list-of any)) -> void))
 (define (start-audio callback xs)
-    (print callback)
   (let ((name (get-setting 'name xs))
         (rate (get-setting 'rate xs))
         (out-ch (get-setting 'out-ch xs))
@@ -243,7 +200,8 @@ void init(void (*schemeAudioOutCallback)(int)) {
 (define-record dsp-buffer
   (bytes : u8vector)
   (data : any)
-  (f : (u8vector any fixnum -> noreturn)))
+  (f : (u8vector any fixnum -> noreturn))
+  (mutex : (struct mutex)))
 
 (: adjust-buffer (u8vector fixnum -> u8vector))
 (define (adjust-buffer buffer size)
@@ -262,18 +220,24 @@ void init(void (*schemeAudioOutCallback)(int)) {
 (define (make-audio-out-condition-variable)
   (let* ((cvar (make-condition-variable))
          (u8 (make-u8vector 128 0 #t #f))
-         (buffer (make-dsp-buffer u8 '() ignore-buffer)))
+         (buffer (make-dsp-buffer u8 '() ignore-buffer (make-mutex))))
     (condition-variable-specific-set! cvar buffer)
     cvar))
 
 (: set-audio-out-data! ((struct condition-variable) any -> noreturn))
 (define (set-audio-out-data! cvar x)
-  (dsp-buffer-data-set! (condition-variable-specific cvar) x))
+  (let ((mutex (dsp-buffer-mutex (condition-variable-specific cvar))))
+    (mutex-lock! mutex)
+    (dsp-buffer-data-set! (condition-variable-specific cvar) x)
+    (mutex-unlock! mutex)))
 
 (: set-audio-out-f! ((struct condition-variable)
                      (u8vector any fixnum -> noreturn) -> noreturn))
 (define (set-audio-out-f! cvar f)
-  (dsp-buffer-f-set! (condition-variable-specific cvar) f))
+  (let* ((mutex (dsp-buffer-mutex (condition-variable-specific cvar)))
+         (new-f (lambda (u8 x n)
+                  (mutex-lock! mutex) (f u8 x n) (mutex-unlock! mutex))))
+    (dsp-buffer-f-set! (condition-variable-specific cvar) new-f)))
 
 (define-syntax make-audio-out-hdl
   (syntax-rules ()
@@ -285,12 +249,18 @@ void init(void (*schemeAudioOutCallback)(int)) {
          ((dsp-buffer-f buf) nu8 (dsp-buffer-data buf) bytes-to-fill)
          (fill-dsp! nu8 bytes-to-fill)
          (condition-variable-broadcast! cvar))))))
-; runtime
-(: AUDIO-OUT-COND (struct condition-variable))
-(define AUDIO-OUT-COND (make-audio-out-condition-variable))
 
-(make-audio-out-hdl sndio_0 AUDIO-OUT-COND)
-(define SNDIO-0 (location sndio_0))
-(start-audio SNDIO-0 '())
+; runtime
+; TODO: 
+; - multiple devices
+;   - start with array of one
+;   - add index arg on line 74
+; - MIDI
+; too many setup steps
+(: SNDIO-0-COND (struct condition-variable))
+(define SNDIO-0-COND (make-audio-out-condition-variable))
+(make-audio-out-hdl sndio_0 SNDIO-0-COND)
+(define SNDIO-0-HDL (location sndio_0))
+(start-audio SNDIO-0-HDL '((read-write? #t)))
 (init-stdin)
 (io-loop)
