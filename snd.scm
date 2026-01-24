@@ -1,5 +1,6 @@
 (import (chicken condition) (chicken file posix) (chicken foreign) (chicken io) 
-        (chicken port) (chicken random) srfi-4 srfi-18 typed-records)
+        (chicken port) (chicken pretty-print) (chicken random) srfi-4 srfi-18
+        typed-records)
 
 #>
 #include <err.h>
@@ -136,7 +137,9 @@ void poll_io(void (*eval)(char *)) {
   int bytesRead    = 0;
   OutputBuffer *ob = &OUTPUT_BUFFER;
   /* Seemingly has to run each time */
-  sio_pollfd(ob->sio, &POLLFDS[SNDIO_OUT_IDX], POLLIN | POLLOUT);
+  if (ob->sio != NULL) {
+    sio_pollfd(ob->sio, &POLLFDS[SNDIO_OUT_IDX], POLLIN | POLLOUT);
+  }
   poll(POLLFDS, FD_LIMIT, -1);
   if (POLLFDS[STDIN_IDX].revents & POLLIN) {
     bytesRead = read(STDIN_FILENO, STDIN_BUFFER, STDIN_BUFFER_SIZE - 1);
@@ -145,7 +148,9 @@ void poll_io(void (*eval)(char *)) {
     }
   }
   /* MIO HDL loop eventually */
-  mask = sio_revents(ob->sio, &POLLFDS[SNDIO_OUT_IDX]);
+  if (ob->sio != NULL) {
+    mask = sio_revents(ob->sio, &POLLFDS[SNDIO_OUT_IDX]);
+  }
   if (mask & POLLIN) {
     sio_read(ob->sio, ob->writeData, ob->writeSizeBytes);
   }
@@ -188,8 +193,8 @@ void poll_io(void (*eval)(char *)) {
   (let ((setting (assoc x xs)))
     (if setting (cadr setting) (cadr (assoc x DEFAULT-AUDIO-SETTINGS)))))
 
-(: start-audio (pointer (list-of (list-of any)) -> void))
-(define (start-audio callback xs)
+(: start-audio (pointer #!optional (list-of (list-of any)) -> void))
+(define (start-audio callback #!optional (xs'()))
   (let ((name (get-setting 'name xs))
         (rate (get-setting 'rate xs))
         (out-ch (get-setting 'out-ch xs))
@@ -262,6 +267,9 @@ void poll_io(void (*eval)(char *)) {
 (define SNDIO-0-COND (make-audio-out-condition-variable))
 (make-audio-out-hdl sndio_0 SNDIO-0-COND)
 (define SNDIO-0-HDL (location sndio_0))
-(start-audio SNDIO-0-HDL '((read-write? #t)))
+(pp `(audio-handles '(SNDIO-0-HDL)))
+(pp `(default-audio-settings ,DEFAULT-AUDIO-SETTINGS))
+(pp `(please run (start-audio AUDIO-HANDLE SETTINGS-OVERRIDES)))
+;(start-audio SNDIO-0-HDL '((read-write? #t)))
 (init-stdin)
 (io-loop)
