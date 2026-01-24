@@ -17,11 +17,13 @@
 #define AUDIO_CHANS 2
 #define AUDIO_BITS 16
 #define STDIN_BUFFER_SIZE 4096
+#define MIDI_BUFFER_SIZE 1024
 #define STDIN_IDX 0
 #define SNDIO_OUT_IDX 1
 #define TEXT_FD_LIMIT 1
 #define AUDIO_FD_LIMIT 4
-#define FD_LIMIT (TEXT_FD_LIMIT + AUDIO_FD_LIMIT)
+#define MIDI_FD_LIMIT 4
+#define FD_LIMIT (TEXT_FD_LIMIT + AUDIO_FD_LIMIT + MIDI_FD_LIMIT)
 
 typedef struct AudioBuffer {
   int               fdIdx;
@@ -36,9 +38,16 @@ typedef struct AudioBuffer {
   void              (*schemeCallback)(int);
 } AudioBuffer;
 
+typedef struct MidiBuffer {
+  int               fdIdx;
+  struct mio_hdl  * mio;
+  uint8_t           midiData[MIDI_BUFFER_SIZE];
+} MidiBuffer;
+
 static struct pollfd POLLFDS[FD_LIMIT]           = {0};
 static uint8_t STDIN_BUFFER[STDIN_BUFFER_SIZE]   = {0};
 static AudioBuffer AUDIO_BUFFERS[AUDIO_FD_LIMIT] = {0};
+static MidiBuffer MIDI_BUFFERS[MIDI_FD_LIMIT]    = {0};
 
 void stdin_init(void) {
   int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
@@ -74,6 +83,22 @@ void fill_silence(AudioBuffer *ob) {
   ob->writePos += (ob->writePos + bytesWritten) % ob->dspSizeBytes;
 }
 
+struct mio_hdl * midi_init(int idx, char *name, bool in, bool out) {
+  int mode            = (in ? MIO_IN : 0) | (out ? MIO_OUT : 0);
+  struct mio_hdl *mio = NULL;
+  MidiBuffer *mb      = NULL;
+  if (idx < 0 || idx >= MIDI_FD_LIMIT) {
+    warnx("%d midi devices available, requested #%d", MIDI_FD_LIMIT, idx + 1);
+  }
+  mb  = &MIDI_BUFFERS[idx];
+  mio = mio_open(name, mode, true);
+  if (mio == NULL) {
+    warnx("could not open midi device %s", name);
+  }
+  mb->mio = mio;
+  return mb->mio;
+}
+
 struct sio_hdl * audio_init(int idx, void (*schemeCallback)(int), char *name, 
                             int rate, int outCh, int inCh, int bits, 
                             bool readWrite) {
@@ -81,7 +106,7 @@ struct sio_hdl * audio_init(int idx, void (*schemeCallback)(int), char *name,
   struct sio_hdl *sio = NULL;
   struct sio_par par  = {0};
   AudioBuffer *ab     = NULL;
-  if (idx < 0 || (idx - 1) > AUDIO_FD_LIMIT) {
+  if (idx < 0 || idx >= AUDIO_FD_LIMIT) {
     warnx("%d audio devices available, requested #%d", AUDIO_FD_LIMIT, idx + 1);
   }
   ab = &AUDIO_BUFFERS[idx];
@@ -149,7 +174,14 @@ void poll_io(void (*eval)(char *)) {
   int i           = 0;
   int mask        = 0;
   int bytesRead   = 0;
+  MidiBuffer *mb  = NULL;
   AudioBuffer *ob = NULL;
+  for (i = 0 ; i < MIDI_FD_LIMIT ; i++) {
+    mb = &MIDI_BUFFERS[i];
+    if (mb->mio != NULL) {
+      mio_pollfd(mb->mio, &POLLFDS[mb->fdIdx], POLLIN | POLLOUT);
+    }
+  }
   for (i = 0 ; i < AUDIO_FD_LIMIT ; i++) {
     ob = &AUDIO_BUFFERS[i];
     if (ob->sio != NULL) {
@@ -163,7 +195,21 @@ void poll_io(void (*eval)(char *)) {
       eval(STDIN_BUFFER);
     }
   }
-  /* MIO HDL loop eventually */
+  for (i = 0 ; i < MIDI_FD_LIMIT ; i++) {
+    mb = &MIDI_BUFFERS[i];
+    if (mb->mio != NULL) {
+      mask = mio_revents(mb->mio, &POLLFDS[mb->fdIdx]);
+      warnx("pollin midi %d", mask);
+      if (mask & POLLIN) {
+        mio_read(mb->mio, mb->midiData, MIDI_BUFFER_SIZE);
+        /* callback here */
+      }
+      if (mask & POLLOUT) {
+        /* this probably is not right */
+        mio_write(mb->mio, mb->midiData, MIDI_BUFFER_SIZE);
+      }
+    }
+  }
   for (i = 0 ; i < AUDIO_FD_LIMIT ; i++) {
     ob = &AUDIO_BUFFERS[i];
     if (ob->sio != NULL) {
@@ -201,6 +247,9 @@ void poll_io(void (*eval)(char *)) {
 (define fill-dsp! (foreign-safe-lambda void "fill_dsp" int u8vector int))
 
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
+
+(define midi-init (foreign-safe-lambda c-pointer "midi_init"
+  int c-string bool bool))
 
 (define audio-init (foreign-safe-lambda c-pointer "audio_init"
   int (function void (int)) c-string int int int int bool))
