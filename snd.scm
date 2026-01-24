@@ -38,14 +38,14 @@ static uint8_t STDIN_BUFFER[STDIN_BUFFER_SIZE] = {0};
 static OutputBuffer OUTPUT_BUFFER              = {0};
 static void (*SCHEME_AUDIO_OUT_CALLBACK)(int)  = NULL;
 
-static void init_stdin(void) {
+void stdin_init(void) {
   int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
   fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
   POLLFDS[STDIN_IDX].fd     = STDIN_FILENO;
   POLLFDS[STDIN_IDX].events = POLLIN;
 }
 
-static void audio_out_callback(void *arg, int deltaFrames) {
+void audio_out_callback(void *arg, int deltaFrames) {
   OutputBuffer *ob = &OUTPUT_BUFFER;
   int chans        = ob->parameters.pchan;
   int byteDepth    = ob->parameters.bits >> 3;
@@ -53,7 +53,7 @@ static void audio_out_callback(void *arg, int deltaFrames) {
   SCHEME_AUDIO_OUT_CALLBACK(deltaBytes);
 }
 
-static void fill_silence(OutputBuffer *ob) {
+void fill_silence(OutputBuffer *ob) {
   /* Meant for pre-filling the buffer. For whatever reason it does not
      seem to trigger callbacks, so init ob->writePos at 0 for maximum
      distance from ob->dspPos. */
@@ -73,9 +73,10 @@ static void fill_silence(OutputBuffer *ob) {
 }
 
 // introduce an index here
-static void init_audio_out(void (*schemeAudioOutCallback)(int),
-                           char *name, int rate, int outCh, int inCh, 
-                           int bits, bool readWrite) {
+struct sio_hdl *
+audio_init(void (*schemeAudioOutCallback)(int),
+                     char *name, int rate, int outCh, int inCh, 
+                     int bits, bool readWrite) {
   int bytes           = 0;
   struct sio_hdl *sio = NULL;
   struct sio_par par  = {0};
@@ -86,7 +87,7 @@ static void init_audio_out(void (*schemeAudioOutCallback)(int),
   }
   if (sio == NULL) { 
     warnx("could not open audio output %s", name); 
-    return;
+    return NULL;
   }
   sio_initpar(&par);
   par.bits     = bits;
@@ -110,6 +111,12 @@ static void init_audio_out(void (*schemeAudioOutCallback)(int),
   sio_start(sio);
   warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.round);
   fill_silence(&OUTPUT_BUFFER);
+  return OUTPUT_BUFFER.sio;
+}
+
+void audio_close(struct sio_hdl *sio) {
+  sio_stop(sio);
+  sio_close(sio);
 }
 
 void fill_dsp(uint8_t *data, int sizeBytes) {
@@ -168,21 +175,24 @@ void poll_io(void (*eval)(char *)) {
 
 (define-record audio-handle
   (condition-variable : (struct condition-variable))
-  (callback : pointer))
+  (callback : pointer)
+  (sio : (or boolean pointer)))
 
 (define-external (stdin_eval (c-string x)) void
   (condition-case (print (eval (with-input-from-string x read)))
    (e (exn) (print (get-condition-property e 'exn 'message)))
    (exn () (print 'unknown-input-error))))
 
-(define init-stdin (foreign-safe-lambda void "init_stdin"))
+(define stdin-init (foreign-safe-lambda void "stdin_init"))
 
 (define fill-dsp! (foreign-safe-lambda void "fill_dsp" u8vector int))
 
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
 
-(define init-audio-out (foreign-safe-lambda void "init_audio_out"
+(define audio-init (foreign-safe-lambda c-pointer "audio_init"
   (function void (int)) c-string int int int int bool))
+
+(define audio-close (foreign-safe-lambda void "audio_close" c-pointer))
 
 (: io-loop (-> noreturn))
 (define (io-loop)
@@ -203,17 +213,32 @@ void poll_io(void (*eval)(char *)) {
   (let ((setting (assoc x xs)))
     (if setting (cadr setting) (cadr (assoc x DEFAULT-AUDIO-SETTINGS)))))
 
-(: start-audio
-  ((struct audio-handle) #!optional (list-of (list-of any)) -> void))
-(define (start-audio handle #!optional (xs'()))
-  (let ((callback (audio-handle-callback handle))
-        (name (get-setting 'name xs))
-        (rate (get-setting 'rate xs))
-        (out-ch (get-setting 'out-ch xs))
-        (in-ch (get-setting 'in-ch xs))
-        (bits (get-setting 'bits xs))
-        (read-write? (if (get-setting 'read-write? xs) 1 0)))
-    (init-audio-out callback name rate out-ch in-ch bits read-write?)))
+(: audio-start!
+  ((struct audio-handle) #!optional (list-of (list-of any)) -> noreturn))
+(define (audio-start! handle #!optional (xs'()))
+  (let* ((callback (audio-handle-callback handle))
+         (name (get-setting 'name xs))
+         (rate (get-setting 'rate xs))
+         (out-ch (get-setting 'out-ch xs))
+         (in-ch (get-setting 'in-ch xs))
+         (bits (get-setting 'bits xs))
+         (read-write? (if (get-setting 'read-write? xs) 1 0))
+         (cvar (audio-handle-condition-variable handle))
+         (mutex (dsp-buffer-mutex (condition-variable-specific cvar))))
+    (mutex-lock! mutex)
+    (audio-handle-sio-set! handle
+      (audio-init callback name rate out-ch in-ch bits read-write?))
+    (mutex-unlock! mutex)))
+
+(: audio-stop! ((struct audio-handle) -> noreturn))
+(define (audio-stop! handle)
+  (let* ((sio (audio-handle-sio handle))
+         (cvar (audio-handle-condition-variable handle))
+         (mutex (dsp-buffer-mutex (condition-variable-specific cvar))))
+    (if sio
+      (begin (mutex-lock! mutex) (audio-close sio) (mutex-unlock! mutex)
+             (audio-handle-sio-set! handle #f))
+      (print "audio is not playing"))))
 
 (: adjust-buffer (u8vector fixnum -> u8vector))
 (define (adjust-buffer buffer size)
@@ -240,17 +265,17 @@ void poll_io(void (*eval)(char *)) {
     (condition-variable-specific-set! cvar buffer)
     cvar))
 
-(: set-audio-out-data! ((struct audio-handle) any -> noreturn))
-(define (set-audio-out-data! handle x)
+(: audio-data-set! ((struct audio-handle) any -> noreturn))
+(define (audio-data-set! handle x)
   (let* ((cvar (audio-handle-condition-variable handle))
          (mutex (dsp-buffer-mutex (condition-variable-specific cvar))))
     (mutex-lock! mutex)
     (dsp-buffer-data-set! (condition-variable-specific cvar) x)
     (mutex-unlock! mutex)))
 
-(: set-audio-out-f! ((struct audio-handle)
+(: audio-f-set! ((struct audio-handle)
                      (u8vector any fixnum -> noreturn) -> noreturn))
-(define (set-audio-out-f! handle f)
+(define (audio-f-set! handle f)
   (let* ((cvar (audio-handle-condition-variable handle))
          (mutex (dsp-buffer-mutex (condition-variable-specific cvar)))
          (new-f (lambda (u8 x n)
@@ -277,15 +302,14 @@ void poll_io(void (*eval)(char *)) {
 ;   - add index arg on line 74
 ; - MIDI
 ; too many setup steps
-(: SNDIO-0-COND (struct condition-variable))
-(define SNDIO-0-COND (make-audio-out-condition-variable))
-(make-audio-out-hdl sndio_0 SNDIO-0-COND)
-(: SNDIO-0 (struct audio-handle))
-(define SNDIO-0
-  (make-audio-handle SNDIO-0-COND (location sndio_0)))
-(pp `(audio-handles '(SNDIO-0)))
+(: SIO-0-COND (struct condition-variable))
+(define SIO-0-COND (make-audio-out-condition-variable))
+(make-audio-out-hdl sio_0 SIO-0-COND)
+(: SIO-0 (struct audio-handle))
+(define SIO-0 (make-audio-handle SIO-0-COND (location sio_0) #f))
+(pp `(audio-handles '(SIO-0)))
 (pp `(default-audio-settings ,DEFAULT-AUDIO-SETTINGS))
-(pp `(please run (start-audio AUDIO-HANDLE SETTINGS-OVERRIDES)))
-;(start-audio SNDIO-0-HDL '((read-write? #t)))
-(init-stdin)
+(pp `(please run (audio-start! AUDIO-HANDLE SETTINGS-OVERRIDES)))
+;(audio-start SNDIO-0-HDL '((read-write? #t)))
+(stdin-init)
 (io-loop)
