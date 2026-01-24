@@ -37,9 +37,9 @@ typedef struct AudioBuffer {
   void              (*schemeCallback)(int);
 } AudioBuffer;
 
-static struct pollfd POLLFDS[FD_LIMIT]         = {0};
-static uint8_t STDIN_BUFFER[STDIN_BUFFER_SIZE] = {0};
-static AudioBuffer OUTPUT_BUFFER               = {0};
+static struct pollfd POLLFDS[FD_LIMIT]           = {0};
+static uint8_t STDIN_BUFFER[STDIN_BUFFER_SIZE]   = {0};
+static AudioBuffer AUDIO_BUFFERS[AUDIO_FD_LIMIT] = {0};
 
 void stdin_init(void) {
   int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
@@ -81,9 +81,11 @@ struct sio_hdl * audio_init(int idx, void (*schemeCallback)(int), char *name,
   int bytes           = 0;
   struct sio_hdl *sio = NULL;
   struct sio_par par  = {0};
+  AudioBuffer *ab     = NULL;
   if (idx < 0 || (idx - 1) > AUDIO_FD_LIMIT) {
     warnx("%d audio devices available, requested #%d", AUDIO_FD_LIMIT, idx + 1);
   }
+  ab = &AUDIO_BUFFERS[idx];
   if (readWrite) {
     sio = sio_open(name, SIO_REC | SIO_PLAY, true);
   } else {
@@ -104,19 +106,19 @@ struct sio_hdl * audio_init(int idx, void (*schemeCallback)(int), char *name,
   sio_setpar(sio, &par);
   sio_getpar(sio, &par);
   bytes = par.bits >> 3;
-  OUTPUT_BUFFER.fdIdx          = TEXT_FD_LIMIT + idx;
-  OUTPUT_BUFFER.sio            = sio;
-  OUTPUT_BUFFER.parameters     = par;
-  OUTPUT_BUFFER.dspSizeBytes   = par.pchan * par.bufsz * bytes;
-  OUTPUT_BUFFER.writeSizeBytes = par.pchan * par.appbufsz * bytes;
-  OUTPUT_BUFFER.dspData        = malloc(OUTPUT_BUFFER.dspSizeBytes);
-  OUTPUT_BUFFER.writeData      = malloc(OUTPUT_BUFFER.writeSizeBytes);
-  OUTPUT_BUFFER.schemeCallback = schemeCallback;
-  sio_onmove(sio, &audio_out_callback, (void *)&OUTPUT_BUFFER);
+  ab->fdIdx          = TEXT_FD_LIMIT + idx;
+  ab->sio            = sio;
+  ab->parameters     = par;
+  ab->dspSizeBytes   = par.pchan * par.bufsz * bytes;
+  ab->writeSizeBytes = par.pchan * par.appbufsz * bytes;
+  ab->dspData        = malloc(ab->dspSizeBytes);
+  ab->writeData      = malloc(ab->writeSizeBytes);
+  ab->schemeCallback = schemeCallback;
+  sio_onmove(sio, &audio_out_callback, (void *)ab);
   sio_start(sio);
   warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.round);
-  fill_silence(&OUTPUT_BUFFER);
-  return OUTPUT_BUFFER.sio;
+  fill_silence(ab);
+  return ab->sio;
 }
 
 void audio_close(struct sio_hdl *sio) {
@@ -125,7 +127,7 @@ void audio_close(struct sio_hdl *sio) {
 }
 
 void fill_dsp(uint8_t *data, int sizeBytes) {
-  AudioBuffer *ob = &OUTPUT_BUFFER;
+  AudioBuffer *ob = &AUDIO_BUFFERS[0];
   memcpy(&ob->dspData[ob->dspPos], data, sizeBytes);
   ob->dspPos = (ob->dspPos + sizeBytes) % ob->dspSizeBytes;
   //warnx("Δ %d → %d", sizeBytes, ob->dspPos);
@@ -147,7 +149,7 @@ void poll_io(void (*eval)(char *)) {
   int i           = 0;
   int mask        = 0;
   int bytesRead   = 0;
-  AudioBuffer *ob = &OUTPUT_BUFFER;
+  AudioBuffer *ob = &AUDIO_BUFFERS[0];
   /* Seemingly has to run each time */
   if (ob->sio != NULL) {
     sio_pollfd(ob->sio, &POLLFDS[SNDIO_OUT_IDX], POLLIN | POLLOUT);
