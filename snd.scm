@@ -31,12 +31,12 @@ typedef struct OutputBuffer {
   struct sio_par    parameters;
   uint8_t         * dspData;
   uint8_t         * writeData;
+  void              (*schemeCallback)(int);
 } OutputBuffer;
 
 static struct pollfd POLLFDS[FD_LIMIT]         = {0};
 static uint8_t STDIN_BUFFER[STDIN_BUFFER_SIZE] = {0};
 static OutputBuffer OUTPUT_BUFFER              = {0};
-static void (*SCHEME_AUDIO_OUT_CALLBACK)(int)  = NULL;
 
 void stdin_init(void) {
   int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
@@ -46,11 +46,11 @@ void stdin_init(void) {
 }
 
 void audio_out_callback(void *arg, int deltaFrames) {
-  OutputBuffer *ob = &OUTPUT_BUFFER;
+  OutputBuffer *ob = (OutputBuffer *)arg;
   int chans        = ob->parameters.pchan;
   int byteDepth    = ob->parameters.bits >> 3;
   int deltaBytes   = deltaFrames * chans * byteDepth;
-  SCHEME_AUDIO_OUT_CALLBACK(deltaBytes);
+  ob->schemeCallback(deltaBytes);
 }
 
 void fill_silence(OutputBuffer *ob) {
@@ -106,7 +106,7 @@ audio_init(void (*schemeAudioOutCallback)(int),
   OUTPUT_BUFFER.writeSizeBytes = par.pchan * par.appbufsz * bytes;
   OUTPUT_BUFFER.dspData        = malloc(OUTPUT_BUFFER.dspSizeBytes);
   OUTPUT_BUFFER.writeData      = malloc(OUTPUT_BUFFER.writeSizeBytes);
-  SCHEME_AUDIO_OUT_CALLBACK    = schemeAudioOutCallback;
+  OUTPUT_BUFFER.schemeCallback = schemeAudioOutCallback;
   sio_onmove(sio, &audio_out_callback, (void *)&OUTPUT_BUFFER);
   sio_start(sio);
   warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.round);
