@@ -1,6 +1,5 @@
 (import (chicken condition) (chicken file posix) (chicken foreign) (chicken io) 
-        (chicken port) (chicken pretty-print) (chicken random) srfi-4 srfi-18
-        typed-records)
+        (chicken port) (chicken random) srfi-4 srfi-18 typed-records)
 
 #>
 #include <err.h>
@@ -20,9 +19,9 @@
 #define STDIN_BUFFER_SIZE 4096
 #define STDIN_IDX 0
 #define SNDIO_OUT_IDX 1
-#define FD_LIMIT 2
 #define TEXT_FD_LIMIT 1
 #define AUDIO_FD_LIMIT 4
+#define FD_LIMIT (TEXT_FD_LIMIT + AUDIO_FD_LIMIT)
 
 typedef struct AudioBuffer {
   int               fdIdx;
@@ -124,10 +123,11 @@ struct sio_hdl * audio_init(int idx, void (*schemeCallback)(int), char *name,
 void audio_close(struct sio_hdl *sio) {
   sio_stop(sio);
   sio_close(sio);
+  sio = NULL;
 }
 
-void fill_dsp(uint8_t *data, int sizeBytes) {
-  AudioBuffer *ob = &AUDIO_BUFFERS[0];
+void fill_dsp(int idx, uint8_t *data, int sizeBytes) {
+  AudioBuffer *ob = &AUDIO_BUFFERS[idx];
   memcpy(&ob->dspData[ob->dspPos], data, sizeBytes);
   ob->dspPos = (ob->dspPos + sizeBytes) % ob->dspSizeBytes;
   //warnx("Δ %d → %d", sizeBytes, ob->dspPos);
@@ -149,10 +149,12 @@ void poll_io(void (*eval)(char *)) {
   int i           = 0;
   int mask        = 0;
   int bytesRead   = 0;
-  AudioBuffer *ob = &AUDIO_BUFFERS[0];
-  /* Seemingly has to run each time */
-  if (ob->sio != NULL) {
-    sio_pollfd(ob->sio, &POLLFDS[SNDIO_OUT_IDX], POLLIN | POLLOUT);
+  AudioBuffer *ob = NULL;
+  for (i = 0 ; i < AUDIO_FD_LIMIT ; i++) {
+    ob = &AUDIO_BUFFERS[i];
+    if (ob->sio != NULL) {
+      sio_pollfd(ob->sio, &POLLFDS[ob->fdIdx], POLLIN | POLLOUT);
+    }
   }
   poll(POLLFDS, FD_LIMIT, -1);
   if (POLLFDS[STDIN_IDX].revents & POLLIN) {
@@ -162,14 +164,17 @@ void poll_io(void (*eval)(char *)) {
     }
   }
   /* MIO HDL loop eventually */
-  if (ob->sio != NULL) {
-    mask = sio_revents(ob->sio, &POLLFDS[SNDIO_OUT_IDX]);
-  }
-  if (mask & POLLIN) {
-    sio_read(ob->sio, ob->writeData, ob->writeSizeBytes);
-  }
-  if (mask & POLLOUT) {
-    write_audio(ob);
+  for (i = 0 ; i < AUDIO_FD_LIMIT ; i++) {
+    ob = &AUDIO_BUFFERS[i];
+    if (ob->sio != NULL) {
+      mask = sio_revents(ob->sio, &POLLFDS[ob->fdIdx]);
+      if (mask & POLLIN) {
+        sio_read(ob->sio, ob->writeData, ob->writeSizeBytes);
+      }
+      if (mask & POLLOUT) {
+        write_audio(ob);
+      }
+    }
   }
 }
 <#
@@ -183,7 +188,8 @@ void poll_io(void (*eval)(char *)) {
 (define-record audio-handle
   (condition-variable : (struct condition-variable))
   (callback : pointer)
-  (sio : (or boolean pointer)))
+  (sio : (or boolean pointer))
+  (idx : fixnum))
 
 (define-external (stdin_eval (c-string x)) void
   (condition-case (print (eval (with-input-from-string x read)))
@@ -192,7 +198,7 @@ void poll_io(void (*eval)(char *)) {
 
 (define stdin-init (foreign-safe-lambda void "stdin_init"))
 
-(define fill-dsp! (foreign-safe-lambda void "fill_dsp" u8vector int))
+(define fill-dsp! (foreign-safe-lambda void "fill_dsp" int u8vector int))
 
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
 
@@ -232,12 +238,13 @@ void poll_io(void (*eval)(char *)) {
          (read-write? (if (get-setting 'read-write? xs) 1 0))
          (cvar (audio-handle-condition-variable handle))
          (mutex (dsp-buffer-mutex (condition-variable-specific cvar)))
-         (sio (audio-handle-sio handle)))
+         (sio (audio-handle-sio handle))
+         (idx (audio-handle-idx handle)))
     (if sio
       (print "audio is already playing")
       (begin (mutex-lock! mutex)
              (audio-handle-sio-set! handle
-              (audio-init 0 callback name rate out-ch in-ch bits read-write?))
+              (audio-init idx callback name rate out-ch in-ch bits read-write?))
              (mutex-unlock! mutex)))))
 
 (: audio-stop! ((struct audio-handle) -> noreturn))
@@ -296,30 +303,49 @@ void poll_io(void (*eval)(char *)) {
 
 (define-syntax make-audio-out-hdl
   (syntax-rules ()
-    ((_ c-func-name cvar)
+    ((_ c-func-name cvar idx)
      (define-external (c-func-name (int bytes-to-fill)) void
        (let* ((buf (condition-variable-specific cvar))
               (nu8 (adjust-buffer (dsp-buffer-bytes buf) bytes-to-fill)))
          (dsp-buffer-bytes-set! buf nu8)
          ((dsp-buffer-f buf) nu8 (dsp-buffer-data buf) bytes-to-fill)
-         (fill-dsp! nu8 bytes-to-fill)
+         (fill-dsp! idx nu8 bytes-to-fill)
          (condition-variable-broadcast! cvar))))))
 
-; runtime
-; TODO: 
-; - multiple devices
-;   - start with array of one
-;   - add index arg on line 74
-; - MIDI
-; too many setup steps
+; audio/MIDI handles hard limited at compile time because C callback pointers
+; are not available in interpreted mode
 (: SIO-0-COND (struct condition-variable))
 (define SIO-0-COND (make-audio-out-condition-variable))
-(make-audio-out-hdl sio_0 SIO-0-COND)
+
+(: SIO-1-COND (struct condition-variable))
+(define SIO-1-COND (make-audio-out-condition-variable))
+
+(: SIO-2-COND (struct condition-variable))
+(define SIO-2-COND (make-audio-out-condition-variable))
+
+(: SIO-3-COND (struct condition-variable))
+(define SIO-3-COND (make-audio-out-condition-variable))
+
+(make-audio-out-hdl sio_0 SIO-0-COND 0)
+(make-audio-out-hdl sio_1 SIO-1-COND 1)
+(make-audio-out-hdl sio_2 SIO-2-COND 2)
+(make-audio-out-hdl sio_3 SIO-3-COND 3)
+
 (: SIO-0 (struct audio-handle))
-(define SIO-0 (make-audio-handle SIO-0-COND (location sio_0) #f))
-(pp `(audio-handles '(SIO-0)))
-(pp `(default-audio-settings ,DEFAULT-AUDIO-SETTINGS))
-(pp `(please run (audio-start! AUDIO-HANDLE SETTINGS-OVERRIDES)))
-;(audio-start SNDIO-0-HDL '((read-write? #t)))
+(define SIO-0 (make-audio-handle SIO-0-COND (location sio_0) #f 0))
+
+(: SIO-1 (struct audio-handle))
+(define SIO-1 (make-audio-handle SIO-1-COND (location sio_1) #f 1))
+
+(: SIO-2 (struct audio-handle))
+(define SIO-2 (make-audio-handle SIO-2-COND (location sio_2) #f 2))
+
+(: SIO-3 (struct audio-handle))
+(define SIO-3 (make-audio-handle SIO-3-COND (location sio_3) #f 3))
+
+; runtime
+(print "boar: available audio handles " '(SIO-0 SIO-1 SIO-2 SIO-3))
+(print "boar: default audio settings " DEFAULT-AUDIO-SETTINGS)
+(print "boar: please run (audio-start! AUDIO-HANDLE SETTINGS-OVERRIDES)")
 (stdin-init)
 (io-loop)
