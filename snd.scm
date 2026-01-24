@@ -160,6 +160,16 @@ void poll_io(void (*eval)(char *)) {
 }
 <#
 
+(define-record dsp-buffer
+  (bytes : u8vector)
+  (data : any)
+  (f : (u8vector any fixnum -> noreturn))
+  (mutex : (struct mutex)))
+
+(define-record audio-handle
+  (condition-variable : (struct condition-variable))
+  (callback : pointer))
+
 (define-external (stdin_eval (c-string x)) void
   (condition-case (print (eval (with-input-from-string x read)))
    (e (exn) (print (get-condition-property e 'exn 'message)))
@@ -193,21 +203,17 @@ void poll_io(void (*eval)(char *)) {
   (let ((setting (assoc x xs)))
     (if setting (cadr setting) (cadr (assoc x DEFAULT-AUDIO-SETTINGS)))))
 
-(: start-audio (pointer #!optional (list-of (list-of any)) -> void))
-(define (start-audio callback #!optional (xs'()))
-  (let ((name (get-setting 'name xs))
+(: start-audio
+  ((struct audio-handle) #!optional (list-of (list-of any)) -> void))
+(define (start-audio handle #!optional (xs'()))
+  (let ((callback (audio-handle-callback handle))
+        (name (get-setting 'name xs))
         (rate (get-setting 'rate xs))
         (out-ch (get-setting 'out-ch xs))
         (in-ch (get-setting 'in-ch xs))
         (bits (get-setting 'bits xs))
         (read-write? (if (get-setting 'read-write? xs) 1 0)))
     (init-audio-out callback name rate out-ch in-ch bits read-write?)))
-
-(define-record dsp-buffer
-  (bytes : u8vector)
-  (data : any)
-  (f : (u8vector any fixnum -> noreturn))
-  (mutex : (struct mutex)))
 
 (: adjust-buffer (u8vector fixnum -> u8vector))
 (define (adjust-buffer buffer size)
@@ -216,8 +222,8 @@ void poll_io(void (*eval)(char *)) {
            (make-u8vector size 0 #t #f))
     buffer))
 
-(: ignore-buffer (u8vector any fixnum -> noreturn))
-(define (ignore-buffer bytes data bytes-to-fill) (void))
+(: ignore-buffer! (u8vector any fixnum -> noreturn))
+(define (ignore-buffer! bytes data bytes-to-fill) (void))
 
 (: fill-noise! (u8vector any fixnum -> noreturn))
 (define (fill-noise! u8 x n) (random-bytes (u8vector->blob/shared u8)) (void))
@@ -226,24 +232,32 @@ void poll_io(void (*eval)(char *)) {
 (define (make-audio-out-condition-variable)
   (let* ((cvar (make-condition-variable))
          (u8 (make-u8vector 128 0 #t #f))
-         (buffer (make-dsp-buffer u8 '() ignore-buffer (make-mutex))))
+         (mutex (make-mutex))
+         (silence (lambda (u8 x n) (mutex-lock! mutex)
+                                   (ignore-buffer! u8 x n)
+                                   (mutex-unlock! mutex)))
+         (buffer (make-dsp-buffer u8 '() silence mutex)))
     (condition-variable-specific-set! cvar buffer)
     cvar))
 
-(: set-audio-out-data! ((struct condition-variable) any -> noreturn))
-(define (set-audio-out-data! cvar x)
-  (let ((mutex (dsp-buffer-mutex (condition-variable-specific cvar))))
+(: set-audio-out-data! ((struct audio-handle) any -> noreturn))
+(define (set-audio-out-data! handle x)
+  (let* ((cvar (audio-handle-condition-variable handle))
+         (mutex (dsp-buffer-mutex (condition-variable-specific cvar))))
     (mutex-lock! mutex)
     (dsp-buffer-data-set! (condition-variable-specific cvar) x)
     (mutex-unlock! mutex)))
 
-(: set-audio-out-f! ((struct condition-variable)
+(: set-audio-out-f! ((struct audio-handle)
                      (u8vector any fixnum -> noreturn) -> noreturn))
-(define (set-audio-out-f! cvar f)
-  (let* ((mutex (dsp-buffer-mutex (condition-variable-specific cvar)))
+(define (set-audio-out-f! handle f)
+  (let* ((cvar (audio-handle-condition-variable handle))
+         (mutex (dsp-buffer-mutex (condition-variable-specific cvar)))
          (new-f (lambda (u8 x n)
                   (mutex-lock! mutex) (f u8 x n) (mutex-unlock! mutex))))
-    (dsp-buffer-f-set! (condition-variable-specific cvar) new-f)))
+    (mutex-lock! mutex)
+    (dsp-buffer-f-set! (condition-variable-specific cvar) new-f)
+    (mutex-unlock! mutex)))
 
 (define-syntax make-audio-out-hdl
   (syntax-rules ()
@@ -266,8 +280,10 @@ void poll_io(void (*eval)(char *)) {
 (: SNDIO-0-COND (struct condition-variable))
 (define SNDIO-0-COND (make-audio-out-condition-variable))
 (make-audio-out-hdl sndio_0 SNDIO-0-COND)
-(define SNDIO-0-HDL (location sndio_0))
-(pp `(audio-handles '(SNDIO-0-HDL)))
+(: SNDIO-0 (struct audio-handle))
+(define SNDIO-0
+  (make-audio-handle SNDIO-0-COND (location sndio_0)))
+(pp `(audio-handles '(SNDIO-0)))
 (pp `(default-audio-settings ,DEFAULT-AUDIO-SETTINGS))
 (pp `(please run (start-audio AUDIO-HANDLE SETTINGS-OVERRIDES)))
 ;(start-audio SNDIO-0-HDL '((read-write? #t)))
