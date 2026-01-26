@@ -41,6 +41,7 @@ typedef struct AudioBuffer {
 typedef struct MidiBuffer {
   int               fdIdx;
   struct mio_hdl  * mio;
+  void              (*schemeCallback)(int);
   uint8_t           midiData[MIDI_BUFFER_SIZE];
 } MidiBuffer;
 
@@ -56,7 +57,7 @@ void stdin_init(void) {
   POLLFDS[STDIN_IDX].events = POLLIN;
 }
 
-void audio_out_callback(void *arg, int deltaFrames) {
+void audio_callback(void *arg, int deltaFrames) {
   AudioBuffer *ob = (AudioBuffer *)arg;
   int chans       = ob->parameters.pchan;
   int byteDepth   = ob->parameters.bits >> 3;
@@ -83,7 +84,8 @@ void fill_silence(AudioBuffer *ob) {
   ob->writePos += (ob->writePos + bytesWritten) % ob->dspSizeBytes;
 }
 
-struct mio_hdl * midi_init(int idx, char *name, bool in, bool out) {
+struct mio_hdl * midi_init(int idx, void(*schemeCallback)(int), char *name, 
+                           bool in, bool out) {
   int mode            = (in ? MIO_IN : 0) | (out ? MIO_OUT : 0);
   struct mio_hdl *mio = NULL;
   MidiBuffer *mb      = NULL;
@@ -95,7 +97,10 @@ struct mio_hdl * midi_init(int idx, char *name, bool in, bool out) {
   if (mio == NULL) {
     warnx("could not open midi device %s", name);
   }
-  mb->mio = mio;
+  mb->mio            = mio;
+  mb->fdIdx          = TEXT_FD_LIMIT + AUDIO_FD_LIMIT + idx;
+  mb->schemeCallback = schemeCallback;
+  mio_pollfd(mb->mio, &POLLFDS[mb->fdIdx], POLLIN | POLLOUT);
   return mb->mio;
 }
 
@@ -138,7 +143,7 @@ struct sio_hdl * audio_init(int idx, void (*schemeCallback)(int), char *name,
   ab->dspData        = malloc(ab->dspSizeBytes);
   ab->writeData      = malloc(ab->writeSizeBytes);
   ab->schemeCallback = schemeCallback;
-  sio_onmove(sio, &audio_out_callback, (void *)ab);
+  sio_onmove(sio, &audio_callback, (void *)ab);
   sio_start(sio);
   warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.round);
   fill_silence(ab);
@@ -176,12 +181,7 @@ void poll_io(void (*eval)(char *)) {
   int bytesRead   = 0;
   MidiBuffer *mb  = NULL;
   AudioBuffer *ob = NULL;
-  for (i = 0 ; i < MIDI_FD_LIMIT ; i++) {
-    mb = &MIDI_BUFFERS[i];
-    if (mb->mio != NULL) {
-      mio_pollfd(mb->mio, &POLLFDS[mb->fdIdx], POLLIN | POLLOUT);
-    }
-  }
+  /* seemingly must run every time for audio, but not for MIDI. */
   for (i = 0 ; i < AUDIO_FD_LIMIT ; i++) {
     ob = &AUDIO_BUFFERS[i];
     if (ob->sio != NULL) {
@@ -199,9 +199,9 @@ void poll_io(void (*eval)(char *)) {
     mb = &MIDI_BUFFERS[i];
     if (mb->mio != NULL) {
       mask = mio_revents(mb->mio, &POLLFDS[mb->fdIdx]);
-      warnx("pollin midi %d", mask);
       if (mask & POLLIN) {
-        mio_read(mb->mio, mb->midiData, MIDI_BUFFER_SIZE);
+        bytesRead = mio_read(mb->mio, mb->midiData, MIDI_BUFFER_SIZE);
+        warnx("%u", bytesRead);
         /* callback here */
       }
       if (mask & POLLOUT) {
@@ -249,7 +249,7 @@ void poll_io(void (*eval)(char *)) {
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
 
 (define midi-init (foreign-safe-lambda c-pointer "midi_init"
-  int c-string bool bool))
+  int (function void (int)) c-string bool bool))
 
 (define audio-init (foreign-safe-lambda c-pointer "audio_init"
   int (function void (int)) c-string int int int int bool))
@@ -350,6 +350,9 @@ void poll_io(void (*eval)(char *)) {
     (dsp-buffer-f-set! (condition-variable-specific cvar) new-f)
     (mutex-unlock! mutex)))
 
+; audio/MIDI handles hard limited at compile time because C callback pointers
+; are not available in interpreted mode
+
 (define-syntax make-audio-out-hdl
   (syntax-rules ()
     ((_ c-func-name cvar idx)
@@ -361,8 +364,6 @@ void poll_io(void (*eval)(char *)) {
          (fill-dsp! idx nu8 bytes-to-fill)
          (condition-variable-broadcast! cvar))))))
 
-; audio/MIDI handles hard limited at compile time because C callback pointers
-; are not available in interpreted mode
 (: SIO-0-COND (struct condition-variable))
 (define SIO-0-COND (make-audio-out-condition-variable))
 
@@ -397,4 +398,5 @@ void poll_io(void (*eval)(char *)) {
 (print "boar: default audio settings " DEFAULT-AUDIO-SETTINGS)
 (print "boar: please run (audio-start! AUDIO-HANDLE SETTINGS-OVERRIDES)")
 (stdin-init)
+;(midi-init 0 (location sio_0) "default" #t #t)
 (io-loop)
