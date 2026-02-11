@@ -1,5 +1,6 @@
 (import (chicken condition) (chicken file posix) (chicken foreign) (chicken io) 
-        (chicken port) (chicken random) srfi-4 srfi-18 typed-records)
+        (chicken memory) (chicken port) (chicken random) srfi-4 srfi-18 
+        typed-records)
 
 #>
 #include <err.h>
@@ -41,7 +42,7 @@ typedef struct AudioBuffer {
 typedef struct MidiBuffer {
   int               fdIdx;
   struct mio_hdl  * mio;
-  void              (*schemeCallback)(int);
+  void              (*schemeCallback)(int, uint8_t *);
   uint8_t           midiData[MIDI_BUFFER_SIZE];
 } MidiBuffer;
 
@@ -84,8 +85,8 @@ void fill_silence(AudioBuffer *ob) {
   ob->writePos += (ob->writePos + bytesWritten) % ob->dspSizeBytes;
 }
 
-struct mio_hdl * midi_init(int idx, void(*schemeCallback)(int), char *name, 
-                           bool in, bool out) {
+struct mio_hdl * midi_init(int idx, void(*schemeCallback)(int, uint8_t *), 
+                           char *name, bool in, bool out) {
   int mode            = (in ? MIO_IN : 0) | (out ? MIO_OUT : 0);
   struct mio_hdl *mio = NULL;
   MidiBuffer *mb      = NULL;
@@ -201,8 +202,7 @@ void poll_io(void (*eval)(char *)) {
       mask = mio_revents(mb->mio, &POLLFDS[mb->fdIdx]);
       if (mask & POLLIN) {
         bytesRead = mio_read(mb->mio, mb->midiData, MIDI_BUFFER_SIZE);
-        warnx("%u", bytesRead);
-        /* callback here */
+        mb->schemeCallback(bytesRead, mb->midiData);
       }
       if (mask & POLLOUT) {
         /* this probably is not right */
@@ -225,11 +225,22 @@ void poll_io(void (*eval)(char *)) {
 }
 <#
 
+(define-record midi-buffer
+  (data : any)
+  (f : (pointer any fixnum -> noreturn))
+  (mutex : (struct mutex)))
+
 (define-record dsp-buffer
   (bytes : u8vector)
   (data : any)
   (f : (u8vector any fixnum -> noreturn))
   (mutex : (struct mutex)))
+
+(define-record midi-handle
+  (condition-variable : (struct condition-variable))
+  (callback : pointer)
+  (mio : (or boolean pointer))
+  (idx : fixnum))
 
 (define-record audio-handle
   (condition-variable : (struct condition-variable))
@@ -249,7 +260,7 @@ void poll_io(void (*eval)(char *)) {
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
 
 (define midi-init (foreign-safe-lambda c-pointer "midi_init"
-  int (function void (int)) c-string bool bool))
+  int (function void (int u8vector)) c-string bool bool))
 
 (define audio-init (foreign-safe-lambda c-pointer "audio_init"
   int (function void (int)) c-string int int int int bool))
@@ -268,7 +279,9 @@ void poll_io(void (*eval)(char *)) {
     (out-ch 2)
     (in-ch 2)
     (bits 16)
-    (read-write? #f)))
+    (read-write? #f)
+    (midi-in? #t)
+    (midi-out? #t)))
 
 (: get-setting (any (list-of (list-of any)) --> any))
 (define (get-setting x xs)
@@ -277,7 +290,7 @@ void poll_io(void (*eval)(char *)) {
 
 (: audio-start!
   ((struct audio-handle) #!optional (list-of (list-of any)) -> noreturn))
-(define (audio-start! handle #!optional (xs'()))
+(define (audio-start! handle #!optional (xs '()))
   (let* ((callback (audio-handle-callback handle))
          (name (get-setting 'name xs))
          (rate (get-setting 'rate xs))
@@ -294,6 +307,24 @@ void poll_io(void (*eval)(char *)) {
       (begin (mutex-lock! mutex)
              (audio-handle-sio-set! handle
               (audio-init idx callback name rate out-ch in-ch bits read-write?))
+             (mutex-unlock! mutex)))))
+
+(: midi-start!
+  ((struct midi-handle) #!optional (list-of (list-of any)) -> noreturn))
+(define (midi-start! handle #!optional (xs '()))
+  (let* ((callback (midi-handle-callback handle))
+         (name (get-setting 'name xs))
+         (midi-in? (if (get-setting 'midi-in? xs) 1 0))
+         (midi-out? (if (get-setting 'midi-out? xs) 1 0))
+         (cvar (midi-handle-condition-variable handle))
+         (mutex (midi-buffer-mutex (condition-variable-specific cvar)))
+         (mio (midi-handle-mio handle))
+         (idx (midi-handle-idx handle)))
+    (if mio
+      (print "midi is already started")
+      (begin (mutex-lock! mutex)
+             (midi-handle-mio-set! handle
+               (midi-init idx callback name midi-in? midi-out?))
              (mutex-unlock! mutex)))))
 
 (: audio-stop! ((struct audio-handle) -> noreturn))
@@ -318,6 +349,24 @@ void poll_io(void (*eval)(char *)) {
 
 (: fill-noise! (u8vector any fixnum -> noreturn))
 (define (fill-noise! u8 x n) (random-bytes (u8vector->blob/shared u8)) (void))
+
+(: for-n-bytes ((fixnum -> noreturn) fixnum pointer -> noreturn))
+(define (for-n-bytes f n ptr)
+  (if (= n 0)
+    (void)
+    (begin (f (pointer-u8-ref ptr)) (for-n-bytes f (- n 1) (pointer+ ptr 1)))))
+
+(: print-bytes (fixnum pointer -> noreturn))
+(define (print-bytes n ptr) (for-n-bytes print n ptr))
+
+(: make-midi-condition-variable (-> (struct condition-variable)))
+(define (make-midi-condition-variable)
+  (let* ((cvar (make-condition-variable))
+         (mutex (make-mutex))
+         (printer (lambda (ptr x n) (print-bytes n ptr)))
+         (buffer (make-midi-buffer '() printer mutex)))
+    (condition-variable-specific-set! cvar buffer)
+    cvar))
 
 (: make-audio-out-condition-variable (-> (struct condition-variable)))
 (define (make-audio-out-condition-variable)
@@ -352,17 +401,37 @@ void poll_io(void (*eval)(char *)) {
 
 ; audio/MIDI handles hard limited at compile time because C callback pointers
 ; are not available in interpreted mode
+(define-syntax make-midi-hdl
+  (syntax-rules ()
+    ((_ c-func-name cvar idx)
+     (define-external (c-func-name (int bytes-to-fill) (c-pointer u8)) void
+       (let ((buf (condition-variable-specific cvar)))
+         ((midi-buffer-f buf) u8 (midi-buffer-data buf) bytes-to-fill)
+         (condition-variable-broadcast! cvar))))))
 
-(define-syntax make-audio-out-hdl
+(define-syntax make-audio-hdl
   (syntax-rules ()
     ((_ c-func-name cvar idx)
      (define-external (c-func-name (int bytes-to-fill)) void
        (let* ((buf (condition-variable-specific cvar))
               (nu8 (adjust-buffer (dsp-buffer-bytes buf) bytes-to-fill)))
+         ; mutex-lock?
          (dsp-buffer-bytes-set! buf nu8)
          ((dsp-buffer-f buf) nu8 (dsp-buffer-data buf) bytes-to-fill)
          (fill-dsp! idx nu8 bytes-to-fill)
          (condition-variable-broadcast! cvar))))))
+
+(: MIO-0-COND (struct condition-variable))
+(define MIO-0-COND (make-midi-condition-variable))
+
+(: MIO-1-COND (struct condition-variable))
+(define MIO-1-COND (make-midi-condition-variable))
+
+(: MIO-2-COND (struct condition-variable))
+(define MIO-2-COND (make-midi-condition-variable))
+
+(: MIO-3-COND (struct condition-variable))
+(define MIO-3-COND (make-midi-condition-variable))
 
 (: SIO-0-COND (struct condition-variable))
 (define SIO-0-COND (make-audio-out-condition-variable))
@@ -376,10 +445,27 @@ void poll_io(void (*eval)(char *)) {
 (: SIO-3-COND (struct condition-variable))
 (define SIO-3-COND (make-audio-out-condition-variable))
 
-(make-audio-out-hdl sio_0 SIO-0-COND 0)
-(make-audio-out-hdl sio_1 SIO-1-COND 1)
-(make-audio-out-hdl sio_2 SIO-2-COND 2)
-(make-audio-out-hdl sio_3 SIO-3-COND 3)
+(make-midi-hdl mio_0 MIO-0-COND 0)
+(make-midi-hdl mio_1 MIO-0-COND 1)
+(make-midi-hdl mio_2 MIO-0-COND 2)
+(make-midi-hdl mio_3 MIO-0-COND 3)
+
+(make-audio-hdl sio_0 SIO-0-COND 0)
+(make-audio-hdl sio_1 SIO-1-COND 1)
+(make-audio-hdl sio_2 SIO-2-COND 2)
+(make-audio-hdl sio_3 SIO-3-COND 3)
+
+(: MIO-0 (struct midi-handle))
+(define MIO-0 (make-midi-handle MIO-0-COND (location mio_0) #f 0))
+
+(: MIO-1 (struct midi-handle))
+(define MIO-1 (make-midi-handle MIO-1-COND (location mio_1) #f 1))
+
+(: MIO-2 (struct midi-handle))
+(define MIO-2 (make-midi-handle MIO-2-COND (location mio_2) #f 2))
+
+(: MIO-3 (struct midi-handle))
+(define MIO-3 (make-midi-handle MIO-3-COND (location mio_3) #f 3))
 
 (: SIO-0 (struct audio-handle))
 (define SIO-0 (make-audio-handle SIO-0-COND (location sio_0) #f 0))
@@ -394,6 +480,7 @@ void poll_io(void (*eval)(char *)) {
 (define SIO-3 (make-audio-handle SIO-3-COND (location sio_3) #f 3))
 
 ; runtime
+; make new MIDI CONDITION VARIABLE on line 346
 (print "boar: available audio handles " '(SIO-0 SIO-1 SIO-2 SIO-3))
 (print "boar: default audio settings " DEFAULT-AUDIO-SETTINGS)
 (print "boar: please run (audio-start! AUDIO-HANDLE SETTINGS-OVERRIDES)")
