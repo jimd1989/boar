@@ -43,7 +43,7 @@ typedef struct MidiBuffer {
   int               fdIdx;
   struct mio_hdl  * mio;
   void              (*schemeCallback)(int, uint8_t *);
-  uint8_t           midiData[MIDI_BUFFER_SIZE];
+  uint8_t         * midiData;
 } MidiBuffer;
 
 static struct pollfd POLLFDS[FD_LIMIT]           = {0};
@@ -85,8 +85,9 @@ void fill_silence(AudioBuffer *ob) {
   ob->writePos += (ob->writePos + bytesWritten) % ob->dspSizeBytes;
 }
 
-struct mio_hdl * midi_init(int idx, void(*schemeCallback)(int, uint8_t *), 
-                           char *name, bool in, bool out) {
+struct mio_hdl * midi_init(int idx, uint8_t *buffer, 
+                           void(*schemeCallback)(int, uint8_t *), char *name, 
+                           bool in, bool out) {
   int mode            = (in ? MIO_IN : 0) | (out ? MIO_OUT : 0);
   struct mio_hdl *mio = NULL;
   MidiBuffer *mb      = NULL;
@@ -101,6 +102,7 @@ struct mio_hdl * midi_init(int idx, void(*schemeCallback)(int, uint8_t *),
   mb->mio            = mio;
   mb->fdIdx          = TEXT_FD_LIMIT + AUDIO_FD_LIMIT + idx;
   mb->schemeCallback = schemeCallback;
+  mb->midiData       = buffer;
   mio_pollfd(mb->mio, &POLLFDS[mb->fdIdx], POLLIN | POLLOUT);
   return mb->mio;
 }
@@ -226,8 +228,9 @@ void poll_io(void (*eval)(char *)) {
 <#
 
 (define-record midi-buffer
+  (bytes : u8vector)
   (data : any)
-  (f : (pointer any fixnum -> noreturn))
+  (f : (u8vector any fixnum -> noreturn))
   (mutex : (struct mutex)))
 
 (define-record dsp-buffer
@@ -260,7 +263,7 @@ void poll_io(void (*eval)(char *)) {
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
 
 (define midi-init (foreign-safe-lambda c-pointer "midi_init"
-  int (function void (int u8vector)) c-string bool bool))
+  int u8vector (function void (int u8vector)) c-string bool bool))
 
 (define audio-init (foreign-safe-lambda c-pointer "audio_init"
   int (function void (int)) c-string int int int int bool))
@@ -317,14 +320,16 @@ void poll_io(void (*eval)(char *)) {
          (midi-in? (if (get-setting 'midi-in? xs) 1 0))
          (midi-out? (if (get-setting 'midi-out? xs) 1 0))
          (cvar (midi-handle-condition-variable handle))
-         (mutex (midi-buffer-mutex (condition-variable-specific cvar)))
+         (buf (condition-variable-specific cvar))
+         (u8 (midi-buffer-bytes buf))
+         (mutex (midi-buffer-mutex buf))
          (mio (midi-handle-mio handle))
          (idx (midi-handle-idx handle)))
     (if mio
       (print "midi is already started")
       (begin (mutex-lock! mutex)
              (midi-handle-mio-set! handle
-               (midi-init idx callback name midi-in? midi-out?))
+               (midi-init idx u8 callback name midi-in? midi-out?))
              (mutex-unlock! mutex)))))
 
 (: audio-stop! ((struct audio-handle) -> noreturn))
@@ -350,21 +355,13 @@ void poll_io(void (*eval)(char *)) {
 (: fill-noise! (u8vector any fixnum -> noreturn))
 (define (fill-noise! u8 x n) (random-bytes (u8vector->blob/shared u8)) (void))
 
-(: for-n-bytes ((fixnum -> noreturn) fixnum pointer -> noreturn))
-(define (for-n-bytes f n ptr)
-  (if (= n 0)
-    (void)
-    (begin (f (pointer-u8-ref ptr)) (for-n-bytes f (- n 1) (pointer+ ptr 1)))))
-
-(: print-bytes (fixnum pointer -> noreturn))
-(define (print-bytes n ptr) (for-n-bytes print n ptr))
-
 (: make-midi-condition-variable (-> (struct condition-variable)))
 (define (make-midi-condition-variable)
   (let* ((cvar (make-condition-variable))
          (mutex (make-mutex))
-         (printer (lambda (ptr x n) (print-bytes n ptr)))
-         (buffer (make-midi-buffer '() printer mutex)))
+         (printer (lambda (u8 x n) (print (subu8vector u8 0 n))))
+         (u8 (make-u8vector 1024 0 #t #f))
+         (buffer (make-midi-buffer u8 '() printer mutex)))
     (condition-variable-specific-set! cvar buffer)
     cvar))
 
@@ -404,8 +401,9 @@ void poll_io(void (*eval)(char *)) {
 (define-syntax make-midi-hdl
   (syntax-rules ()
     ((_ c-func-name cvar idx)
-     (define-external (c-func-name (int bytes-to-fill) (c-pointer u8)) void
-       (let ((buf (condition-variable-specific cvar)))
+     (define-external (c-func-name (int bytes-to-fill) (c-pointer ptr)) void
+       (let* ((buf (condition-variable-specific cvar))
+              (u8 (midi-buffer-bytes buf)))
          ((midi-buffer-f buf) u8 (midi-buffer-data buf) bytes-to-fill)
          (condition-variable-broadcast! cvar))))))
 
