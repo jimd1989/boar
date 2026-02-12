@@ -42,7 +42,7 @@ typedef struct AudioBuffer {
 typedef struct MidiBuffer {
   int               fdIdx;
   struct mio_hdl  * mio;
-  void              (*schemeCallback)(int, uint8_t *);
+  void              (*schemeCallback)(int);
   uint8_t         * midiData;
 } MidiBuffer;
 
@@ -85,9 +85,8 @@ void fill_silence(AudioBuffer *ob) {
   ob->writePos += (ob->writePos + bytesWritten) % ob->dspSizeBytes;
 }
 
-struct mio_hdl * midi_init(int idx, uint8_t *buffer, 
-                           void(*schemeCallback)(int, uint8_t *), char *name, 
-                           bool in, bool out) {
+struct mio_hdl * midi_init(int idx, uint8_t *buffer, void(*schemeCallback)(int), 
+                               char *name, bool in, bool out) {
   int mode            = (in ? MIO_IN : 0) | (out ? MIO_OUT : 0);
   struct mio_hdl *mio = NULL;
   MidiBuffer *mb      = NULL;
@@ -204,7 +203,7 @@ void poll_io(void (*eval)(char *)) {
       mask = mio_revents(mb->mio, &POLLFDS[mb->fdIdx]);
       if (mask & POLLIN) {
         bytesRead = mio_read(mb->mio, mb->midiData, MIDI_BUFFER_SIZE);
-        mb->schemeCallback(bytesRead, mb->midiData);
+        mb->schemeCallback(bytesRead);
       }
       if (mask & POLLOUT) {
         /* this probably is not right */
@@ -263,7 +262,7 @@ void poll_io(void (*eval)(char *)) {
 (define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
 
 (define midi-init (foreign-safe-lambda c-pointer "midi_init"
-  int u8vector (function void (int u8vector)) c-string bool bool))
+  int u8vector (function void (int)) c-string bool bool))
 
 (define audio-init (foreign-safe-lambda c-pointer "audio_init"
   int (function void (int)) c-string int int int int bool))
@@ -401,7 +400,7 @@ void poll_io(void (*eval)(char *)) {
 (define-syntax make-midi-hdl
   (syntax-rules ()
     ((_ c-func-name cvar idx)
-     (define-external (c-func-name (int bytes-to-fill) (c-pointer ptr)) void
+     (define-external (c-func-name (int bytes-to-fill)) void
        (let* ((buf (condition-variable-specific cvar))
               (u8 (midi-buffer-bytes buf)))
          ((midi-buffer-f buf) u8 (midi-buffer-data buf) bytes-to-fill)
