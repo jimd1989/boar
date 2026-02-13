@@ -106,6 +106,11 @@ struct mio_hdl * midi_init(int idx, uint8_t *buffer, void(*schemeCallback)(int),
   return mb->mio;
 }
 
+int midi_write(struct mio_hdl *mio, uint8_t *buffer, int bytes) {
+  int bytesToWrite = bytes > MIDI_BUFFER_SIZE ? MIDI_BUFFER_SIZE : bytes;
+  return mio_write(mio, buffer, bytesToWrite);
+}
+
 struct sio_hdl * audio_init(int idx, void (*schemeCallback)(int), char *name, 
                             int rate, int outCh, int inCh, int bits, 
                             bool readWrite) {
@@ -165,7 +170,7 @@ void fill_dsp(int idx, uint8_t *data, int sizeBytes) {
   //warnx("Δ %d → %d", sizeBytes, ob->dspPos);
 }
 
-static void write_audio(AudioBuffer *ob) {
+static void audio_write(AudioBuffer *ob) {
   int i            = 0;
   int write_ix     = ob->writePos;
   int bytesWritten = 0;
@@ -206,7 +211,9 @@ void poll_io(void (*eval)(char *)) {
         mb->schemeCallback(bytesRead);
       }
       if (mask & POLLOUT) {
-        /* this probably is not right */
+        /* This probably is not right. Leaving branch here, but writes are
+           likely a separate, direct call. */
+        warnx("the MIDI POLLOUT was actually triggered");
         mio_write(mb->mio, mb->midiData, MIDI_BUFFER_SIZE);
       }
     }
@@ -219,7 +226,7 @@ void poll_io(void (*eval)(char *)) {
         sio_read(ob->sio, ob->writeData, ob->writeSizeBytes);
       }
       if (mask & POLLOUT) {
-        write_audio(ob);
+        audio_write(ob);
       }
     }
   }
@@ -264,6 +271,9 @@ void poll_io(void (*eval)(char *)) {
 (define midi-init (foreign-safe-lambda c-pointer "midi_init"
   int u8vector (function void (int)) c-string bool bool))
 
+(define midi-write (foreign-safe-lambda int "midi_write"
+  c-pointer u8vector int))
+
 (define audio-init (foreign-safe-lambda c-pointer "audio_init"
   int (function void (int)) c-string int int int int bool))
 
@@ -290,6 +300,74 @@ void poll_io(void (*eval)(char *)) {
   (let ((setting (assoc x xs)))
     (if setting (cadr setting) (cadr (assoc x DEFAULT-AUDIO-SETTINGS)))))
 
+
+(define-syntax with-lock
+  (syntax-rules ()
+    ((_ m f ...) (dynamic-wind (lambda () (mutex-lock! m))
+                               (lambda () f ...)
+                               (lambda () (mutex-unlock! m))))))
+
+(: midi-start!
+  ((struct midi-handle) #!optional (list-of (list-of any)) -> noreturn))
+(define (midi-start! handle #!optional (xs '()))
+  (let* ((callback (midi-handle-callback handle))
+         (name (get-setting 'name xs))
+         (midi-in? (if (get-setting 'midi-in? xs) 1 0))
+         (midi-out? (if (get-setting 'midi-out? xs) 1 0))
+         (cvar (midi-handle-condition-variable handle))
+         (buf (condition-variable-specific cvar))
+         (u8 (midi-buffer-bytes buf))
+         (mutex (midi-buffer-mutex buf))
+         (mio (midi-handle-mio handle))
+         (idx (midi-handle-idx handle)))
+    (if mio
+      (print "midi is already started")
+      (with-lock mutex
+        (midi-handle-mio-set! handle
+               (midi-init idx u8 callback name midi-in? midi-out?))))))
+
+(: make-midi-condition-variable (-> (struct condition-variable)))
+(define (make-midi-condition-variable)
+  (let* ((cvar (make-condition-variable))
+         (mutex (make-mutex))
+         (printer (lambda (u8 x n) (mutex-lock! mutex)
+                                   (print (subu8vector u8 0 n))
+                                   (mutex-unlock! mutex)))
+         (u8 (make-u8vector 1024 0 #t #f))
+         (buffer (make-midi-buffer u8 '() printer mutex)))
+    (condition-variable-specific-set! cvar buffer)
+    cvar))
+
+(: midi-data-set! ((struct midi-handle) any -> noreturn))
+(define (midi-data-set! handle x)
+  (let* ((cvar (midi-handle-condition-variable handle))
+         (mutex (midi-buffer-mutex (condition-variable-specific cvar))))
+    (mutex-lock! mutex)
+    (midi-buffer-data-set! (condition-variable-specific cvar) x)
+    (mutex-unlock! mutex)))
+
+(: midi-f-set! ((struct midi-handle) any -> noreturn))
+(define (midi-f-set! handle f)
+  (let* ((cvar (midi-handle-condition-variable handle))
+         (mutex (midi-buffer-mutex (condition-variable-specific cvar)))
+         (new-f (lambda (u8 x n)
+                  (mutex-lock! mutex) (f u8 x n) (mutex-unlock! mutex))))
+    (mutex-lock! mutex)
+    (midi-buffer-f-set! (condition-variable-specific cvar) new-f)
+    (mutex-unlock! mutex)))
+
+(: midi-write! ((struct midi-handle) (u8vector any -> fixnum) -> fixnum))
+(define (midi-write! handle f)
+  (let* ((mio (midi-handle-mio handle))
+         (cvar (midi-handle-condition-variable handle))
+         (buf (condition-variable-specific cvar))
+         (mutex (midi-buffer-mutex buf))
+         (bytes (midi-buffer-bytes buf))
+         (data (midi-buffer-data buf)))
+    (if mio
+      (with-lock mutex (midi-write mio bytes (f bytes data)))
+      (begin (print "run (midi-start!) on this handle first") 0))))
+
 (: audio-start!
   ((struct audio-handle) #!optional (list-of (list-of any)) -> noreturn))
 (define (audio-start! handle #!optional (xs '()))
@@ -309,26 +387,6 @@ void poll_io(void (*eval)(char *)) {
       (begin (mutex-lock! mutex)
              (audio-handle-sio-set! handle
               (audio-init idx callback name rate out-ch in-ch bits read-write?))
-             (mutex-unlock! mutex)))))
-
-(: midi-start!
-  ((struct midi-handle) #!optional (list-of (list-of any)) -> noreturn))
-(define (midi-start! handle #!optional (xs '()))
-  (let* ((callback (midi-handle-callback handle))
-         (name (get-setting 'name xs))
-         (midi-in? (if (get-setting 'midi-in? xs) 1 0))
-         (midi-out? (if (get-setting 'midi-out? xs) 1 0))
-         (cvar (midi-handle-condition-variable handle))
-         (buf (condition-variable-specific cvar))
-         (u8 (midi-buffer-bytes buf))
-         (mutex (midi-buffer-mutex buf))
-         (mio (midi-handle-mio handle))
-         (idx (midi-handle-idx handle)))
-    (if mio
-      (print "midi is already started")
-      (begin (mutex-lock! mutex)
-             (midi-handle-mio-set! handle
-               (midi-init idx u8 callback name midi-in? midi-out?))
              (mutex-unlock! mutex)))))
 
 (: audio-stop! ((struct audio-handle) -> noreturn))
@@ -353,16 +411,6 @@ void poll_io(void (*eval)(char *)) {
 
 (: fill-noise! (u8vector any fixnum -> noreturn))
 (define (fill-noise! u8 x n) (random-bytes (u8vector->blob/shared u8)) (void))
-
-(: make-midi-condition-variable (-> (struct condition-variable)))
-(define (make-midi-condition-variable)
-  (let* ((cvar (make-condition-variable))
-         (mutex (make-mutex))
-         (printer (lambda (u8 x n) (print (subu8vector u8 0 n))))
-         (u8 (make-u8vector 1024 0 #t #f))
-         (buffer (make-midi-buffer u8 '() printer mutex)))
-    (condition-variable-specific-set! cvar buffer)
-    cvar))
 
 (: make-audio-out-condition-variable (-> (struct condition-variable)))
 (define (make-audio-out-condition-variable)
