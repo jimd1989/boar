@@ -26,6 +26,11 @@
 #define MIDI_FD_LIMIT 4
 #define FD_LIMIT (TEXT_FD_LIMIT + AUDIO_FD_LIMIT + MIDI_FD_LIMIT)
 
+typedef struct StdinBuffer {
+  int     sizeBytes;
+  char  * data;
+} StdinBuffer;
+
 typedef struct AudioBuffer {
   int               fdIdx;
   int               dspSizeBytes;
@@ -47,7 +52,7 @@ typedef struct MidiBuffer {
 } MidiBuffer;
 
 static struct pollfd POLLFDS[FD_LIMIT]           = {0};
-static uint8_t STDIN_BUFFER[STDIN_BUFFER_SIZE]   = {0};
+static StdinBuffer STDIN_BUFFER                  = {0};
 static AudioBuffer AUDIO_BUFFERS[AUDIO_FD_LIMIT] = {0};
 static MidiBuffer MIDI_BUFFERS[MIDI_FD_LIMIT]    = {0};
 
@@ -56,6 +61,8 @@ void stdin_init(void) {
   fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
   POLLFDS[STDIN_IDX].fd     = STDIN_FILENO;
   POLLFDS[STDIN_IDX].events = POLLIN;
+  STDIN_BUFFER.sizeBytes    = STDIN_BUFFER_SIZE;
+  STDIN_BUFFER.data         = malloc(STDIN_BUFFER_SIZE);
 }
 
 void audio_callback(void *arg, int deltaFrames) {
@@ -186,6 +193,7 @@ void poll_io(void (*eval)(char *)) {
   int i           = 0;
   int mask        = 0;
   int bytesRead   = 0;
+  StdinBuffer *sb = &STDIN_BUFFER;
   MidiBuffer *mb  = NULL;
   AudioBuffer *ob = NULL;
   /* seemingly must run every time for audio, but not for MIDI. */
@@ -197,9 +205,10 @@ void poll_io(void (*eval)(char *)) {
   }
   poll(POLLFDS, FD_LIMIT, -1);
   if (POLLFDS[STDIN_IDX].revents & POLLIN) {
-    bytesRead = read(STDIN_FILENO, STDIN_BUFFER, STDIN_BUFFER_SIZE - 1);
+    bytesRead = read(STDIN_FILENO, sb->data, sb->sizeBytes - 1);
+    sb->data[bytesRead] = '\0';
     if (bytesRead > 1) { 
-      eval(STDIN_BUFFER);
+      eval(STDIN_BUFFER.data);
     }
   }
   for (i = 0 ; i < MIDI_FD_LIMIT ; i++) {
@@ -232,6 +241,8 @@ void poll_io(void (*eval)(char *)) {
   }
 }
 <#
+
+(define-syntax λ (syntax-rules () ((_ . a) (lambda . a))))
 
 (define-record midi-buffer
   (bytes : u8vector)
@@ -300,12 +311,11 @@ void poll_io(void (*eval)(char *)) {
   (let ((setting (assoc x xs)))
     (if setting (cadr setting) (cadr (assoc x DEFAULT-AUDIO-SETTINGS)))))
 
-
 (define-syntax with-lock
   (syntax-rules ()
-    ((_ m f ...) (dynamic-wind (lambda () (mutex-lock! m))
-                               (lambda () f ...)
-                               (lambda () (mutex-unlock! m))))))
+    ((_ m f ...) (dynamic-wind (λ () (mutex-lock! m))
+                               (λ () f ...)
+                               (λ () (mutex-unlock! m))))))
 (: midi-start!
   ((struct midi-handle) #!optional (list-of (list-of any)) -> noreturn))
 (define (midi-start! handle #!optional (xs '()))
@@ -329,8 +339,7 @@ void poll_io(void (*eval)(char *)) {
 (define (make-midi-condition-variable)
   (let* ((cvar (make-condition-variable))
          (mutex (make-mutex))
-         (printer (lambda (u8 x n)
-           (with-lock mutex (print (subu8vector u8 0 n)))))
+         (printer (λ (u8 x n) (with-lock mutex (print (subu8vector u8 0 n)))))
          (u8 (make-u8vector 1024 0 #t #f))
          (buffer (make-midi-buffer u8 '() printer mutex)))
     (condition-variable-specific-set! cvar buffer)
@@ -347,7 +356,7 @@ void poll_io(void (*eval)(char *)) {
 (define (midi-f-set! handle f)
   (let* ((cvar (midi-handle-condition-variable handle))
          (mutex (midi-buffer-mutex (condition-variable-specific cvar)))
-         (new-f (lambda (u8 x n) (with-lock mutex (f u8 x n)))))
+         (new-f (λ (u8 x n) (with-lock mutex (f u8 x n)))))
     (with-lock mutex
       (midi-buffer-f-set! (condition-variable-specific cvar) new-f))))
 
@@ -411,7 +420,7 @@ void poll_io(void (*eval)(char *)) {
   (let* ((cvar (make-condition-variable))
          (u8 (make-u8vector 128 0 #t #f))
          (mutex (make-mutex))
-         (silence (lambda (u8 x n) (with-lock mutex (ignore-buffer u8 x n))))
+         (silence (λ (u8 x n) (with-lock mutex (ignore-buffer u8 x n))))
          (buffer (make-dsp-buffer u8 '() silence mutex)))
     (condition-variable-specific-set! cvar buffer)
     cvar))
@@ -428,7 +437,7 @@ void poll_io(void (*eval)(char *)) {
 (define (audio-f-set! handle f)
   (let* ((cvar (audio-handle-condition-variable handle))
          (mutex (dsp-buffer-mutex (condition-variable-specific cvar)))
-         (new-f (lambda (u8 x n) (with-lock mutex (f u8 x n)))))
+         (new-f (λ (u8 x n) (with-lock mutex (f u8 x n)))))
     (with-lock mutex
       (dsp-buffer-f-set! (condition-variable-specific cvar) new-f))))
 
