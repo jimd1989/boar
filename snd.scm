@@ -445,7 +445,7 @@ void poll_io(void (*eval)(char *)) {
   (let* ((cvar (make-condition-variable))
          (u8 (make-u8vector 128 0 #t #f))
          (mutex (make-mutex))
-         (silence (λ (u8 x n) (with-lock mutex (ignore-buffer u8 x n))))
+         (silence (λ (u8 x n) (with-lock mutex (ignore-buffer! u8 x n))))
          (buffer (make-dsp-buffer u8 '() silence mutex)))
     (condition-variable-specific-set! cvar buffer)
     cvar))
