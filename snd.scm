@@ -118,7 +118,8 @@ struct mio_hdl * midi_init(int idx, uint8_t *buffer, void(*schemeCallback)(int),
 
 int midi_write(struct mio_hdl *mio, uint8_t *buffer, int bytes) {
   int bytesToWrite = bytes > MIDI_BUFFER_SIZE ? MIDI_BUFFER_SIZE : bytes;
-  return mio_write(mio, buffer, bytesToWrite);
+  int bytesWritten = mio_write(mio, buffer, bytesToWrite);
+  return bytesWritten;
 }
 
 void audio_callback(void *arg, int deltaFrames) {
@@ -548,7 +549,6 @@ void poll_io(void (*eval)(char *)) {
 (define SIO-3 (make-audio-handle SIO-3-COND (location sio_3) #f 3))
 
 ; runtime
-; make new MIDI CONDITION VARIABLE on line 346
 (print "boar: available audio handles " '(SIO-0 SIO-1 SIO-2 SIO-3))
 (print "boar: default audio settings " DEFAULT-AUDIO-SETTINGS)
 (print "boar: please run (audio-start! AUDIO-HANDLE SETTINGS-OVERRIDES)")
