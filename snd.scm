@@ -90,7 +90,7 @@ void stdin_read(void (*eval)(char *)) {
     }
   } while (bytesRead > 0);
   sb->data[sb->readPos] = '\0';
-  if (sb->readPos > 0) {
+  if (sb->readPos > 1) {
     eval(STDIN_BUFFER.data);
   }
 }
