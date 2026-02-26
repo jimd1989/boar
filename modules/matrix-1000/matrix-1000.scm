@@ -1,100 +1,23 @@
-(module matrix-1000 (note-on note-off fill-midi-buffer! 
-dco1-freq                
-dco1-lfo1-mod            
-dco-sync                 
-dco1-pw                  
-dco1-lfo2-mod            
-dco1-waveshape           
-dco1-waveform            
-dco1-fixed-mod1          
-dco1-fixed-mod2          
-dco1-click               
-dco2-freq                
-dco2-lfo1-mod            
-dco2-detune              
-dco2-pw                  
-dco2-lfo2-mod            
-dco2-waveshape           
-dco2-waveform            
-dco2-fixed-mod1          
-dco2-fixed-mod2          
-dco2-click               
-mix-dco                  
-vcf-cutoff               
-vcf-env1-mod             
-vcf-aftertouch-mod       
-vcf-resonance            
-vcf-fixed-mod1           
-vcf-fixed-mod2           
-vca1                     
-vca1-vel-mod             
-vca2-env2-mod            
-vcf-fm                   
-vcf-fm-env3-mod          
-vcf-fm-aftertouch-mod    
-tg-input-source          
-tg-point1                
-tg-point2                
-tg-point3                
-tg-point4                
-tg-point5                
-ramp1-rate               
-ramp1-mode               
-ramp2-rate               
-ramp2-mode               
-portamento               
-portamento-vel-mod       
-portamento-mode          
-portamento-legato        
-voice-assign             
-env1-delay               
-env1-attack              
-env1-decay               
-env1-sustain             
-env1-release             
-env1-amplitude           
-env1-vel-mod             
-env1-trigger-mode        
-env1-mode                
-env1-lfo-trigger         
-env2-delay               
-env2-attack              
-env2-decay               
-env2-sustain             
-env2-release             
-env2-amplitude           
-env2-vel-mod             
-env2-trigger-mode        
-env2-mode                
-env2-lfo-trigger         
-env3-delay               
-env3-attack              
-env3-decay               
-env3-sustain             
-env3-release             
-env3-amplitude           
-env3-vel-mod             
-env3-trigger-mode        
-env3-lfo-mode            
-env3-lfo-trigger         
-lfo1-speed               
-lfo1-aftertouch-mod      
-lfo1-waveform            
-lfo1-retrigger-point     
-lfo1-amplitude           
-lfo1-ramp1-mod           
-lfo1-trigger             
-lfo1-lag                 
-lfo1-sampled-source      
-lfo2-speed               
-lfo2-keyboard-mod        
-lfo2-waveform            
-lfo2-retrigger-point     
-lfo2-amplitude           
-lfo2-ramp2-mod           
-lfo2-trigger             
-lfo2-lag                 
-lfo2-sampled-source)
+(module matrix-1000
+  (note-on note-off fill-midi-buffer! dco1-freq dco1-lfo1-mod dco-sync dco1-pw 
+   dco1-lfo2-mod dco1-waveshape dco1-waveform dco1-fixed-mod1 dco1-fixed-mod2
+   dco1-click dco2-freq dco2-lfo1-mod dco2-detune dco2-pw dco2-lfo2-mod 
+   dco2-waveshape dco2-waveform dco2-fixed-mod1 dco2-fixed-mod2 dco2-click 
+   mix-dco vcf-cutoff vcf-env1-mod vcf-aftertouch-mod vcf-resonance 
+   vcf-fixed-mod1 vcf-fixed-mod2 vca1 vca1-vel-mod vca2-env2-mod vcf-fm 
+   vcf-fm-env3-mod vcf-fm-aftertouch-mod tg-input-source tg-point1 tg-point2 
+   tg-point3 tg-point4 tg-point5 ramp1-rate ramp1-mode ramp2-rate ramp2-mode 
+   portamento portamento-vel-mod portamento-mode portamento-legato voice-assign
+   env1-delay env1-attack env1-decay env1-sustain env1-release env1-amplitude 
+   env1-vel-mod env1-trigger-mode env1-mode env1-lfo-trigger env2-delay 
+   env2-attack env2-decay env2-sustain env2-release env2-amplitude env2-vel-mod 
+   env2-trigger-mode env2-mode env2-lfo-trigger env3-delay env3-attack 
+   env3-decay env3-sustain env3-release env3-amplitude env3-vel-mod 
+   env3-trigger-mode env3-lfo-mode env3-lfo-trigger lfo1-speed 
+   lfo1-aftertouch-mod lfo1-waveform lfo1-retrigger-point lfo1-amplitude 
+   lfo1-ramp1-mod lfo1-trigger lfo1-lag lfo1-sampled-source lfo2-speed 
+   lfo2-keyboard-mod lfo2-waveform lfo2-retrigger-point lfo2-amplitude 
+   lfo2-ramp2-mod lfo2-trigger lfo2-lag lfo2-sampled-source)
 
   (import scheme (chicken base) (chicken bitwise) (chicken string) 
           (chicken type) srfi-4)
