@@ -1,6 +1,6 @@
 (module boar-slice
   (make-slice slice-u8vector slice-bytes-written slice-bytes-to-write 
-   extend-slice slice-ref slice-set! slice-fill!) 
+   slice-end-pos extend-slice slice-ref slice-set! slice-fill!) 
   (import scheme (chicken base) (chicken string) (chicken type) srfi-4)
 
   (define-type slice (list u8vector fixnum fixnum))
@@ -19,6 +19,10 @@
 
   (: slice-bytes-to-write (slice --> fixnum))
   (define (slice-bytes-to-write sl) (caddr sl))
+
+  (: slice-end-pos (slice --> fixnum))
+  (define (slice-end-pos sl)
+    (+ (slice-bytes-written sl) (slice-bytes-to-write sl)))
 
   (: extend-slice (fixnum slice --> slice))
   (define (extend-slice bytes-to-write sl)

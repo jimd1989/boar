@@ -23,7 +23,9 @@
   (: note-offf (fixnum -> slice-f))
   (define (note-offf n) (note-on n 0))
 
-  (: fill-midi-buffer! (fixnum any u8vector -> slice))
-  (define (fill-midi-buffer! ch x u8 . fs)
-    (foldl (lambda (sl f) (f ch x sl)) (make-slice 0 u8) fs))
+  (: fill-midi-buffer! (fixnum any u8vector -> (u8vector any -> fixnum)))
+  (define (fill-midi-buffer! ch . fs)
+    (lambda (u8 x)
+      (let ((sl (make-slice 0 u8)))
+        (slice-end-pos (foldl (lambda (sll f) (f ch x sll)) sl fs)))))
 )
