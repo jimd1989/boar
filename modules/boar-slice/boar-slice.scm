@@ -1,6 +1,6 @@
-(module slice (slice make-slice slice-u8vector slice-bytes-written 
-               slice-bytes-to-write extend-slice slice-ref slice-set!
-               slice-fill!) 
+(module boar-slice
+  (make-slice slice-u8vector slice-bytes-written slice-bytes-to-write 
+   extend-slice slice-ref slice-set! slice-fill!) 
   (import scheme (chicken base) (chicken string) (chicken type) srfi-4)
 
   (define-type slice (list u8vector fixnum fixnum))
@@ -50,7 +50,7 @@
         (error (conc "slice len: " bytes-to-write " index: " n))
         (u8vector-set! u8 m x))))
 
-  (: slice-fill! (slice (list-of fixnum) -> fixnum))
+  (: slice-fill! (slice (list-of fixnum) -> slice))
   (define (slice-fill! sl . xs)
     (let ((len (length xs))
           (u8 (car sl))
@@ -58,6 +58,8 @@
           (bytes-to-write (slice-bytes-to-write sl)))
       (if (> len bytes-to-write)
         (error (conc "slice len: " bytes-to-write " bytes: " len))
-        (foldl
-          (lambda (n x) (u8vector-set! u8 n x) (+ n 1)) bytes-written xs))))
+        (begin
+          (foldl
+            (lambda (n x) (u8vector-set! u8 n x) (+ n 1)) bytes-written xs)
+          sl))))
 )

@@ -1,0 +1,7 @@
+((author "Jim Dalrymple")
+ (synopsis "Virtual sub-u8vectors")
+ (license "BSD")
+ (dependencies srfi-4)
+ (components 
+   (extension boar-slice
+    (csc-options "-fixnum-arithmetic" "-O3" "-strict-types"))))
