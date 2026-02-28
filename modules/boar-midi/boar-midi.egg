@@ -1,0 +1,7 @@
+((author "Jim Dalrymple")
+ (synopsis "slice-filling MIDI commands")
+ (license "BSD")
+ (dependencies srfi-4 boar-slice)
+ (components 
+   (extension boar-midi
+    (csc-options "-fixnum-arithmetic" "-O3" "-strict-types"))))
