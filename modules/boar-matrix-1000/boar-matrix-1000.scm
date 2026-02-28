@@ -1,5 +1,5 @@
-(module matrix-1000
-  (note-on note-off fill-midi-buffer! dco1-freq dco1-lfo1-mod dco-sync dco1-pw 
+(module boar-matrix-1000 
+  (dco1-freq dco1-lfo1-mod dco-sync dco1-pw 
    dco1-lfo2-mod dco1-waveshape dco1-waveform dco1-fixed-mod1 dco1-fixed-mod2
    dco1-click dco2-freq dco2-lfo1-mod dco2-detune dco2-pw dco2-lfo2-mod 
    dco2-waveshape dco2-waveform dco2-fixed-mod1 dco2-fixed-mod2 dco2-click 
@@ -19,53 +19,24 @@
    lfo2-keyboard-mod lfo2-waveform lfo2-retrigger-point lfo2-amplitude 
    lfo2-ramp2-mod lfo2-trigger lfo2-lag lfo2-sampled-source)
 
-  (import scheme (chicken base) (chicken bitwise) (chicken string) 
-          (chicken type) srfi-4)
+  (import scheme (chicken base) (chicken string) (chicken type) srfi-4)
+  (import boar-slice)
 
-  (: fill-midi-buffer! (fixnum (list-of (u8vector any fixnum fixnum -> fixnum))
-                        -> (u8vector any -> fixnum)))      
-  (define (fill-midi-buffer! ch . fs)
-    (lambda (u8 x) (foldl (lambda (acc f) (+ acc (f u8 x ch acc))) 0 fs)))
+  (define-type slice (list u8vector fixnum fixnum))
+  (define-type slice-f (fixnum any slice -> slice))
 
-  (: note-on (fixnum -> (u8vector any fixnum fixnum -> fixnum)))
-  (define (note-on n)
-    (lambda (u8 x ch idx)
-      (u8vector-set! u8 idx (+ ch 144 -1))
-      (u8vector-set! u8 (+ 1 idx) n)
-      (u8vector-set! u8 (+ 2 idx) 127)
-      3))
-
-  (: note-off (fixnum -> (u8vector any fixnum fixnum -> fixnum)))
-  (define (note-off n)
-    (lambda (u8 x ch idx)
-      (u8vector-set! u8 idx (+ ch 144 -1))
-      (u8vector-set! u8 (+ 1 idx) n)
-      (u8vector-set! u8 (+ 2 idx) 0)
-      3))
-  
-  (: nrpn (fixnum fixnum -> (u8vector any fixnum fixnum -> fixnum)))
+  (: nrpn (fixnum fixnum -> slice-f))
   (define (nrpn param n)
-    (lambda (u8 x ch idx)
-      (let ((cc (+ 176 (- ch 1))))
-        (u8vector-set! u8 idx cc)
-        (u8vector-set! u8 (+ idx 1) 99)
-        (u8vector-set! u8 (+ idx 2) 0)
-        (u8vector-set! u8 (+ idx 3) cc)
-        (u8vector-set! u8 (+ idx 4) 98)
-        (u8vector-set! u8 (+ idx 5) param)
-        (u8vector-set! u8 (+ idx 6) cc)
-        (u8vector-set! u8 (+ idx 7) 6)
-        (u8vector-set! u8 (+ idx 8) n)
-        (u8vector-set! u8 (+ idx 9) cc)
-        (u8vector-set! u8 (+ idx 10) 38)
-        (u8vector-set! u8 (+ idx 11) 0)
-        12)))
+    (lambda (ch x sl)
+      (let ((sll (extend-slice 12 sl))
+            (cc (+ 176 -1 ch)))
+        (slice-fill! sll cc 99 0 cc 98 param cc 6 n cc 38 0))))
 
   (define-syntax matrix-cmd
     (syntax-rules ()
       ((_ cmd-name param-num min max offset)
        (begin
-         (: cmd-name (fixnum fixnum -> (u8vector any fixnum fixnum -> fixnum)))
+         (: cmd-name (fixnum fixnum -> slice-f))
          (define (cmd-name n)
            (cond ((< n min) (error (conc "below range [" min "," max "]")))
                  ((> n max) (error (conc "above range [" min "," max "]")))

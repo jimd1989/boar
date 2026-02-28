@@ -1,0 +1,7 @@
+((author "Jim Dalrymple")
+ (synopsis "MIDI NRPN commands for controlling an Oberheim Matrix-1000")
+ (license "BSD")
+ (dependencies srfi-4 boar-slice)
+ (components 
+   (extension boar-matrix-1000
+    (csc-options "-fixnum-arithmetic" "-O3" "-strict-types"))))
