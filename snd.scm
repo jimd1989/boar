@@ -116,9 +116,21 @@ struct mio_hdl * midi_init(int idx, uint8_t *buffer, void(*schemeCallback)(int),
   return mb->mio;
 }
 
-int midi_write(struct mio_hdl *mio, uint8_t *buffer, int bytes) {
-  int bytesToWrite = bytes > MIDI_BUFFER_SIZE ? MIDI_BUFFER_SIZE : bytes;
-  int bytesWritten = mio_write(mio, buffer, bytesToWrite);
+int midi_write(int idx, uint8_t *buffer, int bytes) {
+  int mask = 0;
+  int bytesWritten = 0;
+  int bytesToWrite = 0;
+  struct pollfd pfd[1] = {0};
+  MidiBuffer *mb = &MIDI_BUFFERS[idx];
+  while (bytesWritten < bytes) {
+    bytesToWrite = bytes > MIDI_BUFFER_SIZE ? MIDI_BUFFER_SIZE : bytes;
+    mio_pollfd(mb->mio, pfd, POLLOUT);
+    poll(pfd, 1, -1);
+    mask = mio_revents(mb->mio, pfd);
+    if (mask & POLLOUT) {
+      bytesWritten += mio_write(mb->mio, buffer, bytesToWrite); 
+    }
+  }
   return bytesWritten;
 }
 
@@ -309,7 +321,7 @@ void poll_io(void (*eval)(char *)) {
   int u8vector (function void (int)) c-string bool bool))
 
 (define midi-write (foreign-safe-lambda int "midi_write"
-  c-pointer u8vector int))
+  int u8vector int))
 
 (define audio-init (foreign-safe-lambda c-pointer "audio_init"
   int (function void (int)) c-string int int int int bool))
@@ -393,9 +405,10 @@ void poll_io(void (*eval)(char *)) {
          (buf (condition-variable-specific cvar))
          (mutex (midi-buffer-mutex buf))
          (bytes (midi-buffer-bytes buf))
-         (data (midi-buffer-data buf)))
+         (data (midi-buffer-data buf))
+         (idx (midi-handle-idx handle)))
     (if mio
-      (with-lock mutex (midi-write mio bytes (f bytes data)))
+      (with-lock mutex (midi-write idx bytes (f bytes data)))
       (begin (print "run (midi-start!) on this handle first") 0))))
 
 (: audio-start!
