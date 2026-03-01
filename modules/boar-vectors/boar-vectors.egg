@@ -1,0 +1,7 @@
+((author "Jim Dalrymple")
+ (synopsis "folds and maps over numerical vectors")
+ (license "BSD")
+ (dependencies srfi-4)
+ (components 
+   (extension boar-vectors
+    (csc-options "-O3" "-strict-types"))))
