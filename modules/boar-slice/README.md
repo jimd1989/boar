@@ -6,7 +6,7 @@ A `slice` represents a virtual sub-section of a srfi-4 `u8vector`. It aims to pr
 
 A `slice` is a three-item Scheme list with the following fields:
 
-1. A reference to a pre-allocated `u8vector`
+1. A reference to an explicitly-allocated `u8vector`. ie `(u8vector n x #t #f)`. If a normal garbage-collected vector is used, this may segfault.
 2. A `fixnum` indicating how many bytes have already been written to the `u8vector`.
 3. A `fixnum` indicating how many bytes should be written to the `u8vector` in the next `slice` operation.
 
@@ -55,7 +55,7 @@ One can use `(slice-ref n slice)` and `(slice-set! n new-value slice)` to get/se
 The following will return index 3 of the underlying `u8vector`:
 
 ```scheme
-(slice-ref 0 (#u8(144 72 127 11 22 33) 3 3))
+(slice-ref 0 `(,#u8(144 72 127 11 22 33) 3 3))
   11
 ```
 
@@ -64,15 +64,37 @@ If `n` is beyond `(slice-bytes-to-write)`, the program will error, even if more 
 Rather than using `(slice-set!)`, one generally uses `(slice-fill! slice . bytes)` to fill the entire slice with desired bytes:
 
 ```scheme
-(slice-fill! (#u8(144 72 127 0 0 0) 3 3) 128 72 0)
+(slice-fill! `(,#u8(144 72 127 0 0 0) 3 3) 128 72 0)
   (#u8(144 72 127 128 72 0) 3 3)
 ```
 
-Note how the slice's write position has not changed. One must use `(extend-slice new-bytes-to-write slice)` to return a new slice over the next section of the `u8vector`. This is the fundamental iteration method, similar to `(cdr)` over lists. An error is thrown when the `u8vector` doesn't have enough space to allocate a new `slice`.
+Note how the slice's write position has not changed. One must use `(extend-slice new-bytes-to-write slice)` to return a new slice over the next section of the `u8vector`. This is the fundamental iteration method, similar to `(cdr)` over lists. 
 
 ```scheme
-(extend-slice 3 (#u8(1 2 3 0 0 0) 0 3))
+(extend-slice 3 `(,#u8(1 2 3 0 0 0) 0 3))
   (#u8(1 2 3 0 0 0) 3 3)
 ```
 
 Any higher level `fold` functionality is best left to other libraries, since the underlying `u8vector` is not intended to be fully traversed. That is to say: one should `fold` over a list of `slice`-manipulating functions rather than the buffer itself.
+
+## Caveats
+
+Attempting to `(make-slice)` or `(extend-slice)` beyond the underlying `u8vector`'s normal bounds will trigger a re-allocation with double the previous vector's size. This is intended to conveniently grow buffers, but comes with a lethal consequence; the previous (freed) buffer must no longer be referenced. One is advised to always extract the `u8vector` from the `slice` when he/she is done with it, since it may have grown.
+
+```
+(define xs (make-u8vector 2 0 #t #f))
+
+; no problem making empty slices
+(make-slice 0 xs)
+  (#u8(0 0) 0 0)
+
+; extending 2 → 7 means re-allocating xs to 4 bytes, then 8
+(extend-slice 7 (make-slice 0 xs))
+  (#u8(0 0 0 0 0 0 0 0) 0 7)
+
+; original xs is freed! don't use it!
+xs
+  Error: segmentation violation
+```
+
+"Scheme" and "segfault" rarely belong together. This is a very low-level construct for consenting adults.

@@ -1,14 +1,23 @@
 (module boar-slice
   (make-slice slice-u8vector slice-bytes-written slice-bytes-to-write 
    slice-end-pos extend-slice slice-ref slice-set! slice-fill!) 
-  (import scheme (chicken base) (chicken string) (chicken type) srfi-4)
+  (import scheme (chicken base) (chicken memory) (chicken string) (chicken type)
+          srfi-4)
 
   (define-type slice (list u8vector fixnum fixnum))
+
+  (: extend-vector (u8vector -> u8vector))
+  (define (extend-vector u8)
+    (let* ((old-len (u8vector-length u8))
+           (nu8 (make-u8vector (* 2 old-len) 0 #t #f)))
+      (move-memory! u8 nu8 old-len)
+      (release-number-vector u8)
+      nu8))
 
   (: make-slice (fixnum u8vector --> slice))
   (define (make-slice bytes-to-write u8)
     (if (> bytes-to-write (u8vector-length u8))
-      (error (conc "not enough free bytes to create slice of: " bytes-to-write))
+      (make-slice bytes-to-write (extend-vector u8))
       (list u8 0 bytes-to-write)))
   
   (: slice-u8vector (slice --> u8vector))
@@ -31,7 +40,7 @@
                              (slice-bytes-to-write sl)))
            (end-pos (+ bytes-written bytes-to-write)))
       (if (> end-pos (u8vector-length u8))
-        (error (conc "not enough free bytes to extend slice to: " end-pos))
+        (extend-slice bytes-to-write `(,(extend-vector u8) ,@(cdr sl)))
         (list u8 bytes-written bytes-to-write))))
   
   (: slice-ref (fixnum slice --> fixnum))
