@@ -398,7 +398,8 @@ void poll_io(void (*eval)(char *)) {
     (with-lock mutex
       (midi-buffer-f-set! (condition-variable-specific cvar) new-f))))
 
-(: midi-write! ((struct midi-handle) (u8vector any -> fixnum) -> fixnum))
+(: midi-write!
+   ((struct midi-handle) (u8vector any -> fixnum u8vector) -> fixnum))
 (define (midi-write! handle f)
   (let* ((mio (midi-handle-mio handle))
          (cvar (midi-handle-condition-variable handle))
@@ -408,7 +409,12 @@ void poll_io(void (*eval)(char *)) {
          (data (midi-buffer-data buf))
          (idx (midi-handle-idx handle)))
     (if mio
-      (with-lock mutex (midi-write idx bytes (f bytes data)))
+      (with-lock mutex 
+        (receive (bytes-to-write . extra) (f bytes data)
+          (if (not (null? extra))
+            (let ((nu8 (car extra)))
+              (if (not (eq? nu8 bytes)) (midi-buffer-bytes-set! buf nu8))))
+          (midi-write idx (midi-buffer-bytes buf) bytes-to-write)))
       (begin (print "run (midi-start!) on this handle first") 0))))
 
 (: audio-start!
