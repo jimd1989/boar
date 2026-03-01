@@ -1,0 +1,7 @@
+((author "Jim Dalrymple")
+ (synopsis "mix floating point streams to raw bytes")
+ (license "BSD")
+ (dependencies srfi-4 typed-records))
+ (components 
+   (extension boar-mixer
+    (csc-options "-O3" "-strict-types"))))
