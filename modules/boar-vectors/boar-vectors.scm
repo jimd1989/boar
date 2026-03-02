@@ -20,7 +20,7 @@
 
   (: vector-for-each ((any -> any) vector -> vector))
   (define (vector-for-each f xs)
-    ((vector-foldl (lambda (acc x n) (vector-set! xs n (f x))) #f xs) xs))
+    (vector-foldl (lambda (acc x n) (vector-set! xs n (f x))) #f xs) xs)
 
   (define-syntax define-for-vector
     (er-macro-transformer
