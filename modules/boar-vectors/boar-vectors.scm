@@ -1,10 +1,26 @@
 (module boar-vectors
-  (u8vector-foldl u8vector-for-each s8vector-foldl s8vector-for-each
-   u16vector-foldl u16vector-for-each s16vector-foldl s16vector-for-each
-   u32vector-foldl u32vector-for-each s32vector-foldl s32vector-for-each
-   u64vector-foldl u64vector-for-each s64vector-foldl s64vector-for-each
-   f32vector-foldl f32vector-for-each f64vector-foldl f64vector-for-each)
+  (vector-foldl vector-for-each u8vector-foldl u8vector-for-each 
+   s8vector-foldl s8vector-for-each u16vector-foldl u16vector-for-each 
+   s16vector-foldl s16vector-for-each u32vector-foldl u32vector-for-each 
+   s32vector-foldl s32vector-for-each u64vector-foldl u64vector-for-each 
+   s64vector-foldl s64vector-for-each f32vector-foldl f32vector-for-each 
+   f64vector-foldl f64vector-for-each)
   (import scheme (chicken base) (chicken type) srfi-4)
+
+  (: vector-foldl ((any any fixnum -> any) any vector -> any))
+  (define (vector-foldl f iacc xs)
+    (letrec ((len (vector-length xs))
+             (loop (lambda (acc n)
+                     (if (< n len)
+                       (let* ((x (vector-ref xs n))
+                              (nacc (f acc x n)))
+                         (loop nacc (+ n 1)))
+                       acc))))
+      (loop iacc 0)))
+
+  (: vector-for-each ((any -> any) vector -> vector))
+  (define (vector-for-each f xs)
+    ((vector-foldl (lambda (acc x n) (vector-set! xs n (f x))) #f xs) xs))
 
   (define-syntax define-for-vector
     (er-macro-transformer
