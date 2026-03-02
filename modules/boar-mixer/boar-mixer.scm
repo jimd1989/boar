@@ -1,7 +1,7 @@
 (module boar-mixer
   (mixer mixer-channels mixer-volume mixer-volume-set! mixer-from-buffers
          mixer-free! mixer-channel-volume mixer-channel-volume-set!
-         mixer-channel-balance mixer-channel-balance-set!)
+         mixer-channel-balance mixer-channel-balance-set! mix-master-to-s16)
   (import scheme (chicken base) (chicken bitwise) (chicken fixnum)
           (chicken memory) (chicken type) srfi-4 typed-records)
   (import boar-vectors)
@@ -74,13 +74,23 @@
         inputs)
       master-buffer))
 
-  ;(: mix-master-to-s16 ((struct mixer) u8vector -> u8vector))
-  ;(define (mix-master-to-s16 mixer output-buffer)
-  ;  (let* ((output-s16 (blob->s16vector/shared (u8vector->blob/shared xs))))
-  ;    (f32vector-foldl (lambda (acc f32-sample n)
-  ;                       (let ((
-  ;  (mix-master-to-f32)
-
+  (: mix-master-to-s16 ((struct mixer) u8vector -> u8vector))
+  ; eventually clip
+  ; eventually dither
+  (define (mix-master-to-s16 mixer output-buffer)
+    (mix-master-to-f32 mixer)
+    (f32vector-foldl
+      (lambda (output-n master-sample master-n)
+        ; byte order might be wrong
+        (let* ((s16 (inexact->exact (* master-sample 32767.0)))
+               (b1 (bitwise-and 255 s16))
+               (b2 (arithmetic-shift s16 -8)))
+          (u8vector-set! output-buffer output-n b1)
+          (u8vector-set! output-buffer (+ 1 output-n) b2)
+          (+ 2 output-n)))
+        0
+        (mixer-master mixer))
+    output-buffer)
 
   ; "input" is an internal name—"channel" is external name to avoid clashing
   (: mixer-input-ref (fixnum (struct mixer) --> (struct mixer-input)))
