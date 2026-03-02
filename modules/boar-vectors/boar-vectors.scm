@@ -18,10 +18,11 @@
                        acc))))
       (loop iacc 0)))
 
-  (: vector-for-each ((any -> any) vector -> vector))
+  (: vector-for-each ((any -> any) vector -> noreturn))
   (define (vector-for-each f xs)
-    (vector-foldl (lambda (acc x n) (vector-set! xs n (f x))) #f xs) xs)
+    (vector-foldl (lambda (acc x n) (f x) (void)) #f xs))
 
+  ; for-each was written like a map! change this!
   (define-syntax define-for-vector
     (er-macro-transformer
       (lambda (exp rename compare)

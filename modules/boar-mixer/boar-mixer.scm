@@ -45,7 +45,6 @@
   (define (mix-sample-to-master master-buffer master-idx volume balances s)
     (f32vector-foldl
       (lambda (master-n balance local-n)
-        ;(print `(mixing-sample-to-master ,master-n ,balance ,local-n))
         (let* ((old (f32vector-ref master-buffer master-n))
                (new (+ old (* volume balance s))))
           (f32vector-set! master-buffer master-n new)
@@ -71,12 +70,9 @@
           (silence (mixer-silence mixer))
           (inputs (mixer-inputs mixer)))
       (move-memory! silence master-buffer)
-      ;(vector-for-each
-      ;  (lambda (input) (mix-input-to-master master-buffer input))
-      ;  inputs)
-      ; SEE IF THIS IS PROBLEM ↓
-      (for-each (lambda (input) (mix-input-to-master master-buffer input))
-                (vector->list inputs))
+      (vector-for-each
+        (lambda (input) (mix-input-to-master master-buffer input))
+        inputs)
       master-buffer))
 
   (: mix-master-to-s16 ((struct mixer) u8vector -> u8vector))
