@@ -1,7 +1,8 @@
 (module boar-mixer
-  (mixer mixer-channels mixer-volume mixer-volume-set! mixer-from-buffers
-         mixer-free! mixer-channel-volume mixer-channel-volume-set!
-         mixer-channel-balance mixer-channel-balance-set! mix-master-to-s16)
+  (mixer mixer-channels mixer-volume mixer-volume-set! mixer-input-volume-set!
+         mixer-from-buffers mixer-free! mixer-channel-volume 
+         mixer-channel-volume-set! mixer-channel-balance 
+         mixer-channel-balance-set! mix-master-to-s16)
   (import scheme (chicken base) (chicken bitwise) (chicken fixnum)
           (chicken memory) (chicken type) srfi-4 typed-records)
   (import boar-vectors)
@@ -18,7 +19,7 @@
     (silence : f32vector)
     (inputs : (vector-of (struct mixer-input))))
 
-  (: mixer-from-buffers (fixnum (list-of f32vector) --> (struct mixer)))
+  (: mixer-from-buffers (fixnum #!rest f32vector --> (struct mixer)))
   (define (mixer-from-buffers ch . f32s)
     (make-mixer
       ch
@@ -27,7 +28,7 @@
       (make-f32vector (* ch (f32vector-length (car f32s))) 0.0 #t #f)
       (list->vector
         (map (lambda (f32)
-               (make-mixer-input 0.0 (make-f32vector ch 0.0 #t #f) f32))
+               (make-mixer-input 0.0 (make-f32vector ch 1.0 #t #f) f32))
              f32s))))
 
   (: mixer-free! ((struct mixer) -> noreturn))
@@ -101,7 +102,7 @@
 
   (: mixer-channel-volume-set! (fixnum float (struct mixer) -> noreturn))
   (define (mixer-channel-volume-set! n x m)
-    (mixer-input-volume-set! x (mixer-input-ref n m)))
+    (mixer-input-volume-set! (mixer-input-ref n m) x))
 
   (: mixer-channel-balance (fixnum fixnum (struct mixer) -> noreturn))
   (define (mixer-channel-balance n b m)
