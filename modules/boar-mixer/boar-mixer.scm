@@ -24,11 +24,11 @@
     (make-mixer
       ch
       0.0
-      (make-f32vector (* ch (f32vector-length (car f32s))) 0.0 #t #f)
+      (make-f32vector (* ch (f32vector-length (car f32s))) 1.0 #t #f)
       (make-f32vector (* ch (f32vector-length (car f32s))) 0.0 #t #f)
       (list->vector
         (map (lambda (f32)
-               (make-mixer-input 0.0 (make-f32vector ch 1.0 #t #f) f32))
+               (make-mixer-input 1.0 (make-f32vector ch 1.0 #t #f) f32))
              f32s))))
 
   (: mixer-free! ((struct mixer) -> noreturn))
@@ -83,7 +83,8 @@
     (f32vector-foldl
       (lambda (output-n master-sample master-n)
         ; byte order might be wrong
-        (let* ((s16 (inexact->exact (* master-sample 32767.0)))
+        (let* ((v (mixer-volume mixer))
+               (s16 (inexact->exact (floor (* master-sample v 32767.0))))
                (b1 (bitwise-and 255 s16))
                (b2 (arithmetic-shift s16 -8)))
           (u8vector-set! output-buffer output-n b1)
