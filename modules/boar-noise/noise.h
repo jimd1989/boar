@@ -2,4 +2,4 @@
 
 #include <stdint.h>
 
-void fill_white_noise(uint8_t *, int);
+void fill_white_noise(uint32_t *, float *, int);

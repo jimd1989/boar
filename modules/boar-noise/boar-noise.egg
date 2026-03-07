@@ -1,7 +1,7 @@
 ((author "Jim Dalrymple")
  (synopsis "creating random audio signals")
  (license "BSD")
- (dependencies srfi-4)
+ (dependencies srfi-4 typed-records)
  (components 
    (extension boar-noise
     (csc-options "-O3" "-strict-types")
