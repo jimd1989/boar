@@ -1,10 +1,29 @@
 (module boar-slice
-  (make-slice slice-u8vector slice-bytes-written slice-bytes-to-write 
-   slice-end-pos extend-slice slice-ref slice-set! slice-fill!) 
+  (growable-u8slice f32slice f32vector->slice f32slice-vector f32slice-written
+   f32slice-to-write make-slice slice-u8vector slice-bytes-written 
+   slice-bytes-to-write slice-end-pos extend-slice slice-ref slice-set! 
+   slice-fill!) 
   (import scheme (chicken base) (chicken memory) (chicken string) (chicken type)
-          srfi-4)
+          srfi-4 typed-records)
 
   (define-type slice (list u8vector fixnum fixnum))
+
+  (define-record f32slice
+    (vector : f32vector)
+    (written : fixnum)
+    (to-write : fixnum))
+
+  (: f32vector->slice (f32vector fixnum fixnum --> (struct f32slice)))
+  (define (f32vector->slice f32 n m)
+    (if (> (+ n m) (f32vector-length f32))
+      (make-f32slice f32 0 0)
+      (make-f32slice f32 n m)))
+
+  ; eventually rewrite "slice" functions to use this
+  (define-record growable-u8slice
+    (vector : u8vector)
+    (written : fixnum)
+    (to-write : fixnum))
 
   (: extend-vector (u8vector -> u8vector))
   (define (extend-vector u8)

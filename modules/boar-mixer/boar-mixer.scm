@@ -7,6 +7,7 @@
          mixer-channel-balance-set! mixer-channel->slice mixer-mix!)
   (import scheme (chicken base) (chicken foreign) (chicken type) srfi-4 
           typed-records)
+  (import boar-slice)
 
   (foreign-declare "#include \"mixer.h\"")
 
@@ -89,15 +90,14 @@
       (f32vector-set!
         (mixer-balances m) (+ b (* (+ n 1) (mixer-output-channels m))) x)))
 
-  (: mixer-channel->slice
-     ((struct mixer) fixnum -> (list f32vector fixnum fixnum)))
+  (: mixer-channel->slice ((struct mixer) fixnum --> (struct f32slice)))
   (define (mixer-channel->slice m n)
     (let ((len (mixer-buffer-length-frames m))
           (in-ch (mixer-input-channels m))
           (out-ch (mixer-output-channels m)))
       (if (>= n in-ch)
-        `(,(mixer-audio m) 0 0)
-        `(,(mixer-audio m) ,(+ (* out-ch len) (* n len)) ,len))))
+        (f32vector->slice (mixer-audio m) 0 0)
+        (f32vector->slice (mixer-audio m) (+ (* out-ch len) (* n len)) len))))
 
   (: mixer-mix! ((struct mixer) u8vector -> noreturn))
   (define (mixer-mix! m u8)
