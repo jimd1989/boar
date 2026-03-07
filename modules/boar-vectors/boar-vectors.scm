@@ -1,10 +1,15 @@
 (module boar-vectors
-  (vector-foldl vector-for-each u8vector-foldl u8vector-for-each 
-   s8vector-foldl s8vector-for-each u16vector-foldl u16vector-for-each 
-   s16vector-foldl s16vector-for-each u32vector-foldl u32vector-for-each 
-   s32vector-foldl s32vector-for-each u64vector-foldl u64vector-for-each 
-   s64vector-foldl s64vector-for-each f32vector-foldl f32vector-for-each 
-   f64vector-foldl f64vector-for-each)
+  (vector-foldl vector-for-each vector-map 
+   u8vector-foldl u8vector-for-each u8vector-map
+   s8vector-foldl s8vector-for-each s8vector-map
+   u16vector-foldl u16vector-for-each u16vector-map
+   s16vector-foldl s16vector-for-each s16vector-map
+   u32vector-foldl u32vector-for-each u32vector-map
+   s32vector-foldl s32vector-for-each s32vector-map
+   u64vector-foldl u64vector-for-each u64vector-map
+   s64vector-foldl s64vector-for-each s64vector-map
+   f32vector-foldl f32vector-for-each f32vector-map
+   f64vector-foldl f64vector-for-each f64vector-map)
   (import scheme (chicken base) (chicken type) srfi-4)
 
   (: vector-foldl ((any any fixnum -> any) any vector -> any))
