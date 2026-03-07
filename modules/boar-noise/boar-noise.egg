@@ -1,0 +1,8 @@
+((author "Jim Dalrymple")
+ (synopsis "creating random audio signals")
+ (license "BSD")
+ (dependencies srfi-4)
+ (components 
+   (extension boar-noise
+    (csc-options "-O3" "-strict-types")
+    (link-options "noise.c"))))
