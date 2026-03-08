@@ -310,7 +310,8 @@ void poll_io(void (*eval)(char *)) {
   (condition-case
     (for-each 
       (lambda (q) (print (eval q))) (with-input-from-string x read-list))
-   (e (exn) (print (get-condition-property e 'exn 'message)))
+   (e (exn) (print (get-condition-property e 'exn 'message)
+                   (get-condition-property e 'exn 'arguments)))
    (exn () (print 'unknown-input-error))))
 
 (define stdin-init (foreign-safe-lambda void "stdin_init"))
