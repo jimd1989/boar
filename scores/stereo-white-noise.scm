@@ -6,7 +6,9 @@
 
 ; init 4 channel mixer
 (define mm (mixer-from-lengths 4 2 1184))
-(mixer-master-volume-set! mm 1.0)
+(mixer-master-volume-set! mm 0.4)
+(mixer-master-balance-set! mm 0 1.0)
+(mixer-master-balance-set! mm 1 1.0)
 
 ; channel 1 → white noise (left ear)
 (define ch1-sl (mixer-channel->slice mm 0))

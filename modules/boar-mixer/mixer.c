@@ -47,10 +47,14 @@ void mix_s16(int inputCh, int outputCh, int bufLen, float *volumes,
   int masterBufLen = bufLen * outputCh;
   int masterIdx    = 0;
   int outputIdx    = 0;
+  float vol        = volumes[0];
+  float sampleF    = 0.0f;
   int16_t sample   = 0;
   mix_f32(inputCh, outputCh, bufLen, volumes, balances, audio);
   for (masterIdx = 0 ; masterIdx < masterBufLen ; masterIdx++) {
-    sample              = audio[masterIdx] * 32767.0f; /* eventually dither */
+    sampleF             = audio[masterIdx];
+    sampleF            *= vol * balances[masterIdx % outputCh];
+    sample              = sampleF * 32767.0f; /* eventually dither */
     output[outputIdx++] = sample & 255;
     output[outputIdx++] = sample >> 8;
   }
