@@ -1,10 +1,12 @@
 (module boar-slice
-  (growable-u8slice f32slice f32vector->slice f32slice-vector f32slice-written
-   f32slice-to-write make-slice slice-u8vector slice-bytes-written 
-   slice-bytes-to-write slice-end-pos extend-slice slice-ref slice-set! 
-   slice-fill!) 
-  (import scheme (chicken base) (chicken memory) (chicken string) (chicken type)
-          srfi-4 typed-records)
+  (growable-u8slice f32slice f32slice-vector f32slice-written f32slice-to-write 
+   f32slice-copy-to-f32vector f32slice-copy-from-f32vector f32vector->slice
+   make-slice slice-u8vector slice-bytes-written slice-bytes-to-write 
+   slice-end-pos extend-slice slice-ref slice-set! slice-fill!) 
+  (import scheme (chicken base) (chicken foreign) (chicken memory) 
+          (chicken string) (chicken type) srfi-4 typed-records)
+
+  (foreign-declare "#include \"slice.h\"")
 
   (define-type slice (list u8vector fixnum fixnum))
 
@@ -12,6 +14,26 @@
     (vector : f32vector)
     (written : fixnum)
     (to-write : fixnum))
+
+  (: f32slice-copy-to-f32vector ((struct f32slice) f32vector -> noreturn))
+  (define (f32slice-copy-to-f32vector sl f32)
+    (if (<= (f32slice-to-write sl) (f32vector-length f32))
+      ((foreign-lambda void "f32slice_copy_to_f32vector"
+                       f32vector int int f32vector)
+       (f32slice-vector sl)
+       (f32slice-written sl)
+       (f32slice-to-write sl)
+       f32)))
+
+  (: f32slice-copy-from-f32vector ((struct f32slice) f32vector -> noreturn))
+  (define (f32slice-copy-from-f32vector sl f32)
+    (if (<= (f32vector-length f32) (f32slice-to-write sl))
+      ((foreign-lambda void "f32slice_copy_from_f32vector"
+                       f32vector int int f32vector)
+       (f32slice-vector sl)
+       (f32slice-written sl)
+       (f32slice-to-write sl)
+       f32)))
 
   (: f32vector->slice (f32vector fixnum fixnum --> (struct f32slice)))
   (define (f32vector->slice f32 n m)
