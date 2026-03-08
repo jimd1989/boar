@@ -18,7 +18,7 @@
   (: make-sine-wavetable (-> f32vector))
   (define (make-sine-wavetable)
     (let ((f32 (make-f32vector WAVETABLE-SIZE 0.0 #t #f)))
-      ((foreign-lambda void "make_sine_wavetable" f32vector) f32) f32))
+      ((foreign-safe-lambda void "make_sine_wavetable" f32vector) f32) f32))
 
   (: osc-from-wavetable (f32vector fixnum --> (struct osc)))
   (define (osc-from-wavetable f32 sample-rate)
@@ -34,7 +34,7 @@
            (f32 (f32slice-vector sl))
            (written (f32slice-written sl))
            (to-write (f32slice-to-write sl))
-           (new-phase ((foreign-lambda float "osc_fill_slice" 
+           (new-phase ((foreign-safe-lambda float "osc_fill_slice" 
                           f32vector float float f32vector int int)
                        table freq-inc phase f32 written to-write)))
       (osc-phase-set! o new-phase)))

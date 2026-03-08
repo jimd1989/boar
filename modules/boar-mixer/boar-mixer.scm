@@ -4,7 +4,8 @@
          mixer-master-volume-set! mixer-channel-volume
          mixer-channel-volume-set! mixer-master-balance
          mixer-master-balance-set! mixer-channel-balance
-         mixer-channel-balance-set! mixer-channel->slice mixer-mix!)
+         mixer-channel-balance-set! mixer-channel->slice mixer-mix!
+         mixer-balances)
   (import scheme (chicken base) (chicken foreign) (chicken type) srfi-4 
           typed-records)
   (import boar-slice)
@@ -12,7 +13,7 @@
   (foreign-declare "#include \"mixer.h\"")
 
   (define mix-s16
-    (foreign-lambda void "mix_s16" 
+    (foreign-safe-lambda void "mix_s16" 
       int int int f32vector f32vector f32vector u8vector))
 
   (define-record mixer

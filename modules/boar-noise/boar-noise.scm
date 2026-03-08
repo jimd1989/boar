@@ -22,7 +22,7 @@
     (release-number-vector (noise-white-f32 no)))
 
   (define fill-white-noise
-    (foreign-lambda void "fill_white_noise" u32vector f32vector int))
+    (foreign-safe-lambda void "fill_white_noise" u32vector f32vector int))
 
   (: fill-white-noise! ((struct noise) -> noreturn))
   (define (fill-white-noise! no)

@@ -1,6 +1,7 @@
 (import boar-mixer boar-noise boar-slice boar-osc srfi-4)
 
 ; assumes stereo audio, 48Khz sample rate, 1184 buffsize
+; eventually needs automated way to access playback params
 (audio-start! SIO-0)
 
 ; init 4 channel mixer
@@ -9,7 +10,7 @@
 
 ; channel 1 → white noise (left ear)
 (define ch1-sl (mixer-channel->slice mm 0))
-(mixer-channel-volume-set! mm 0 0.6)
+(mixer-channel-volume-set! mm 0 0.2)
 (mixer-channel-balance-set! mm 0 0 1.0)
 (mixer-channel-balance-set! mm 0 1 0.0)
 (define no (noise-from-length 1184))
@@ -17,8 +18,8 @@
 ; channel 2 → 440hz sine wave (right ear)
 (define ch2-sl (mixer-channel->slice mm 1))
 (mixer-channel-volume-set! mm 1 0.6)
-(mixer-channel-balance-set! mm 0 0 0.0) ; this doesn't seem correct
-(mixer-channel-balance-set! mm 0 1 1.0)
+(mixer-channel-balance-set! mm 1 0 0.0)
+(mixer-channel-balance-set! mm 1 1 1.0)
 (define sine (make-sine-wavetable))
 (define o2 (osc-from-wavetable sine 48000))
 (osc-freq-set! o2 440.0)

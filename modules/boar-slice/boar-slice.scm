@@ -18,7 +18,7 @@
   (: f32slice-copy-to-f32vector ((struct f32slice) f32vector -> noreturn))
   (define (f32slice-copy-to-f32vector sl f32)
     (if (<= (f32slice-to-write sl) (f32vector-length f32))
-      ((foreign-lambda void "f32slice_copy_to_f32vector"
+      ((foreign-safe-lambda void "f32slice_copy_to_f32vector"
                        f32vector int int f32vector)
        (f32slice-vector sl)
        (f32slice-written sl)
@@ -28,7 +28,7 @@
   (: f32slice-copy-from-f32vector ((struct f32slice) f32vector -> noreturn))
   (define (f32slice-copy-from-f32vector sl f32)
     (if (<= (f32vector-length f32) (f32slice-to-write sl))
-      ((foreign-lambda void "f32slice_copy_from_f32vector"
+      ((foreign-safe-lambda void "f32slice_copy_from_f32vector"
                        f32vector int int f32vector)
        (f32slice-vector sl)
        (f32slice-written sl)
