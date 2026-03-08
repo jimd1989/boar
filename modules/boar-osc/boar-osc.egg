@@ -1,0 +1,8 @@
+((author "Jim Dalrymple")
+ (synopsis "creating periodic audio signals")
+ (license "BSD")
+ (dependencies boar-slice srfi-4 typed-records)
+ (components 
+   (extension boar-osc
+    (csc-options "-O3" "-strict-types" "-Llm")
+    (link-options "osc.c"))))
