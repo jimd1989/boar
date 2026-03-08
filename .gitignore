@@ -1,0 +1,10 @@
+*.o
+*.build.sh
+*.install.sh
+*.import.scm
+*.so
+*.link
+*.swp*
+*.core
+*.out
+boar-scm
