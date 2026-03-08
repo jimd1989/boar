@@ -30,9 +30,8 @@ float osc_fill_slice(float *table, float freqInc, float phase,
   float remainder  = 0.0f;
   for (i = 0 ; i < toWrite ; i++, phase += freqInc) {
     wavetableIdx = ((int)phase) & OSC_WAVETABLE_MASK;
-    remainder    = phase - wavetableIdx;
-    phase        = wavetableIdx + remainder;
+    remainder    = phase - wavetableIdx; /* use for lerp */
     buf[i]       = table[wavetableIdx]; /* no lerp yet */
   }
-  return phase;
+  return fmodf(phase, (float)OSC_WAVETABLE_SIZE);
 }

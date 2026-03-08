@@ -17,7 +17,7 @@
 ; channel 2 → 440hz sine wave (right ear)
 (define ch2-sl (mixer-channel->slice mm 1))
 (mixer-channel-volume-set! mm 1 0.6)
-(mixer-channel-balance-set! mm 0 0 0.0)
+(mixer-channel-balance-set! mm 0 0 0.0) ; this doesn't seem correct
 (mixer-channel-balance-set! mm 0 1 1.0)
 (define sine (make-sine-wavetable))
 (define o2 (osc-from-wavetable sine 48000))
