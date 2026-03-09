@@ -88,7 +88,7 @@ void stdin_read(void (*eval)(char *)) {
   } while (bytesRead > 0);
   sb->data[sb->readPos] = '\0';
   if (sb->readPos > 1) {
-    eval(STDIN_BUFFER.data);
+    stdin_eval(STDIN_BUFFER.data);
   }
 }
 
@@ -158,13 +158,17 @@ void fill_silence(AudioBuffer *ob) {
   ob->writePos += (ob->writePos + bytesWritten) % ob->dspSizeBytes;
 }
 
-struct sio_hdl * audio_init(int idx, void (*schemeCallback)(int), char *name, 
+struct sio_hdl * audio_init(int idx, char *name, 
                             int rate, int outCh, int inCh, int bits, 
                             bool readWrite) {
-  int bytes           = 0;
-  struct sio_hdl *sio = NULL;
-  struct sio_par par  = {0};
-  AudioBuffer *ab     = NULL;
+  int bytes             = 0;
+  struct sio_hdl *sio   = NULL;
+  struct sio_par par    = {0};
+  AudioBuffer *ab       = NULL;
+  void (*callback)(int) = idx == 1 ? sio_1 :
+                          idx == 2 ? sio_2 :
+                          idx == 3 ? sio_3 :
+                          /* else */ sio_0;
   if (idx < 0 || idx >= AUDIO_FD_LIMIT) {
     warnx("%d audio devices available, requested #%d", AUDIO_FD_LIMIT, idx + 1);
   }
@@ -196,7 +200,7 @@ struct sio_hdl * audio_init(int idx, void (*schemeCallback)(int), char *name,
   ab->writeSizeBytes = par.pchan * par.appbufsz * bytes;
   ab->dspData        = malloc(ab->dspSizeBytes);
   ab->writeData      = malloc(ab->writeSizeBytes);
-  ab->schemeCallback = schemeCallback;
+  ab->schemeCallback = callback;
   sio_onmove(sio, &audio_callback, (void *)ab);
   sio_start(sio);
   warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.round);

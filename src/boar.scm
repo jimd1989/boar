@@ -2,10 +2,11 @@
         (chicken memory) (chicken port) (chicken random) srfi-4 srfi-18 
         typed-records)
 
-(foreign-declare "#include \"audio.h\"")
-
 (define-syntax λ (syntax-rules () ((_ . a) (lambda . a))))
 
+(foreign-declare "#include \"audio.h\"")
+
+; MIDI/audio buffers that live inside a condition-variable
 (define-record midi-buffer
   (bytes : u8vector)
   (data : any)
@@ -18,6 +19,7 @@
   (f : (u8vector any fixnum -> noreturn))
   (mutex : (struct mutex)))
 
+; condition-variables that wait for MIDI/audio callbacks from C
 (define-record midi-handle
   (condition-variable : (struct condition-variable))
   (callback : pointer)
@@ -26,18 +28,42 @@
 
 (define-record audio-handle
   (condition-variable : (struct condition-variable))
-  (callback : pointer)
   (sio : (or boolean pointer))
   (idx : fixnum))
 
+; Scheme functions used by C (declare first?)
 (define-external (stdin_eval (c-string x)) void
   (condition-case
-    (for-each 
-      (lambda (q) (print (eval q))) (with-input-from-string x read-list))
+    (for-each
+      (λ (q) (let ((result (eval q)))
+        (if (not (eq? (void) result)) (print result))))
+      (with-input-from-string x read-list))
    (e (exn) (print (get-condition-property e 'exn 'message)
                    (get-condition-property e 'exn 'arguments)))
    (exn () (print 'unknown-input-error))))
 
+(define-syntax make-midi-hdl
+  (syntax-rules ()
+    ((_ c-func-name cvar idx)
+     (define-external (c-func-name (int bytes-to-fill)) void
+       (let* ((buf (condition-variable-specific cvar))
+              (u8 (midi-buffer-bytes buf)))
+         ((midi-buffer-f buf) u8 (midi-buffer-data buf) bytes-to-fill)
+         (condition-variable-broadcast! cvar))))))
+
+(define-syntax make-audio-hdl
+  (syntax-rules ()
+    ((_ c-func-name cvar idx)
+     (define-external (c-func-name (int bytes-to-fill)) void
+       (let* ((buf (condition-variable-specific cvar))
+              (nu8 (adjust-buffer (dsp-buffer-bytes buf) bytes-to-fill)))
+         ; mutex-lock?
+         (dsp-buffer-bytes-set! buf nu8)
+         ((dsp-buffer-f buf) nu8 (dsp-buffer-data buf) bytes-to-fill)
+         (fill-dsp! idx nu8 bytes-to-fill)
+         (condition-variable-broadcast! cvar))))))
+
+; C functions used by Scheme
 (define stdin-init (foreign-safe-lambda void "stdin_init"))
 
 (define fill-dsp! (foreign-safe-lambda void "fill_dsp" int u8vector int))
@@ -51,10 +77,11 @@
   int u8vector int))
 
 (define audio-init (foreign-safe-lambda c-pointer "audio_init"
-  int (function void (int)) c-string int int int int bool))
+  int c-string int int int int bool))
 
 (define audio-close (foreign-safe-lambda void "audio_close" c-pointer))
 
+; pure Scheme
 (: io-loop (-> noreturn))
 (define (io-loop)
   (poll-io (location stdin_eval))
@@ -147,8 +174,7 @@
 (: audio-start!
   ((struct audio-handle) #!optional (list-of (list-of any)) -> noreturn))
 (define (audio-start! handle #!optional (xs '()))
-  (let* ((callback (audio-handle-callback handle))
-         (name (get-setting 'name xs))
+  (let* ((name (get-setting 'name xs))
          (rate (get-setting 'rate xs))
          (out-ch (get-setting 'out-ch xs))
          (in-ch (get-setting 'in-ch xs))
@@ -162,7 +188,7 @@
       (print "audio is already playing")
       (with-lock mutex
         (audio-handle-sio-set! handle
-          (audio-init idx callback name rate out-ch in-ch bits read-write?))))))
+          (audio-init idx name rate out-ch in-ch bits read-write?))))))
 
 (: audio-stop! ((struct audio-handle) -> noreturn))
 (define (audio-stop! handle)
@@ -213,29 +239,8 @@
     (with-lock mutex
       (dsp-buffer-f-set! (condition-variable-specific cvar) new-f))))
 
-; audio/MIDI handles hard limited at compile time because C callback pointers
-; are not available in interpreted mode
-(define-syntax make-midi-hdl
-  (syntax-rules ()
-    ((_ c-func-name cvar idx)
-     (define-external (c-func-name (int bytes-to-fill)) void
-       (let* ((buf (condition-variable-specific cvar))
-              (u8 (midi-buffer-bytes buf)))
-         ((midi-buffer-f buf) u8 (midi-buffer-data buf) bytes-to-fill)
-         (condition-variable-broadcast! cvar))))))
-
-(define-syntax make-audio-hdl
-  (syntax-rules ()
-    ((_ c-func-name cvar idx)
-     (define-external (c-func-name (int bytes-to-fill)) void
-       (let* ((buf (condition-variable-specific cvar))
-              (nu8 (adjust-buffer (dsp-buffer-bytes buf) bytes-to-fill)))
-         ; mutex-lock?
-         (dsp-buffer-bytes-set! buf nu8)
-         ((dsp-buffer-f buf) nu8 (dsp-buffer-data buf) bytes-to-fill)
-         (fill-dsp! idx nu8 bytes-to-fill)
-         (condition-variable-broadcast! cvar))))))
-
+; because they are closures around a specific condition variable, MIDI/audio
+; handles are hard-limited and manually defined for now.
 (: MIO-0-COND (struct condition-variable))
 (define MIO-0-COND (make-midi-condition-variable))
 
@@ -283,16 +288,16 @@
 (define MIO-3 (make-midi-handle MIO-3-COND (location mio_3) #f 3))
 
 (: SIO-0 (struct audio-handle))
-(define SIO-0 (make-audio-handle SIO-0-COND (location sio_0) #f 0))
+(define SIO-0 (make-audio-handle SIO-0-COND #f 0))
 
 (: SIO-1 (struct audio-handle))
-(define SIO-1 (make-audio-handle SIO-1-COND (location sio_1) #f 1))
+(define SIO-1 (make-audio-handle SIO-1-COND #f 1))
 
 (: SIO-2 (struct audio-handle))
-(define SIO-2 (make-audio-handle SIO-2-COND (location sio_2) #f 2))
+(define SIO-2 (make-audio-handle SIO-2-COND #f 2))
 
 (: SIO-3 (struct audio-handle))
-(define SIO-3 (make-audio-handle SIO-3-COND (location sio_3) #f 3))
+(define SIO-3 (make-audio-handle SIO-3-COND #f 3))
 
 ; runtime
 (print "boar: available audio handles " '(SIO-0 SIO-1 SIO-2 SIO-3))

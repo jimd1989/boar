@@ -6,7 +6,7 @@
 
 ; init 4 channel mixer
 (define mm (mixer-from-lengths 4 2 1184))
-(mixer-master-volume-set! mm 0.4)
+(mixer-master-volume-set! mm 0.2)
 (mixer-master-balance-set! mm 0 1.0)
 (mixer-master-balance-set! mm 1 1.0)
 
