@@ -65,7 +65,7 @@ void stdin_init(void) {
   STDIN_BUFFER.data         = malloc(blockSize * STDIN_BUFFER_BLOCK_SIZE);
 }
 
-void stdin_read(void (*eval)(char *)) {
+void stdin_read() {
   int bytesRead    = 0;
   int currentBlock = 0;
   StdinBuffer *sb  = &STDIN_BUFFER;
@@ -92,11 +92,15 @@ void stdin_read(void (*eval)(char *)) {
   }
 }
 
-struct mio_hdl * midi_init(int idx, uint8_t *buffer, void(*schemeCallback)(int), 
-                               char *name, bool in, bool out) {
-  int mode            = (in ? MIO_IN : 0) | (out ? MIO_OUT : 0);
-  struct mio_hdl *mio = NULL;
-  MidiBuffer *mb      = NULL;
+struct mio_hdl * midi_init(int idx, uint8_t *buffer, char *name, bool in, 
+                           bool out) {
+  int mode              = (in ? MIO_IN : 0) | (out ? MIO_OUT : 0);
+  struct mio_hdl *mio   = NULL;
+  MidiBuffer *mb        = NULL;
+  void (*callback)(int) = idx == 1 ? mio_1_callback :
+                          idx == 2 ? mio_2_callback :
+                          idx == 3 ? mio_3_callback :
+                          /* else */ mio_0_callback ;
   if (idx < 0 || idx >= MIDI_FD_LIMIT) {
     warnx("%d midi devices available, requested #%d", MIDI_FD_LIMIT, idx + 1);
   }
@@ -107,7 +111,7 @@ struct mio_hdl * midi_init(int idx, uint8_t *buffer, void(*schemeCallback)(int),
   }
   mb->mio            = mio;
   mb->fdIdx          = TEXT_FD_LIMIT + AUDIO_FD_LIMIT + idx;
-  mb->schemeCallback = schemeCallback;
+  mb->schemeCallback = callback;
   mb->midiData       = buffer;
   mio_pollfd(mb->mio, &POLLFDS[mb->fdIdx], POLLIN | POLLOUT);
   return mb->mio;
@@ -158,17 +162,16 @@ void fill_silence(AudioBuffer *ob) {
   ob->writePos += (ob->writePos + bytesWritten) % ob->dspSizeBytes;
 }
 
-struct sio_hdl * audio_init(int idx, char *name, 
-                            int rate, int outCh, int inCh, int bits, 
-                            bool readWrite) {
+struct sio_hdl * audio_init(int idx, char *name, int rate, int outCh, int inCh, 
+                            int bits, bool readWrite) {
   int bytes             = 0;
   struct sio_hdl *sio   = NULL;
   struct sio_par par    = {0};
   AudioBuffer *ab       = NULL;
-  void (*callback)(int) = idx == 1 ? sio_1 :
-                          idx == 2 ? sio_2 :
-                          idx == 3 ? sio_3 :
-                          /* else */ sio_0;
+  void (*callback)(int) = idx == 1 ? sio_1_callback :
+                          idx == 2 ? sio_2_callback :
+                          idx == 3 ? sio_3_callback :
+                          /* else */ sio_0_callback ;
   if (idx < 0 || idx >= AUDIO_FD_LIMIT) {
     warnx("%d audio devices available, requested #%d", AUDIO_FD_LIMIT, idx + 1);
   }
@@ -233,7 +236,7 @@ static void audio_write(AudioBuffer *ob) {
   ob->writePos = (ob->writePos + bytesWritten) % ob->dspSizeBytes;
 }
 
-void poll_io(void (*eval)(char *)) {
+void poll_io() {
   int i           = 0;
   int mask        = 0;
   int bytesRead   = 0;
@@ -248,7 +251,7 @@ void poll_io(void (*eval)(char *)) {
   }
   poll(POLLFDS, FD_LIMIT, -1);
   if (POLLFDS[STDIN_IDX].revents & POLLIN) {
-    stdin_read(eval);
+    stdin_read();
   }
   for (i = 0 ; i < MIDI_FD_LIMIT ; i++) {
     mb = &MIDI_BUFFERS[i];

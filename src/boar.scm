@@ -22,7 +22,6 @@
 ; condition-variables that wait for MIDI/audio callbacks from C
 (define-record midi-handle
   (condition-variable : (struct condition-variable))
-  (callback : pointer)
   (mio : (or boolean pointer))
   (idx : fixnum))
 
@@ -68,10 +67,10 @@
 
 (define fill-dsp! (foreign-safe-lambda void "fill_dsp" int u8vector int))
 
-(define poll-io (foreign-safe-lambda void "poll_io" (function void (c-string))))
+(define poll-io (foreign-safe-lambda void "poll_io"))
 
 (define midi-init (foreign-safe-lambda c-pointer "midi_init"
-  int u8vector (function void (int)) c-string bool bool))
+  int u8vector c-string bool bool))
 
 (define midi-write (foreign-safe-lambda int "midi_write"
   int u8vector int))
@@ -84,7 +83,7 @@
 ; pure Scheme
 (: io-loop (-> noreturn))
 (define (io-loop)
-  (poll-io (location stdin_eval))
+  (poll-io)
   (io-loop))
 
 (: DEFAULT-AUDIO-SETTINGS (list-of (list-of any)))
@@ -111,8 +110,7 @@
 (: midi-start!
   ((struct midi-handle) #!optional (list-of (list-of any)) -> noreturn))
 (define (midi-start! handle #!optional (xs '()))
-  (let* ((callback (midi-handle-callback handle))
-         (name (get-setting 'name xs))
+  (let* ((name (get-setting 'name xs))
          (midi-in? (if (get-setting 'midi-in? xs) 1 0))
          (midi-out? (if (get-setting 'midi-out? xs) 1 0))
          (cvar (midi-handle-condition-variable handle))
@@ -125,7 +123,7 @@
       (print "midi is already started")
       (with-lock mutex
         (midi-handle-mio-set! handle
-               (midi-init idx u8 callback name midi-in? midi-out?))))))
+               (midi-init idx u8 name midi-in? midi-out?))))))
 
 (: make-midi-condition-variable (-> (struct condition-variable)))
 (define (make-midi-condition-variable)
@@ -265,27 +263,27 @@
 (: SIO-3-COND (struct condition-variable))
 (define SIO-3-COND (make-audio-out-condition-variable))
 
-(make-midi-hdl mio_0 MIO-0-COND 0)
-(make-midi-hdl mio_1 MIO-0-COND 1)
-(make-midi-hdl mio_2 MIO-0-COND 2)
-(make-midi-hdl mio_3 MIO-0-COND 3)
+(make-midi-hdl mio_0_callback MIO-0-COND 0)
+(make-midi-hdl mio_1_callback MIO-0-COND 1)
+(make-midi-hdl mio_2_callback MIO-0-COND 2)
+(make-midi-hdl mio_3_callback MIO-0-COND 3)
 
-(make-audio-hdl sio_0 SIO-0-COND 0)
-(make-audio-hdl sio_1 SIO-1-COND 1)
-(make-audio-hdl sio_2 SIO-2-COND 2)
-(make-audio-hdl sio_3 SIO-3-COND 3)
+(make-audio-hdl sio_0_callback SIO-0-COND 0)
+(make-audio-hdl sio_1_callback SIO-1-COND 1)
+(make-audio-hdl sio_2_callback SIO-2-COND 2)
+(make-audio-hdl sio_3_callback SIO-3-COND 3)
 
 (: MIO-0 (struct midi-handle))
-(define MIO-0 (make-midi-handle MIO-0-COND (location mio_0) #f 0))
+(define MIO-0 (make-midi-handle MIO-0-COND #f 0))
 
 (: MIO-1 (struct midi-handle))
-(define MIO-1 (make-midi-handle MIO-1-COND (location mio_1) #f 1))
+(define MIO-1 (make-midi-handle MIO-1-COND #f 1))
 
 (: MIO-2 (struct midi-handle))
-(define MIO-2 (make-midi-handle MIO-2-COND (location mio_2) #f 2))
+(define MIO-2 (make-midi-handle MIO-2-COND #f 2))
 
 (: MIO-3 (struct midi-handle))
-(define MIO-3 (make-midi-handle MIO-3-COND (location mio_3) #f 3))
+(define MIO-3 (make-midi-handle MIO-3-COND #f 3))
 
 (: SIO-0 (struct audio-handle))
 (define SIO-0 (make-audio-handle SIO-0-COND #f 0))
@@ -304,5 +302,4 @@
 (print "boar: default audio settings " DEFAULT-AUDIO-SETTINGS)
 (print "boar: please run (audio-start! AUDIO-HANDLE SETTINGS-OVERRIDES)")
 (stdin-init)
-;(midi-init 0 (location sio_0) "default" #t #t)
 (io-loop)
