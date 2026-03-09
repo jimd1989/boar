@@ -38,6 +38,4 @@
                           f32vector float float f32vector int int)
                        table freq-inc phase f32 written to-write)))
       (osc-phase-set! o new-phase)))
-
-
 )

@@ -309,7 +309,10 @@ void poll_io(void (*eval)(char *)) {
 (define-external (stdin_eval (c-string x)) void
   (condition-case
     (for-each 
-      (lambda (q) (print (eval q))) (with-input-from-string x read-list))
+      (lambda (q)
+        (let ((result (eval q)))
+          (if (not (eq? result (void))) (print result))))
+      (with-input-from-string x read-list))
    (e (exn) (print (get-condition-property e 'exn 'message)
                    (get-condition-property e 'exn 'arguments)))
    (exn () (print 'unknown-input-error))))
