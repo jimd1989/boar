@@ -1,0 +1,8 @@
+((author "Jim Dalrymple")
+ (synopsis "fading between parameter changes")
+ (license "BSD")
+ (dependencies boar-slice srfi-4 typed-records)
+ (components 
+   (extension boar-param
+    (csc-options "-O3" "-strict-types")
+    (link-options "param.c"))))
