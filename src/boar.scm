@@ -1,5 +1,5 @@
 (import (chicken condition) (chicken file posix) (chicken foreign) (chicken io) 
-        (chicken memory) (chicken port) (chicken random) srfi-4 srfi-18 
+        (chicken memory) (chicken port) srfi-4 srfi-18 
         typed-records)
 
 (define-syntax λ (syntax-rules () ((_ . a) (lambda . a))))
@@ -208,9 +208,6 @@
 (: ignore-buffer! (u8vector any fixnum -> noreturn))
 (define (ignore-buffer! bytes data bytes-to-fill) (void))
 
-(: fill-noise! (u8vector any fixnum -> noreturn))
-(define (fill-noise! u8 x n) (random-bytes (u8vector->blob/shared u8)) (void))
-
 (: make-audio-out-condition-variable (-> (struct condition-variable)))
 (define (make-audio-out-condition-variable)
   (let* ((cvar (make-condition-variable))
@@ -228,6 +225,18 @@
     (with-lock mutex
       (dsp-buffer-data-set! (condition-variable-specific cvar) x))))
 
+(: audio-over-data!
+   ((struct audio-handle) #!optional (list-of (any -> any)) -> noreturn))
+(define (audio-over-data! handle . fs)
+  (let* ((cvar (audio-handle-condition-variable handle))
+         (data (dsp-buffer-data (condition-variable-specific cvar)))
+         (mutex (dsp-buffer-mutex (condition-variable-specific cvar))))
+    (with-lock mutex
+      (dsp-buffer-data-set!
+        (condition-variable-specific cvar)
+        (foldl (lambda (acc f) (f acc) acc) data fs)))))
+    
+
 (: audio-f-set! ((struct audio-handle)
                      (u8vector any fixnum -> noreturn) -> noreturn))
 (define (audio-f-set! handle f)
@@ -236,6 +245,7 @@
          (new-f (λ (u8 x n) (with-lock mutex (f u8 x n)))))
     (with-lock mutex
       (dsp-buffer-f-set! (condition-variable-specific cvar) new-f))))
+
 
 ; because they are closures around a specific condition variable, MIDI/audio
 ; handles are hard-limited and manually defined for now.

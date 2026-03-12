@@ -23,6 +23,7 @@
   (: note-offf (fixnum -> slice-f))
   (define (note-offf n) (note-on n 0))
 
+  ; is this typed properly? revisit
   (: fill-midi-buffer!
      (fixnum any u8vector -> (u8vector any -> fixnum u8vector)))
   (define (fill-midi-buffer! ch . fs)
