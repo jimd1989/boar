@@ -5,5 +5,5 @@
  (dependencies boar-slice srfi-4 typed-records)
  (components 
    (extension boar-mixer
-    (csc-options "-O3" "-strict-types")
+    (csc-options "-O0" "-strict-types")
     (link-options "mixer.c"))))

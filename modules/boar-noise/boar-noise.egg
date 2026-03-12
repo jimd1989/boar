@@ -4,5 +4,5 @@
  (dependencies srfi-4 typed-records)
  (components 
    (extension boar-noise
-    (csc-options "-O3" "-strict-types")
+    (csc-options "-O0" "-strict-types")
     (link-options "noise.c"))))

@@ -6,7 +6,7 @@
 
 ; init 4 channel mixer
 (define mm (mixer-from-lengths 4 2 1184))
-(mixer-master-volume-set! mm 0.2)
+(mixer-master-volume-set! mm 0.7)
 (mixer-master-balance-set! mm 0 1.0)
 (mixer-master-balance-set! mm 1 1.0)
 
@@ -39,3 +39,12 @@
 
     ; mixdown
     (mixer-mix! x u8)))
+
+(##sys#gc)
+
+; MIDI handling
+(midi-start! MIO-0)
+(midi-f-set! MIO-0
+  (lambda (u8 x n)
+    (let ((note (u8vector-ref u8 1)))
+      (osc-freq-set! o2 (* 8.1757989156 (expt 2 (/ note 12)))))))

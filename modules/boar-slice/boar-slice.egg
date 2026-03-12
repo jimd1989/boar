@@ -4,5 +4,5 @@
  (dependencies srfi-4 typed-records)
  (components 
    (extension boar-slice
-    (csc-options "-fixnum-arithmetic" "-O3" "-strict-types")
+    (csc-options "-O0" "-strict-types")
     (link-options "slice.c"))))
