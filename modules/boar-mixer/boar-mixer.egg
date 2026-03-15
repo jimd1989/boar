@@ -1,9 +1,8 @@
 ((author "Jim Dalrymple")
- (synopsis "folds and maps over numerical vectors")
  (synopsis "mix floating point streams to raw bytes")
  (license "BSD")
- (dependencies boar-slice srfi-4 typed-records)
+ (dependencies boar-param boar-slice srfi-4 typed-records)
  (components 
    (extension boar-mixer
-    (csc-options "-O0" "-strict-types")
+    (csc-options "-O0" "-strict-types" "-Llm")
     (link-options "mixer.c"))))
