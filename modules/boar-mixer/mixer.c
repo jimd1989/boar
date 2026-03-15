@@ -41,8 +41,8 @@ int mix_f32_fade(int fadeLen, int paramLen, float *params, int inputCh,
   int balIdx        = 0;
   float fadePhase   = 0.0f;
   float fadeInc     = (float)paramLen / (float)fadeLen;
-  float vol         = 0.0f;
   float chDiv       = 1.0f / (float)inputCh;
+  float vol         = 0.0f;
   float bal         = 0.0f;
   float localSample = 0.0f;
   if (bufLen < fadeLen) {
@@ -50,10 +50,10 @@ int mix_f32_fade(int fadeLen, int paramLen, float *params, int inputCh,
     fadeInc = (float)paramLen / (float)fadeLen;
   }
   for (chIdx = 0 ; chIdx < inputCh ; chIdx++) {
-    /* Must check the start or end of fade curve to see if channel is on. 
+    /* Must check the start or end of volume fade curve to see if channel is on. 
      * Skip otherwise. */
-    if ((params[chIdx        * paramChLen     ] > 0.0f) ||
-        (params[((chIdx + 1) * paramChLen) - 1] > 0.0f)  ) {
+    if ((params[chIdx        * paramChLen              ] > 0.0f) ||
+        (params[((chIdx + 1) * paramChLen) - paramCount] > 0.0f)  ) {
       for (
            /* init */
            fadePhase     = 0.0f                            ,
@@ -65,16 +65,54 @@ int mix_f32_fade(int fadeLen, int paramLen, float *params, int inputCh,
            /* iterate */
            fadePhase    += fadeInc                          ) {
         paramIdx    = paramChIdx + ((int)fadePhase * paramCount); /* no lerp */
-        vol         = params[paramIdx];
+        vol         = params[paramIdx] * chDiv;
         localSample = audio[localBufIdx++];
-        for (balIdx = 1 ; balIdx <= outputCh ; balIdx++) {
+        for (balIdx = 1 ; balIdx < paramCount ; balIdx++) {
           bal                    = params[paramIdx + balIdx];
-          audio[masterBufIdx++] += chDiv * vol * bal * localSample;
+          audio[masterBufIdx++] += vol * bal * localSample;
         }
       } 
     }
   }
   return fadeLen;
+}
+
+/* Mixes with interleaved, but non-faded volume/balance params: ie a one
+ * dimensional array of:
+ *
+ * [ v0 l0 r0 v1 l1 r1 v2 l2 r2 … ] 
+ *
+ * Starts at `offset` for each input channel, which could be `fadeLen` if a 
+ * fade has taken place, or 0 if no parameters were recently changed. */
+void mix_f32_new(int offset, float *staticParams, int inputCh, int outputCh,
+                int bufLen, float *audio) {
+  int i               = 0;
+  int paramCount      = 1 + outputCh;
+  int masterBufLen    = bufLen * outputCh; /* zero this section of buffer */
+  int masterBufOffset = offset * outputCh;
+  int localBufLen     = bufLen - offset;
+  int chIdx           = 0;
+  int paramIdx        = 0;
+  int masterBufIdx    = 0;
+  int localBufIdx     = 0;
+  int balIdx          = 0;
+  float chDiv         = 1.0f / (float)inputCh;
+  float vol           = 0.0f;
+  float bal           = 0.0f;
+  float localSample   = 0.0f;
+  for (chIdx = 0 ; chIdx < inputCh ; chIdx++, paramIdx += paramCount) {
+    vol = staticParams[paramIdx] * chDiv;
+    if (vol > 0.0f) {
+      localBufIdx = masterBufLen + offset + (chIdx * bufLen);
+      for (masterBufIdx = masterBufOffset, i = 0 ; i < localBufLen ; i++) {
+        localSample = audio[localBufIdx++];
+        for (balIdx = 1 ; balIdx < paramCount ; balIdx++) {
+          bal                   = staticParams[paramIdx + balIdx];
+          audio[masterBufIdx++] += vol * bal * localSample;
+        }
+      }
+    }
+  }
 }
 
 /* All mixer audio is a contiguous stretch of floats, with the master
