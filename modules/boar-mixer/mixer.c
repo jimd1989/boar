@@ -148,15 +148,39 @@ int mix_s16_fade(int fadeLen, int paramLen, float *params, int outputCh,
     paramIdx = paramCount * (int)fadePhase; /* no lerp */
     vol      = params[paramIdx];
     for (balIdx = 1 ; balIdx < paramCount ; balIdx++) {
-      bal    = params[paramIdx + balIdx];
-      sample = vol * bal * audio[masterBufIdx++] * 32767.0f;
-      sample = fmaxf(-32768.0f, fminf(32767.0f, sample));
-      s      = (int16_t)sample; /* no dither yet */
+      bal                 = params[paramIdx + balIdx];
+      sample              = vol * bal * audio[masterBufIdx++] * 32767.0f;
+      sample              = fmaxf(-32768.0f, fminf(32767.0f, sample));
+      s                   = (int16_t)sample; /* no dither yet */
       output[outputIdx++] = s & 255;
       output[outputIdx++] = s >> 8;
     }
   }
   return fadeLen;
+}
+
+void mix_s16_new(int offset, float *staticParams, int outputCh, 
+                 int bufLen, float *audio, uint8_t *output) {
+  int paramCount      = 1 + outputCh;
+  int masterBufLen    = bufLen * outputCh; /* zero this section of buffer */
+  int masterBufOffset = offset * outputCh;
+  int masterBufIdx    = masterBufOffset;
+  int outputIdx       = masterBufOffset * outputCh * 2;
+  int balIdx          = 0;
+  float vol           = staticParams[0];
+  float bal           = 0.0f;
+  float sample        = 0.0f;
+  int16_t s           = 0;
+  while (masterBufIdx < masterBufLen) {
+    for (balIdx = 1 ; balIdx < paramCount ; balIdx++) {
+      bal                 = staticParams[balIdx];
+      sample              = vol * bal * audio[masterBufIdx++] * 32767.0f;
+      sample              = fmaxf(-32768.0f, fminf(32767.0f, sample));
+      s                   = (int16_t)sample; /* no dither yet */
+      output[outputIdx++] = s & 255;
+      output[outputIdx++] = s >> 8;
+    }
+  }
 }
 
 /* All mixer audio is a contiguous stretch of floats, with the master
