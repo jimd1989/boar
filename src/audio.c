@@ -157,9 +157,10 @@ void fill_silence(AudioBuffer *ob) {
     if (sio_revents(ob->sio, pfd) & POLLOUT) {
       memset(ob->writeData, 0, ob->writeSizeBytes);
       bytesWritten += sio_write(ob->sio, ob->writeData, ob->writeSizeBytes);
+      warnx("pre-filled buf %u", bytesWritten);
     }
   }
-  ob->writePos += (ob->writePos + bytesWritten) % ob->dspSizeBytes;
+  ob->writePos = (ob->writePos + bytesWritten) % ob->dspSizeBytes;
 }
 
 struct sio_hdl * audio_init(int idx, char *name, int rate, int outCh, int inCh, 
@@ -206,7 +207,7 @@ struct sio_hdl * audio_init(int idx, char *name, int rate, int outCh, int inCh,
   ab->schemeCallback = callback;
   sio_onmove(sio, &audio_callback, (void *)ab);
   sio_start(sio);
-  warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.round);
+  warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.appbufsz);
   fill_silence(ab);
   return ab->sio;
 }

@@ -39,24 +39,25 @@
 (define o2 (osc-from-wavetable sine 48000))
 (osc-freq-set! o2 440.0)
 (audio-params-set! SIO-0
-  (mixer-channel-volume-set!  1 0.6)
+  (mixer-channel-volume-set!  1 0.8)
   (mixer-channel-balance-set! 1 0 0.0)
   (mixer-channel-balance-set! 1 1 1.0))
 
 ; main DSP loop, x = audio handle state (mixer)
 (audio-f-set! SIO-0
   (lambda (u8 x n)
-    (let ((ch1-sl (mixer-channel->slice x 0))
-          (ch2-sl (mixer-channel->slice x 1)))
-      ; generate noise
-      (fill-white-noise! no)
-      (f32slice-copy-from-f32vector ch1-sl (noise-white-f32 no))
+    (if (> n 0)
+      (let ((ch1-sl (mixer-channel->slice x 0))
+            (ch2-sl (mixer-channel->slice x 1)))
+        ; generate noise
+        (fill-white-noise! no)
+        (f32slice-copy-from-f32vector ch1-sl (noise-white-f32 no))
 
-      ; advance oscillator
-      (osc-fill-slice! o2 ch2-sl)
+        ; advance oscillator
+        (osc-fill-slice! o2 ch2-sl)
 
-      ; mixdown
-      (mixer-mix! x u8))))
+        ; mixdown
+        (mixer-mix! x u8)))))
 
 (##sys#gc)
 
