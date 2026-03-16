@@ -1,14 +1,8 @@
 (module boar-mixer
-  (mixer mixer-output-channels mixer-input-channels
-         mixer-from-lengths mixer-free! mixer-master-volume 
-         mixer-master-volume-set! mixer-channel-volume
-         mixer-channel-volume-set! mixer-master-balance
-         mixer-master-balance-set! mixer-channel-balance
-         mixer-channel-balance-set! mixer-channel->slice mixer-mix!
-         mixer-balances)
-  (import scheme (chicken base) (chicken foreign) (chicken type) srfi-4 
-          typed-records)
-  (import boar-slice)
+  *
+  (import scheme (chicken base) (chicken foreign) (chicken string) 
+          (chicken type) srfi-4 typed-records)
+  (import boar-param boar-slice)
 
   (foreign-declare "#include \"mixer.h\"")
 
@@ -109,4 +103,99 @@
              (mixer-balances m)
              (mixer-audio m)
              u8))
+
+  ; refactor starts here
+  (define-record mixer-new
+    (input-channels : fixnum)
+    (output-channels : fixnum)
+    (params : (struct params))
+    (audio : f32vector))
+
+  (: mixer-new-from-lengths (fixnum fixnum fixnum -> (struct mixer-new)))
+  (define (mixer-new-from-lengths mixer-inputs channels buffer-length-frames)
+    (let ((params-count (* (+ 1 channels) (+ 1 mixer-inputs)))
+          (audio-length (+ (* channels buffer-length-frames)
+                           (* mixer-inputs buffer-length-frames))))
+    (make-mixer-new
+      mixer-inputs
+      channels
+      (params-from-length params-count)
+      (make-f32vector audio-length 0.0 #t #f))))
+
+  (: mixer-new-master-volume ((struct mixer-new) --> float))
+  (define (mixer-new-master-volume m)
+    (f32vector-ref (params-new (mixer-new-params m)) 0))
+
+  (: mixer-new-master-volume-set! ((struct mixer-new) float -> noreturn))
+  (define (mixer-new-master-volume-set! m n)
+    (params-set-linear! (mixer-new-params m) 0 n))
+
+  (: mixer-new-master-balance ((struct mixer-new) fixnum --> float))
+  (define (mixer-new-master-balance m b)
+    (let ((out-ch (mixer-new-output-channels m))
+          (params (mixer-new-params m)))
+      (if (>= b out-ch)
+        (error (conc out-ch " channels; got " (+ 1 b)))
+        (f32vector-ref (params-new params) (+ 1 b)))))
+
+  (: mixer-new-master-balance-set! ((struct mixer-new) fixnum float -> noreturn))
+  (define (mixer-new-master-balance-set! m b n)
+    (let ((out-ch (mixer-new-output-channels m))
+          (params (mixer-new-params m)))
+      (if (>= b out-ch)
+        (error (conc out-ch " channels; got " (+ 1 b)))
+        (params-set-linear! params (+ 1 b) n))))
+
+  (: mixer-new-channel-volume ((struct mixer-new) fixnum --> float))
+  (define (mixer-new-channel-volume m ch)
+    (let* ((in-ch (mixer-new-input-channels m))
+           (out-ch (mixer-new-output-channels m))
+           (param-count (+ 1 out-ch))
+           (idx (+ param-count (* param-count ch)))
+           (params (mixer-new-params m)))
+      (if (>= ch in-ch)
+        (error (conc in-ch " input channels; got " (+ 1 ch)))
+        (f32vector-ref (params-new params) idx))))
+
+  (: mixer-new-channel-volume-set! ((struct mixer-new) fixnum float -> noreturn))
+  (define (mixer-new-channel-volume-set! m ch n)
+    (let* ((in-ch (mixer-new-input-channels m))
+           (out-ch (mixer-new-output-channels m))
+           (param-count (+ 1 out-ch))
+           (idx (+ param-count (* param-count ch)))
+           (params (mixer-new-params m)))
+      (if (>= ch in-ch)
+        (error (conc in-ch " input channels; got " (+ 1 ch)))
+        (params-set-linear! params idx n))))
+
+  (: mixer-new-channel-balance ((struct mixer-new) fixnum fixnum --> float))
+  (define (mixer-new-channel-balance m ch b)
+    (let* ((in-ch (mixer-new-input-channels m))
+           (out-ch (mixer-new-output-channels m))
+           (param-count (+ 1 out-ch))
+           (idx (+ b (+ param-count (* param-count ch))))
+           (params (mixer-new-params m)))
+      (cond ((>= ch in-ch)
+             (error (conc in-ch " input channels; got " (+ 1 ch))))
+             ((>= b out-ch)
+              (error (conc out-ch " channels; got " (+ 1 b))))
+             (else
+               (f32vector-ref (params-new params) idx)))))
+
+  (: mixer-new-channel-balance-set! ((struct mixer-new) fixnum fixnum float -> noreturn))
+  (define (mixer-new-channel-balance-set! m ch b n)
+    (let* ((in-ch (mixer-new-input-channels m))
+           (out-ch (mixer-new-output-channels m))
+           (param-count (+ 1 out-ch))
+           (idx (+ 1 b (+ param-count (* param-count ch))))
+           (params (mixer-new-params m)))
+      (cond ((>= ch in-ch)
+             (error (conc in-ch " input channels; got " (+ 1 ch))))
+             ((>= b out-ch)
+              (error (conc out-ch " channels; got " (+ 1 b))))
+             (else
+               (params-set-linear! params idx n)))))
+
+
+
 )

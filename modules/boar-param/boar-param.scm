@@ -56,5 +56,5 @@
           (population (params-population p)))
       ((foreign-lambda void "params_after_fade_cleanup" int f32vector f32vector)
        population new vec)
-      (params-updated?-set! #f)))
+      (params-updated?-set! p #f)))
 )
