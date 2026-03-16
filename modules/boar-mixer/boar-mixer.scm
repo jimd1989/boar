@@ -108,6 +108,7 @@
   (define-record mixer-new
     (input-channels : fixnum)
     (output-channels : fixnum)
+    (buffer-length-frames : fixnum)
     (params : (struct params))
     (audio : f32vector))
 
@@ -119,6 +120,7 @@
     (make-mixer-new
       mixer-inputs
       channels
+      buffer-length-frames
       (params-from-length params-count)
       (make-f32vector audio-length 0.0 #t #f))))
 
@@ -195,6 +197,45 @@
               (error (conc out-ch " channels; got " (+ 1 b))))
              (else
                (params-set-linear! params idx n)))))
+
+  (: mixer-new-mix! ((struct mixer-new) u8vector -> noreturn))
+  (define (mixer-new-mix! m u8)
+    (let* ((params (mixer-new-params m))
+           (updated? (params-updated? params))
+           (param-len (params-fade-length params))
+           (params-curves (params-vector params))
+           (static-params (params-new params))
+           (in-ch (mixer-new-input-channels m))
+           (out-ch (mixer-new-output-channels m))
+           (buf-len-frames (mixer-new-buffer-length-frames m))
+           (audio (mixer-new-audio m))
+           (fade-len 32))
+      ((foreign-lambda void "mixer_zero" int int f32vector)
+       out-ch buf-len-frames audio)
+      (if updated?
+        (begin
+          ((foreign-lambda int "mix_f32_fade"
+            int int f32vector int int int f32vector)
+           fade-len param-len params-curves in-ch out-ch buf-len-frames audio)
+          (params-after-fade-cleanup! params)
+          ((foreign-lambda void "mix_f32_new"
+            int f32vector int int int f32vector)
+           fade-len static-params in-ch out-ch buf-len-frames audio)
+          ((foreign-lambda int "mix_s16_fade"
+            int int f32vector int int f32vector u8vector)
+           fade-len param-len static-params out-ch buf-len-frames audio u8)
+          ((foreign-lambda void "mix_s16_new"
+            int f32vector int int f32vector u8vector)
+           fade-len static-params out-ch buf-len-frames audio u8))
+        (begin
+          ((foreign-lambda void "mix_f32_new"
+            int f32vector int int int f32vector)
+           0 static-params in-ch out-ch buf-len-frames audio)
+          ((foreign-lambda void "mix_s16_new"
+            int f32vector int int f32vector u8vector)
+           0 static-params out-ch buf-len-frames audio u8)))))
+        
+
 
 
 

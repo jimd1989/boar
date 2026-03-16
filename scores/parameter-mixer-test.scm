@@ -11,12 +11,7 @@
 (mixer-new-channel-balance-set! mix 1 0 888.0)
 (mixer-new-channel-balance-set! mix 1 1 999.0)
 (params-new (mixer-new-params mix))
-
-
-(define par (params-from-length 3))
-(params-set-linear! par 1 100.0)
-(params-vector par)
-(params-updated? par)
-(params-after-fade-cleanup! par)
-
-
+(define output (make-u8vector 16 0 #t #f))
+(params-updated? (mixer-new-params mix))
+(mixer-new-mix! mix output)
+(mixer-new-audio mix)
