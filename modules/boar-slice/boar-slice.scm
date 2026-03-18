@@ -35,6 +35,18 @@
        (f32slice-to-write sl)
        f32)))
 
+  (: f32slice-copy-to-f32slice 
+     ((struct f32slice) (struct f32slice) -> noreturn))
+  (define (f32slice-copy-to-f32slice src-sl dest-sl)
+    (if ((<= (f32slice-to-write src-sl) (f32slice-to-write dest-sl)))
+      ((foreign-safe-lambda void "f32slice_copy_to_f32slice"
+        f32vector int int f32vector int)
+       (f32slice-vector src-sl)
+       (f32slice-written src-sl)
+       (f32slice-to-write src-sl)
+       (f32slice-vector dest-sl)
+       (f32slice-written dest-sl))))
+
   (: f32vector->slice (f32vector fixnum fixnum --> (struct f32slice)))
   (define (f32vector->slice f32 n m)
     (if (> (+ n m) (f32vector-length f32))

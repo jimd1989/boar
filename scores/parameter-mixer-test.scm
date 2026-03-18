@@ -1,4 +1,4 @@
-(import boar-param boar-mixer srfi-4 srfi-18 (chicken string))
+(import boar-param boar-mixer boar-slice srfi-4 srfi-18 (chicken string))
 
 (define mix (mixer-new-from-lengths 2 2 4))
 (mixer-new-master-volume-set!   mix     111.0)

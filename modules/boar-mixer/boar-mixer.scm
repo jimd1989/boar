@@ -110,19 +110,35 @@
     (output-channels : fixnum)
     (buffer-length-frames : fixnum)
     (params : (struct params))
-    (audio : f32vector))
+    (audio : f32vector)
+    (slices : (vector-of (struct boar-slice))))
+
+  (: audio->slices
+     (f32vector fixnum fixnum fixnum  --> (vector-of (struct boar-slice))))
+  (define (audio->slices f32 in-ch out-ch buf-len)
+    (letrec* ((audio-len (f32vector-length f32))
+              (master-len (* out-ch buf-len))
+              (master-slice (f32vector->slice f32 0 master-len))
+              (loop (lambda (n)
+                      (if (> n audio-len)
+                        '()
+                        (let ((m (+ n buf-len)))
+                          (cons (f32vector->slice f32 n m) (loop m)))))))
+      (list->vector (cons master-slice (loop master-len)))))
 
   (: mixer-new-from-lengths (fixnum fixnum fixnum -> (struct mixer-new)))
   (define (mixer-new-from-lengths mixer-inputs channels buffer-length-frames)
-    (let ((params-count (* (+ 1 channels) (+ 1 mixer-inputs)))
-          (audio-length (+ (* channels buffer-length-frames)
-                           (* mixer-inputs buffer-length-frames))))
-    (make-mixer-new
-      mixer-inputs
-      channels
-      buffer-length-frames
-      (params-from-length params-count)
-      (make-f32vector audio-length 0.0 #t #f))))
+    (let* ((params-count (* (+ 1 channels) (+ 1 mixer-inputs)))
+           (audio-length (+ (* channels buffer-length-frames)
+                            (* mixer-inputs buffer-length-frames)))
+           (audio (make-f32vector audio-length 0.0 #t #f)))
+      (make-mixer-new
+        mixer-inputs
+        channels
+        buffer-length-frames
+        (params-from-length params-count)
+        audio
+        (audio->slices audio mixer-inputs channels buffer-length-frames))))
 
   (: mixer-new-master-volume ((struct mixer-new) --> float))
   (define (mixer-new-master-volume m)
@@ -234,9 +250,4 @@
           ((foreign-lambda void "mix_s16_new"
             int f32vector int int f32vector u8vector)
            0 static-params out-ch buf-len-frames audio u8)))))
-        
-
-
-
-
 )
