@@ -24,4 +24,3 @@ void f32slice_copy_to_f32slice(float *srcSlice, int srcWritten, int srcToWrite,
   int len     = srcToWrite * sizeof(float);
   memcpy((void *)dest, (void *)src, len);
 }
-     

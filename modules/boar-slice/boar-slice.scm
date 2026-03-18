@@ -50,7 +50,7 @@
   (: f32vector->slice (f32vector fixnum fixnum --> (struct f32slice)))
   (define (f32vector->slice f32 n m)
     (if (> (+ n m) (f32vector-length f32))
-      (make-f32slice f32 0 0)
+      (error (conc (+ n m) " beyond length " (f32vector-length f32)))
       (make-f32slice f32 n m)))
 
   ; eventually rewrite "slice" functions to use this

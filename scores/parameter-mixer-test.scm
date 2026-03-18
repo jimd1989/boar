@@ -15,3 +15,9 @@
 (params-updated? (mixer-new-params mix))
 (mixer-new-mix! mix output)
 (mixer-new-audio mix)
+(vector-ref (mixer-new-slices mix) 0)
+(f32vector-length (mixer-new-audio mix))
+(f32slice-to-write (mixer-new-master-slice mix))
+(f32slice-written (mixer-new-channel-slice mix 0))
+(f32slice-written (mixer-new-channel-slice mix 1))
+mix
