@@ -194,7 +194,7 @@
            (param-count (+ 1 out-ch))
            (idx (+ b (+ param-count (* param-count ch))))
            (params (mixer-new-params m)))
-      (cond (((+ 1 ch) in-ch)
+      (cond ((> (+ 1 ch) in-ch)
              (error (conc in-ch " input channels; got " (+ 1 ch))))
              ((>= b out-ch)
               (error (conc out-ch " channels; got " (+ 1 b))))

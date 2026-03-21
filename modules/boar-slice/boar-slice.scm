@@ -1,6 +1,7 @@
 (module boar-slice
   (growable-u8slice f32slice f32slice-vector f32slice-written f32slice-to-write 
-   f32slice-copy-to-f32vector f32slice-copy-from-f32vector f32vector->slice
+   f32slice-copy-to-f32vector f32slice-copy-from-f32vector 
+   f32slice-copy-to-f32slice f32vector->slice
    make-slice slice-u8vector slice-bytes-written slice-bytes-to-write 
    slice-end-pos extend-slice slice-ref slice-set! slice-fill!) 
   (import scheme (chicken base) (chicken foreign) (chicken memory) 
@@ -38,7 +39,7 @@
   (: f32slice-copy-to-f32slice 
      ((struct f32slice) (struct f32slice) -> noreturn))
   (define (f32slice-copy-to-f32slice src-sl dest-sl)
-    (if ((<= (f32slice-to-write src-sl) (f32slice-to-write dest-sl)))
+    (if (<= (f32slice-to-write src-sl) (f32slice-to-write dest-sl))
       ((foreign-safe-lambda void "f32slice_copy_to_f32slice"
         f32vector int int f32vector int)
        (f32slice-vector src-sl)
