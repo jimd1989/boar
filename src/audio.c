@@ -157,7 +157,6 @@ void fill_silence(AudioBuffer *ob) {
     if (sio_revents(ob->sio, pfd) & POLLOUT) {
       memset(ob->writeData, 0, ob->writeSizeBytes);
       bytesWritten += sio_write(ob->sio, ob->writeData, ob->writeSizeBytes);
-      warnx("pre-filled buf %u", bytesWritten);
     }
   }
   ob->writePos = (ob->writePos + bytesWritten) % ob->dspSizeBytes;

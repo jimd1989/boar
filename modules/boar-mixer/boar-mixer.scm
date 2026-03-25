@@ -121,7 +121,6 @@
               (master-slice (f32vector->slice f32 0 master-len))
               (loop (lambda (n)
                       (let ((m (+ n buf-len)))
-                      (print `(,n ,m ,buf-len ,audio-len))
                         (if (>= n audio-len)
                           '()
                           (cons (f32vector->slice f32 n buf-len) (loop m)))))))
