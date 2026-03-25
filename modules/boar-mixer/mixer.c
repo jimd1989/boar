@@ -1,3 +1,4 @@
+#include <err.h>
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
@@ -26,6 +27,8 @@ void mixer_zero(int outputCh, int bufLen, float *audio) {
  *   - N master channel sends (balances)
  * 
  * For master params and {a b} mono input channels, with stereo output:
+ *
+ * THIS IS INCORRECT
  *
  * [  v0  l0  r0  v1  l1  r1  v2  l2  r2 …
  *   va0 la0 ra0 va1 la1 ra1 va2 la2 ra2 …
@@ -127,6 +130,7 @@ void mix_f32_new(int offset, float *staticParams, int inputCh, int outputCh,
 
 int mix_s16_fade(int fadeLen, int paramLen, float *params, int outputCh, 
                  int bufLen, float *audio, uint8_t *output) {
+  /* need access to inCh */
   int paramCount   = 1 + outputCh;
   int masterBufLen = bufLen * outputCh; /* zero this section of buffer */
   int fadeIdx      = 0;
@@ -147,6 +151,7 @@ int mix_s16_fade(int fadeLen, int paramLen, float *params, int outputCh,
   for (fadeIdx = 0 ; fadeIdx < fadeLen ; fadeIdx++, fadePhase += fadeInc) {
     paramIdx = paramCount * (int)fadePhase; /* no lerp */
     vol      = params[paramIdx];
+    warnx("%d\tVOL CURVE\t%d\t→\t%d\t=\t%f", paramCount, fadeIdx, paramIdx, vol);
     for (balIdx = 1 ; balIdx < paramCount ; balIdx++) {
       bal                 = params[paramIdx + balIdx];
       sample              = vol * bal * audio[masterBufIdx++] * 32767.0f;

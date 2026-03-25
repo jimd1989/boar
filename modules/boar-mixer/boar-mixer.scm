@@ -236,7 +236,7 @@
            (out-ch (mixer-new-output-channels m))
            (buf-len-frames (mixer-new-buffer-length-frames m))
            (audio (mixer-new-audio m))
-           (fade-len 128))
+           (fade-len 16))
       ((foreign-lambda void "mixer_zero" int int f32vector)
        out-ch buf-len-frames audio)
       (if updated?

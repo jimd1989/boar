@@ -1,4 +1,4 @@
-(import boar-mixer boar-noise boar-slice boar-osc srfi-4 srfi-18)
+(import boar-param boar-mixer boar-noise boar-slice boar-osc srfi-4 srfi-18)
 
 ; audio handle
 (audio-start! SIO-0)
@@ -32,6 +32,13 @@
 ; scratch
 (osc-freq-set! o2 880.0)
 (f32slice-vector (mixer-new-channel-slice mix 0))
+; 1 + out-ch is incorrect
+; should be... (*
+;                 (+ 1 out-ch) ← vol    bal_0 … bal_n
+;                 (+ 1 in-ch)  ← master in_0  … in_n
+;                 )
+(subf32vector (params-vector (mixer-new-params mix)) 0 10)
+
 
 ; main audio loop
 (audio-f-set! SIO-0
