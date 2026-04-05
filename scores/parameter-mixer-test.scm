@@ -9,18 +9,14 @@
 (mixer-new-master-balance-set!  mix 0   1.0)
 (mixer-new-master-balance-set!  mix 1   1.0)
 
-(subf32vector (params-vector (mixer-new-params mix)) 0 (* 128 3))
-(subf32vector (params-vector (mixer-new-params mix)) (* 128 3) (* 128 6))
-(subf32vector (params-vector (mixer-new-params mix)) (* 128 6) (* 128 9))
-
 ; input channel 1 → left ear
-(mixer-new-channel-volume-set!  mix 0   0.0)
-(mixer-new-channel-balance-set! mix 0 0 0.0)
+(mixer-new-channel-volume-set!  mix 0   1.0)
+(mixer-new-channel-balance-set! mix 0 0 1.0)
 (mixer-new-channel-balance-set! mix 0 1 0.0)
 
 ; input channel 2 → right ear
 (mixer-new-channel-volume-set!  mix 1   1.0)
-(mixer-new-channel-balance-set! mix 1 0 1.0)
+(mixer-new-channel-balance-set! mix 1 0 0.0)
 (mixer-new-channel-balance-set! mix 1 1 1.0)
 
 ; audio handle state = mixer
@@ -34,7 +30,7 @@
 (define o2 (osc-from-wavetable sine 48000))
 
 ; scratch
-(osc-freq-set! o2 880.0)
+(osc-freq-set! o2 220.0)
 (f32slice-vector (mixer-new-channel-slice mix 0))
 ; 1 + out-ch is incorrect
 ; should be... (*

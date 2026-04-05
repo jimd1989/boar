@@ -245,13 +245,13 @@
           ((foreign-lambda int "mix_f32_fade"
             int int f32vector int int int f32vector)
            fade-len param-len params-curves in-ch out-ch buf-len-frames audio)
-          (params-after-fade-cleanup! params)
           ((foreign-lambda void "mix_f32_new"
             int f32vector int int int f32vector)
            fade-len static-params in-ch out-ch buf-len-frames audio)
           ((foreign-lambda int "mix_s16_fade"
             int int f32vector int int f32vector u8vector)
-           fade-len param-len static-params out-ch buf-len-frames audio u8)
+           fade-len param-len params-curves out-ch buf-len-frames audio u8)
+          (params-after-fade-cleanup! params)
           ((foreign-lambda void "mix_s16_new"
             int f32vector int int f32vector u8vector)
            fade-len static-params out-ch buf-len-frames audio u8))

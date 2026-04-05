@@ -148,6 +148,9 @@ int mix_s16_fade(int fadeLen, int paramLen, float *params, int outputCh,
     fadeLen = bufLen;
   }
   fadeInc = (float)paramLen / (float)fadeLen;
+  for (int q = 0 ; q < 24 ; q++) {
+    warnx("%f", params[q]);
+  }
   for (fadeIdx = 0 ; fadeIdx < fadeLen ; fadeIdx++, fadePhase += fadeInc) {
     paramIdx = paramCount * (int)fadePhase; /* no lerp */
     vol      = params[paramIdx];
