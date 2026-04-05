@@ -5,7 +5,7 @@
 
 ; 2 outputs, 2 inputs, buffer len 1184
 (define mix (mixer-new-from-lengths 2 2 1184))
-(mixer-new-master-volume-set!   mix     0.2)
+(mixer-new-master-volume-set!   mix     0.3)
 (mixer-new-master-balance-set!  mix 0   1.0)
 (mixer-new-master-balance-set!  mix 1   1.0)
 
