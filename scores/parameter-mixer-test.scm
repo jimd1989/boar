@@ -9,14 +9,18 @@
 (mixer-new-master-balance-set!  mix 0   1.0)
 (mixer-new-master-balance-set!  mix 1   1.0)
 
+(subf32vector (params-vector (mixer-new-params mix)) 0 (* 128 3))
+(subf32vector (params-vector (mixer-new-params mix)) (* 128 3) (* 128 6))
+(subf32vector (params-vector (mixer-new-params mix)) (* 128 6) (* 128 9))
+
 ; input channel 1 → left ear
-(mixer-new-channel-volume-set!  mix 0   1.0)
-(mixer-new-channel-balance-set! mix 0 0 1.0)
+(mixer-new-channel-volume-set!  mix 0   0.0)
+(mixer-new-channel-balance-set! mix 0 0 0.0)
 (mixer-new-channel-balance-set! mix 0 1 0.0)
 
 ; input channel 2 → right ear
 (mixer-new-channel-volume-set!  mix 1   1.0)
-(mixer-new-channel-balance-set! mix 1 0 0.0)
+(mixer-new-channel-balance-set! mix 1 0 1.0)
 (mixer-new-channel-balance-set! mix 1 1 1.0)
 
 ; audio handle state = mixer
@@ -37,8 +41,6 @@
 ;                 (+ 1 out-ch) ← vol    bal_0 … bal_n
 ;                 (+ 1 in-ch)  ← master in_0  … in_n
 ;                 )
-(subf32vector (params-vector (mixer-new-params mix)) 0 10)
-
 
 ; main audio loop
 (audio-f-set! SIO-0
@@ -84,4 +86,16 @@
 ; (f32slice-written (mixer-new-channel-slice mix 1))
 ; mix
 
-
+(import boar-param boar-mixer boar-noise boar-slice boar-osc srfi-4 srfi-18)
+(define ppp (params-from-lengths 2 3))
+(params-set-linear! ppp 0 0 1.0)
+(params-set-linear! ppp 0 1 2.0)
+(params-set-linear! ppp 0 2 3.0)
+(params-set-linear! ppp 1 0 4.0)
+(params-set-linear! ppp 1 1 5.0)
+(params-set-linear! ppp 1 2 6.0)
+(subf32vector (params-vector ppp) 0 (* 128 3))
+(subf32vector (params-vector ppp) (* 128 3) 768)
+(params-after-fade-cleanup! ppp)
+(params-new ppp)
+(params-old ppp)

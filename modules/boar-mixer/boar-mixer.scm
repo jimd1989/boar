@@ -128,7 +128,8 @@
 
   (: mixer-new-from-lengths (fixnum fixnum fixnum -> (struct mixer-new)))
   (define (mixer-new-from-lengths mixer-inputs channels buffer-length-frames)
-    (let* ((params-count (* (+ 1 channels) (+ 1 mixer-inputs)))
+    (let* ((params-channels (+ 1 channels))
+           (params-count (+ 1 channels))
            (audio-length (+ (* channels buffer-length-frames)
                             (* mixer-inputs buffer-length-frames)))
            (audio (make-f32vector audio-length 0.0 #t #f)))
@@ -136,7 +137,7 @@
         mixer-inputs
         channels
         buffer-length-frames
-        (params-from-length params-count)
+        (params-from-lengths params-channels params-count)
         audio
         (audio->slices audio mixer-inputs channels buffer-length-frames))))
 
@@ -146,7 +147,7 @@
 
   (: mixer-new-master-volume-set! ((struct mixer-new) float -> noreturn))
   (define (mixer-new-master-volume-set! m n)
-    (params-set-linear! (mixer-new-params m) 0 n))
+    (params-set-linear! (mixer-new-params m) 0 0 n))
 
   (: mixer-new-master-balance ((struct mixer-new) fixnum --> float))
   (define (mixer-new-master-balance m b)
@@ -162,7 +163,7 @@
           (params (mixer-new-params m)))
       (if (>= b out-ch)
         (error (conc out-ch " channels; got " (+ 1 b)))
-        (params-set-linear! params (+ 1 b) n))))
+        (params-set-linear! params 0 (+ 1 b) n))))
 
   (: mixer-new-channel-volume ((struct mixer-new) fixnum --> float))
   (define (mixer-new-channel-volume m ch)
@@ -184,7 +185,7 @@
            (params (mixer-new-params m)))
       (if (> (+ 1 ch) in-ch)
         (error (conc in-ch " input channels; got " (+ 1 ch)))
-        (params-set-linear! params idx n))))
+        (params-set-linear! params (+ 1 ch) 0 n))))
 
   (: mixer-new-channel-balance ((struct mixer-new) fixnum fixnum --> float))
   (define (mixer-new-channel-balance m ch b)
@@ -212,7 +213,7 @@
              ((>= b out-ch)
               (error (conc out-ch " channels; got " (+ 1 b))))
              (else
-               (params-set-linear! params idx n)))))
+               (params-set-linear! params (+ 1 ch) (+ 1 b) n)))))
 
   (: mixer-new-master-slice ((struct mixer-new) -> (struct f32slice)))
   (define (mixer-new-master-slice m)
