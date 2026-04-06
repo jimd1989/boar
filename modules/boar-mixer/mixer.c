@@ -165,7 +165,7 @@ void mix_s16(int offset, float *staticParams, int outputCh, int bufLen,
   int masterBufLen    = bufLen * outputCh; /* zero this section of buffer */
   int masterBufOffset = offset * outputCh;
   int masterBufIdx    = masterBufOffset;
-  int outputIdx       = masterBufOffset * outputCh * 2;
+  int outputIdx       = masterBufOffset * sizeof(int16_t);
   int balIdx          = 0;
   float vol           = staticParams[0];
   float bal           = 0.0f;
