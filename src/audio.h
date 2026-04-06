@@ -17,7 +17,7 @@ void sio_3_callback(int);
 
 /* foreign-lambda */
 void stdin_init(void);
-void fill_dsp(int, uint8_t *, int);
+void audio_write(int, uint8_t *, int);
 void poll_io(void);
 struct mio_hdl *midi_init(int, uint8_t *, char *, bool, bool);
 int midi_write(int, uint8_t *, int);

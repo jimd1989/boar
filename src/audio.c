@@ -38,8 +38,7 @@ typedef struct AudioBuffer {
   int               writePos;
   struct sio_hdl  * sio;
   struct sio_par    parameters;
-  uint8_t         * dspData;
-  uint8_t         * writeData;
+  uint8_t         * writeData;  /* readData instead? */
   void              (*schemeCallback)(int);
 } AudioBuffer;
 
@@ -135,33 +134,6 @@ int midi_write(int idx, uint8_t *buffer, int bytes) {
   return bytesWritten;
 }
 
-void audio_callback(void *arg, int deltaFrames) {
-  AudioBuffer *ob = (AudioBuffer *)arg;
-  int chans       = ob->parameters.pchan;
-  int byteDepth   = ob->parameters.bits >> 3;
-  int deltaBytes  = deltaFrames * chans * byteDepth;
-  ob->schemeCallback(deltaBytes);
-}
-
-void fill_silence(AudioBuffer *ob) {
-  /* Meant for pre-filling the buffer. For whatever reason it does not
-     seem to trigger callbacks, so init ob->writePos at 0 for maximum
-     distance from ob->dspPos. */
-  int i            = 0;
-  int n            = ob->dspSizeBytes / ob->writeSizeBytes;
-  int bytesWritten = 0;
-  struct pollfd pfd[1] = {0};
-  for (i = 0 ; i <= n ; i++) {
-    sio_pollfd(ob->sio, pfd, POLLOUT);
-    poll(pfd, 1, -1);
-    if (sio_revents(ob->sio, pfd) & POLLOUT) {
-      memset(ob->writeData, 0, ob->writeSizeBytes);
-      bytesWritten += sio_write(ob->sio, ob->writeData, ob->writeSizeBytes);
-    }
-  }
-  ob->writePos = (ob->writePos + bytesWritten) % ob->dspSizeBytes;
-}
-
 struct sio_hdl * audio_init(int idx, char *name, int rate, int outCh, int inCh, 
                             int bits, bool readWrite) {
   int bytes             = 0;
@@ -187,7 +159,9 @@ struct sio_hdl * audio_init(int idx, char *name, int rate, int outCh, int inCh,
   }
   sio_initpar(&par);
   par.bits     = bits;
-  par.appbufsz = 1; /* soundcard will overwrite with min size */
+  par.appbufsz = 1184 * 3; /* HARDCODED TEST: delete later */
+  /* eventually let user specify appbufsz × n buffer */
+  //par.appbufsz = 1; /* soundcard will overwrite with min size */
   par.rate     = rate;
   par.pchan    = outCh;
   par.rchan    = inCh;
@@ -199,15 +173,11 @@ struct sio_hdl * audio_init(int idx, char *name, int rate, int outCh, int inCh,
   ab->fdIdx          = TEXT_FD_LIMIT + idx;
   ab->sio            = sio;
   ab->parameters     = par;
-  ab->dspSizeBytes   = par.pchan * par.bufsz * bytes;
-  ab->writeSizeBytes = par.pchan * par.appbufsz * bytes;
-  ab->dspData        = malloc(ab->dspSizeBytes);
+  ab->writeSizeBytes = par.pchan * par.round * bytes;
   ab->writeData      = malloc(ab->writeSizeBytes);
   ab->schemeCallback = callback;
-  sio_onmove(sio, &audio_callback, (void *)ab);
   sio_start(sio);
   warnx("%dch %dHz %d frame buffer", par.pchan, par.rate, par.appbufsz);
-  fill_silence(ab);
   return ab->sio;
 }
 
@@ -217,23 +187,9 @@ void audio_close(struct sio_hdl *sio) {
   sio = NULL;
 }
 
-void fill_dsp(int idx, uint8_t *data, int sizeBytes) {
+void audio_write(int idx, uint8_t *data, int sizeBytes) {
   AudioBuffer *ob = &AUDIO_BUFFERS[idx];
-  memcpy(&ob->dspData[ob->dspPos], data, sizeBytes);
-  ob->dspPos = (ob->dspPos + sizeBytes) % ob->dspSizeBytes;
-  //warnx("Δ %d → %d", sizeBytes, ob->dspPos);
-}
-
-static void audio_write(AudioBuffer *ob) {
-  int i            = 0;
-  int write_ix     = ob->writePos;
-  int bytesWritten = 0;
-  for (i = 0 ; i < ob->writeSizeBytes ; i++) {
-    ob->writeData[i] = ob->dspData[write_ix];
-    write_ix = (write_ix + 1) % ob->dspSizeBytes;
-  }
-  bytesWritten = sio_write(ob->sio, ob->writeData, ob->writeSizeBytes);
-  ob->writePos = (ob->writePos + bytesWritten) % ob->dspSizeBytes;
+  sio_write(ob->sio, data, sizeBytes);
 }
 
 void poll_io() {
@@ -274,10 +230,11 @@ void poll_io() {
     if (ob->sio != NULL) {
       mask = sio_revents(ob->sio, &POLLFDS[ob->fdIdx]);
       if (mask & POLLIN) {
+        /* how is this even accessed? */
         sio_read(ob->sio, ob->writeData, ob->writeSizeBytes);
       }
       if (mask & POLLOUT) {
-        audio_write(ob);
+        ob->schemeCallback(ob->writeSizeBytes);
       }
     }
   }

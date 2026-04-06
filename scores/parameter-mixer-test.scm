@@ -5,7 +5,7 @@
 
 ; 2 outputs, 2 inputs, buffer len 1184
 (define mix (mixer-from-lengths 2 2 1184))
-(mixer-master-volume-set!   mix     0.3)
+(mixer-master-volume-set!   mix     0.2)
 (mixer-master-balance-set!  mix 0   1.0)
 (mixer-master-balance-set!  mix 1   1.0)
 
@@ -31,7 +31,6 @@
 
 ; scratch
 (osc-freq-set! o2 220.0)
-(f32slice-vector (mixer-channel-slice mix 0))
 ; 1 + out-ch is incorrect
 ; should be... (*
 ;                 (+ 1 out-ch) ← vol    bal_0 … bal_n

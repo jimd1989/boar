@@ -59,13 +59,13 @@
          ; mutex-lock?
          (dsp-buffer-bytes-set! buf nu8)
          ((dsp-buffer-f buf) nu8 (dsp-buffer-data buf) bytes-to-fill)
-         (fill-dsp! idx nu8 bytes-to-fill)
+         (audio-write! idx nu8 bytes-to-fill)
          (condition-variable-broadcast! cvar))))))
 
 ; C functions used by Scheme
 (define stdin-init (foreign-safe-lambda void "stdin_init"))
 
-(define fill-dsp! (foreign-safe-lambda void "fill_dsp" int u8vector int))
+(define audio-write! (foreign-safe-lambda void "audio_write" int u8vector int))
 
 (define poll-io (foreign-safe-lambda void "poll_io"))
 
@@ -245,7 +245,6 @@
          (new-f (λ (u8 x n) (with-lock mutex (f u8 x n)))))
     (with-lock mutex
       (dsp-buffer-f-set! (condition-variable-specific cvar) new-f))))
-
 
 ; because they are closures around a specific condition variable, MIDI/audio
 ; handles are hard-limited and manually defined for now.
