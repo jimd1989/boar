@@ -1,0 +1,9 @@
+((author "Jim Dalrymple")
+ (synopsis "staged envelopes")
+ (license "BSD")
+ (dependencies boar-param srfi-4 typed-records)
+ (components 
+   (extension boar-envelope
+    (csc-options "-O3" "-strict-types" 
+                 "-C" "-O3" "-C" "-ffast-math" "-C" "-march=native")
+    (link-options "envelope.c"))))
