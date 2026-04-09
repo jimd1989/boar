@@ -12,14 +12,31 @@
   (foreign-declare "#include \"param.h\"")
 
   (define PARAM-SIZE (foreign-value "PARAM_SIZE" int))
+  (define PARAM-BLOCK-SIZE (foreign-value "PARAM_BLOCK_SIZE" int))
 
+  ; Potential new flow:
+  ; if total-blocks-to-fade > 0 then enter fade function for entire buffer
+  ; increment phases with independent incs
+  ; param value is (PARAM-SIZE - 1) × phase = index of fade
+  ; after FADE-BLOCK-SIZE samples, decrement from blocks-to-fade
+  ; total-blocks-to-fade -= faded-blocks
+  ; if blocks-to-fade[i] = 0, 
+  ;  .. then increment[i] = 0 → always read max val
+  ;  .. IMPORTANT: (linear curve should be (0, max] instead now
+  ; return new total-blocks-to-fade
+  ; fades can now take place at different speeds or transcend buffer fills
   (define-record params
     (updated? : boolean)
-    (channels : fixnum)
+    (channels : fixnum)  
     (count : fixnum)
     (fade-length : fixnum)
+    (fade-block-size : fixnum)      ; NEW
+    (total-blocks-to-fade : fixnum) ; NEW
     (old : f32vector)
     (new : f32vector)
+    (phases : f32vector)            ; NEW
+    (increments : f32vector)        ; NEW
+    (blocks-to-fade : u32vector)    ; NEW
     (vector : f32vector))
 
   (: params-from-lengths (fixnum fixnum --> (struct params)))
@@ -27,17 +44,25 @@
     (let* ((population (* channels count))
            (old (make-f32vector population 0.0 #t #f))
            (new (make-f32vector population 0.0 #t #f))
+           (phases (make-f32vector population 0.0 #t #f))
+           (increments (make-f32vector population 0.0 #t #f))
+           (blocks-to-fade (make-u32vector population 0 #t #f))
            (vec (make-f32vector (* population PARAM-SIZE) 0.0 #t #f)))
-      (make-params #f channels count PARAM-SIZE old new vec)))
+      (make-params #f channels count PARAM-SIZE PARAM-BLOCK-SIZE 0
+                   old new phases increments blocks-to-fade vec)))
 
   (: params-free! ((struct params) -> noreturn))
   (define (params-free! p)
     (release-number-vector (params-old p))
     (release-number-vector (params-new p))
+    (release-number-vector (params-phases p))
+    (release-number-vector (params-increments p))
+    (release-number-vector (params-blocks-to-fade p))
     (release-number-vector (params-vector p)))
 
-  (: params-set-linear! ((struct params) fixnum fixnum float -> noreturn))
-  (define (params-set-linear! p ch n x)
+  (: params-set-linear!
+     ((struct params) fixnum fixnum float fixnum -> noreturn))
+  (define (params-set-linear! p ch n x blocks)
     (let ((pch (params-channels p))
           (pco (params-count p)))
       (cond ((>= ch pch) 
@@ -48,9 +73,19 @@
                          (idx (+ n (* ch (params-count p))))
                          (new-old (f32vector-ref (params-new p) idx))
                          (new (params-new p))
-                         (old (params-old p)))
+                         (old (params-old p))
+                         (phases (params-phases p))
+                         (increments (params-increments p))
+                         (to-fade (params-blocks-to-fade p))
+                         (total-blocks
+                           (+ blocks (params-total-blocks-to-fade p)))
+                         (inc (/ 1.0 (* blocks (params-fade-block-size p)))))
                     (f32vector-set! new idx x)
                     (f32vector-set! old idx new-old)
+                    (f32vector-set! phases idx 0.0)
+                    (f32vector-set! increments idx inc)
+                    (u32vector-set! to-fade idx blocks)
+                    (params-total-blocks-to-fade-set! p total-blocks)
                     ((foreign-lambda void "params_set_linear" 
                                      int int int float float f32vector)
                      pco ch n new-old x vec)
