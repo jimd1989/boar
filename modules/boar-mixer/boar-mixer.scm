@@ -46,12 +46,12 @@
   (define (mixer-master-volume m)
     (f32vector-ref (params-new (mixer-params m)) 0))
 
-  ; needs dynamic fade block count based on parameter deltas
-  ; currently hardcoded to 1
+  ; needs dynamic fade sample count based on parameter deltas
+  ; currently hardcoded to 64
   ; probably shouldn't be linear either
   (: mixer-master-volume-set! ((struct mixer) float -> noreturn))
   (define (mixer-master-volume-set! m n)
-    (params-set-linear! (mixer-params m) 0 0 n 1))
+    (params-set-linear! (mixer-params m) 0 0 n))
 
   (: mixer-master-balance ((struct mixer) fixnum --> float))
   (define (mixer-master-balance m b)
@@ -67,7 +67,7 @@
           (params (mixer-params m)))
       (if (>= b out-ch)
         (error (conc out-ch " channels; got " (+ 1 b)))
-        (params-set-linear! params 0 (+ 1 b) n 1))))
+        (params-set-linear! params 0 (+ 1 b) n))))
 
   (: mixer-channel-volume ((struct mixer) fixnum --> float))
   (define (mixer-channel-volume m ch)
@@ -89,7 +89,7 @@
            (params (mixer-params m)))
       (if (> (+ 1 ch) in-ch)
         (error (conc in-ch " input channels; got " (+ 1 ch)))
-        (params-set-linear! params (+ 1 ch) 0 n 1))))
+        (params-set-linear! params (+ 1 ch) 0 n))))
 
   (: mixer-channel-balance ((struct mixer) fixnum fixnum --> float))
   (define (mixer-channel-balance m ch b)
@@ -117,7 +117,7 @@
              ((>= b out-ch)
               (error (conc out-ch " channels; got " (+ 1 b))))
              (else
-               (params-set-linear! params (+ 1 ch) (+ 1 b) n 1)))))
+               (params-set-linear! params (+ 1 ch) (+ 1 b) n)))))
 
   (: mixer-master-slice ((struct mixer) -> (struct f32slice)))
   (define (mixer-master-slice m)

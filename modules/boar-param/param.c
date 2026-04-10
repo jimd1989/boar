@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <string.h>
 
 #include "param.h"
@@ -15,6 +16,21 @@ void params_set_linear(int count, int ch, int n,
   for (i = 0 ; i < PARAM_SIZE ; i++, idx += count, phase += PARAM_PHASE_INC) {
     buf[idx] = old + (phase * delta);
   }
+}
+
+uint32_t params_after_fade_cleanup_new(int len, float *phases, 
+                                       float *increments, uint32_t *fadeLens) {
+  int i                     = 0;
+  uint32_t finishedFadeLens = 0;
+  for (i = 0 ; i < len ; i++) {
+    if (phases[i] >= 1.0f) {
+      phases[i]         = 1.0f;
+      increments[i]     = 0.0f;
+      finishedFadeLens += fadeLens[i];
+      fadeLens[i]       = 0;
+    }
+  }
+  return finishedFadeLens;
 }
 
 /* Uses a new (to me) memory-doubling trick for faster resets. Be careful. */
