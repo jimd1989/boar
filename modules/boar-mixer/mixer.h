@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 void mixer_zero(int, int, float *);
+void mix_f32_fade_new(int, int, int, int, float *, float *, float *, float *);
 int mix_f32_fade(int, int, float *, int, int, int, float *);
 void mix_f32(int, float *, int, int, int, float *);
 int mix_s16_fade(int, int, float *, int, int, float *, uint8_t *);
