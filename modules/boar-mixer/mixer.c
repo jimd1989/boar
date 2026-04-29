@@ -75,7 +75,8 @@ void mix_f32_fade_new(int paramLen, int bufLen, int inputCh, int outputCh,
         fadePhase         = phases[scalarIdx];
         fadeInc           = increments[scalarIdx];
         paramIdx          = (int)(fadePhase * paramLen * paramCount); // no lerp
-        paramIdx         += paramChIdx;
+        paramIdx         -= paramIdx % paramCount; /* Snap to volume block */
+        paramIdx         += paramChIdx; /* On correct param channel */
         phases[scalarIdx] = fmax(1.0f, fadePhase + fadeInc);
         vol               = params[paramIdx] * chDiv;
         localSample       = audio[localBufIdx++];
@@ -83,9 +84,11 @@ void mix_f32_fade_new(int paramLen, int bufLen, int inputCh, int outputCh,
           fadePhase = phases[scalarIdx + balIdx];
           fadeInc                    = increments[scalarIdx + balIdx];
           paramIdx                   = (int)(fadePhase * paramLen * paramCount);
+          paramIdx                  += balIdx;
+          paramIdx                  -= paramIdx % paramCount
           paramIdx                  += paramChIdx;
           phases[scalarIdx + balIdx] = fmax(1.0f, fadePhase + fadeInc);
-          bal                        = params[paramIdx + balIdx];
+          bal                        = params[paramIdx];
           audio[masterBufIdx++]     += vol * bal * localSample;
         }
       } 
@@ -181,6 +184,44 @@ void mix_f32(int offset, float *staticParams, int inputCh, int outputCh,
           audio[masterBufIdx++] += vol * bal * localSample;
         }
       }
+    }
+  }
+}
+
+void mix_s16_fade_new(int paramLen, int bufLen, int outputCh,
+                      float *params, float *phases, float *increments,
+                      float *audio, uint8_t *output) {
+  int paramCount   = 1 + outputCh;
+  int masterBufLen = bufLen * outputCh; /* zero this section of buffer */
+  int paramIdx     = 0;
+  int masterBufIdx = 0;
+  int outputIdx    = 0;
+  int balIdx       = 0;
+  float fadePhase  = 0.0f;
+  float fadeInc    = 0.0f;
+  float vol        = 0.0f;
+  float bal        = 0.0f;
+  float sample     = 0.0f;
+  int16_t s        = 0;
+  for (masterBufIdx = 0 ; masterBufIdx < masterBufLen ; masterBufIdx++) {
+    fadePhase = phases[0];
+    fadeInc   = increments[0];
+    paramIdx  = (int)(fadePhase * paramLen * paramCount); /* no lerp */
+    paramIdx -= paramIdx % paramCount;
+    vol       = params[paramIdx];
+    phases[0] = fmax(1.0f, fadePhase + fadeInc);
+    for (balIdx = 1 ; balIdx < paramCount ; balIdx++) {
+      fadePhase           = phases[balIdx];
+      fadeInc             = increments[balIdx];
+      paramIdx            = (int)(fadePhase * paramLen * paramCount);
+      paramIdx           += balIdx;
+      paramIdx           -= paramIdx % paramCount;
+      bal                 = params[paramIdx];
+      phases[balIdx]      = fmax(1.0f, fadePhase + fadeInc);
+      sample              = vol * bal * audio[masterBufIdx++] * 32767.0f;
+      sample              = fmaxf(-32768.0f, fminf(32767.0f, sample));
+      output[outputIdx++] = s & 255;
+      output[outputIdx++] = s >> 8;
     }
   }
 }
