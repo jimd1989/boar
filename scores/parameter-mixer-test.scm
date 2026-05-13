@@ -3,6 +3,9 @@
 ; audio handle
 (audio-start! SIO-0)
 
+;(/ (u8vector-length (dsp-buffer-bytes
+;  (condition-variable-specific (audio-handle-condition-variable SIO-0)))) 4)
+
 ; 2 outputs, 2 inputs, buffer len 1184
 (define mix (mixer-from-lengths 2 2 1184))
 (mixer-master-volume-set!   mix     0.2)
@@ -15,6 +18,9 @@
 (mixer-channel-balance-set! mix 0 1 0.0)
 
 ; input channel 2 → right ear
+; TO INVESTIGATE:
+; - still slight click
+; - double-setting a value: 0 then 0, gets weird buzz
 (mixer-channel-volume-set!  mix 1   1.0)
 (mixer-channel-balance-set! mix 1 0 0.0)
 (mixer-channel-balance-set! mix 1 1 1.0)
@@ -52,7 +58,7 @@
         (osc-fill-slice! o2 ch1-sl)
 
         ; mixdown
-        (mixer-mix! x u8)))))
+        (mixer-mix-new! x u8)))))
 
 (##sys#gc)
 

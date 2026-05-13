@@ -1,8 +1,5 @@
 (module boar-param
-  (params params-updated? params-updated?-set! params-channels params-count
-   params-fade-length params-old params-new params-vector params-from-lengths
-   params-free! params-set-linear! params-should-fade? 
-   params-after-fade-cleanup!)
+  *
   (import scheme (chicken base) (chicken foreign) (chicken string) 
           (chicken type) srfi-4 typed-records)
 

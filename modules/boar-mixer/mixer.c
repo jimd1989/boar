@@ -1,3 +1,4 @@
+#include <err.h>
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
@@ -12,7 +13,7 @@ void mixer_zero(int outputCh, int bufLen, float *audio) {
  * Audio is polyphonic master output, interleaved, then monophonic input
  * channels, contiguous. 
  *
- * For {a b c d} mono input channels, with stereo output:
+ * For {a b c d} mono input channels, with stereo (l/r) output:
  *
  * [ l0 r0 l1 r1 l2 r2 …
  *   a0    a1    a2    …
@@ -77,17 +78,20 @@ void mix_f32_fade_new(int paramLen, int bufLen, int inputCh, int outputCh,
         paramIdx          = (int)(fadePhase * paramLen * paramCount); // no lerp
         paramIdx         -= paramIdx % paramCount; /* Snap to volume block */
         paramIdx         += paramChIdx; /* On correct param channel */
-        phases[scalarIdx] = fmax(1.0f, fadePhase + fadeInc);
+        phases[scalarIdx] = fminf(1.0f, fadePhase + fadeInc);
+        /* SOMEHOW OVERSHOOTING BUFFER WITH paramIdx */
+        warnx("phase %d\t%d\t%f", scalarIdx, paramIdx, phases[scalarIdx]);
         vol               = params[paramIdx] * chDiv;
+        warnx("vol %f %d", vol, bufLen);
         localSample       = audio[localBufIdx++];
         for (balIdx = 1 ; balIdx < paramCount ; balIdx++) {
           fadePhase = phases[scalarIdx + balIdx];
           fadeInc                    = increments[scalarIdx + balIdx];
           paramIdx                   = (int)(fadePhase * paramLen * paramCount);
           paramIdx                  += balIdx;
-          paramIdx                  -= paramIdx % paramCount
+          paramIdx                  -= paramIdx % paramCount;
           paramIdx                  += paramChIdx;
-          phases[scalarIdx + balIdx] = fmax(1.0f, fadePhase + fadeInc);
+          phases[scalarIdx + balIdx] = fminf(1.0f, fadePhase + fadeInc);
           bal                        = params[paramIdx];
           audio[masterBufIdx++]     += vol * bal * localSample;
         }
@@ -209,7 +213,7 @@ void mix_s16_fade_new(int paramLen, int bufLen, int outputCh,
     paramIdx  = (int)(fadePhase * paramLen * paramCount); /* no lerp */
     paramIdx -= paramIdx % paramCount;
     vol       = params[paramIdx];
-    phases[0] = fmax(1.0f, fadePhase + fadeInc);
+    phases[0] = fminf(1.0f, fadePhase + fadeInc);
     for (balIdx = 1 ; balIdx < paramCount ; balIdx++) {
       fadePhase           = phases[balIdx];
       fadeInc             = increments[balIdx];
@@ -217,7 +221,7 @@ void mix_s16_fade_new(int paramLen, int bufLen, int outputCh,
       paramIdx           += balIdx;
       paramIdx           -= paramIdx % paramCount;
       bal                 = params[paramIdx];
-      phases[balIdx]      = fmax(1.0f, fadePhase + fadeInc);
+      phases[balIdx]      = fminf(1.0f, fadePhase + fadeInc);
       sample              = vol * bal * audio[masterBufIdx++] * 32767.0f;
       sample              = fmaxf(-32768.0f, fminf(32767.0f, sample));
       output[outputIdx++] = s & 255;

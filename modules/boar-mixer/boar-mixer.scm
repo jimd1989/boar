@@ -166,4 +166,39 @@
           ((foreign-lambda void "mix_s16"
             int f32vector int int f32vector u8vector)
            0 static-params out-ch buf-len-frames audio u8)))))
+
+  (: mixer-mix-new! ((struct mixer) u8vector -> noreturn))
+  (define (mixer-mix-new! m u8)
+    (let* ((params (mixer-params m))
+           (updated? (params-should-fade? params))
+           (param-len (params-fade-length params))
+           (params-curves (params-vector params))
+           (static-params (params-new params))
+           (phases (params-phases params))
+           (increments (params-increments params))
+           (in-ch (mixer-input-channels m))
+           (out-ch (mixer-output-channels m))
+           (buf-len-frames (mixer-buffer-length-frames m))
+           (audio (mixer-audio m))
+           (fade-len 128))
+      ((foreign-lambda void "mixer_zero" int int f32vector)
+       out-ch buf-len-frames audio)
+      (if updated?
+        (begin
+          ((foreign-lambda void "mix_f32_fade_new"
+            int int int int f32vector f32vector f32vector f32vector)
+           param-len buf-len-frames in-ch out-ch params-curves phases
+            increments audio)
+          ((foreign-lambda void "mix_s16_fade_new"
+            int int int f32vector f32vector f32vector f32vector u8vector)
+           param-len buf-len-frames out-ch params-curves phases increments
+           audio u8)
+          (params-after-fade-cleanup-new! params))
+        (begin
+          ((foreign-lambda void "mix_f32"
+            int f32vector int int int f32vector)
+           0 static-params in-ch out-ch buf-len-frames audio)
+          ((foreign-lambda void "mix_s16"
+            int f32vector int int f32vector u8vector)
+           0 static-params out-ch buf-len-frames audio u8)))))
 )
